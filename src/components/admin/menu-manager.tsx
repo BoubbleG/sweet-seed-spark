@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Edit2, GripVertical, FileText, Sparkles, Wand2, Upload, Loader2, FileSearch } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Plus, Trash2, Edit2, GripVertical, FileText, Sparkles, Wand2, Upload, Loader2, FileSearch, Clock, Info, Layers, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -460,7 +461,10 @@ function ProductDialog({ restaurantId, categories, product, open, onOpenChange }
     is_available: true,
     is_featured: false,
     restaurant_id: restaurantId,
-    image_url: ""
+    image_url: "",
+    estimated_time: "",
+    nutritional_info: "",
+    variants: []
   });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -518,72 +522,113 @@ function ProductDialog({ restaurantId, categories, product, open, onOpenChange }
         <DialogHeader>
           <DialogTitle>{product ? "Editar Produto" : "Novo Produto"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="prod-name">Nome</Label>
-            <Input id="prod-name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required />
+        <form onSubmit={handleSubmit} className="space-y-6 py-4 max-h-[70vh] overflow-y-auto px-1">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2 col-span-2">
+              <Label htmlFor="prod-name" className="text-xs font-bold uppercase tracking-wider text-slate-500">Nome do Item</Label>
+              <Input id="prod-name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required className="rounded-xl border-slate-200 focus:ring-primary/20" />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="prod-price" className="text-xs font-bold uppercase tracking-wider text-slate-500">Preço Base (R$)</Label>
+              <Input id="prod-price" type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} required className="rounded-xl border-slate-200" />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="prod-cat" className="text-xs font-bold uppercase tracking-wider text-slate-500">Categoria</Label>
+              <Select value={formData.category_id} onValueChange={(v) => setFormData({...formData, category_id: v})}>
+                <SelectTrigger className="rounded-xl border-slate-200">
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c: any) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="prod-price">Preço (R$)</Label>
-            <Input id="prod-price" type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} required />
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="prod-time" className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                <Clock className="w-3 h-3" /> Tempo Est.
+              </Label>
+              <Input id="prod-time" placeholder="ex: 15-20 min" value={formData.estimated_time || ""} onChange={(e) => setFormData({...formData, estimated_time: e.target.value})} className="rounded-xl border-slate-200" />
+            </div>
+            <div className="grid gap-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" /> Destaque
+              </Label>
+              <div className="flex items-center space-x-2 h-10 px-3 bg-slate-50 rounded-xl border border-slate-100">
+                <Switch 
+                  checked={formData.is_featured} 
+                  onCheckedChange={(checked) => setFormData({...formData, is_featured: checked})} 
+                />
+                <span className="text-xs text-slate-600 font-medium">Promover</span>
+              </div>
+            </div>
           </div>
+
           <div className="grid gap-2">
-            <Label htmlFor="prod-cat">Categoria</Label>
-            <Select value={formData.category_id} onValueChange={(v) => setFormData({...formData, category_id: v})}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((c: any) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="prod-desc" className="text-xs font-bold uppercase tracking-wider text-slate-500">Descrição Detalhada</Label>
+            <Textarea id="prod-desc" value={formData.description || ""} onChange={(e) => setFormData({...formData, description: e.target.value})} className="rounded-xl border-slate-200 min-h-[80px]" />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="prod-desc">Descrição</Label>
-            <Textarea id="prod-desc" value={formData.description || ""} onChange={(e) => setFormData({...formData, description: e.target.value})} />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="prod-image">Foto do Produto</Label>
+
+          <div className="grid gap-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-2">
+              <ImageIcon className="w-4 h-4 text-primary" /> Mídia do Produto
+            </Label>
             <div className="flex items-center gap-4">
               {formData.image_url ? (
-                <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/10 group">
+                <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-white shadow-sm group">
                   <img src={formData.image_url} className="w-full h-full object-cover" alt="Preview" />
                   <button 
                     type="button"
                     onClick={() => setFormData({ ...formData, image_url: "" })}
-                    className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <Trash2 className="w-4 h-4 text-white" />
+                    <Trash2 className="w-5 h-5 text-white" />
                   </button>
                 </div>
               ) : (
                 <button 
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-20 h-20 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-primary hover:text-primary transition-all"
+                  className="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-primary hover:text-primary hover:bg-white transition-all bg-slate-100/50"
                 >
-                  <Plus className="w-5 h-5" />
-                  <span className="text-[10px] font-medium mt-1">Subir</span>
+                  <Plus className="w-6 h-6" />
+                  <span className="text-[10px] font-bold mt-1 uppercase">Subir Foto</span>
                 </button>
               )}
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                accept="image/*" 
-                onChange={handleImageUpload} 
-              />
-              <div className="flex-1">
+              <div className="flex-1 space-y-2">
                 <Input 
-                  id="prod-image" 
                   value={formData.image_url || ""} 
                   onChange={(e) => setFormData({...formData, image_url: e.target.value})} 
-                  placeholder="Ou cole o link da imagem aqui..." 
-                  className="text-xs"
+                  placeholder="Ou cole a URL da imagem..." 
+                  className="text-xs rounded-lg h-8"
                 />
+                <p className="text-[10px] text-slate-400 italic">Fotos de alta qualidade aumentam conversão em até 30%.</p>
               </div>
+            </div>
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+              <Layers className="w-3 h-3" /> Tamanhos / Variantes
+            </Label>
+            <div className="p-4 bg-violet-50/50 rounded-2xl border border-violet-100 flex items-center justify-between group hover:border-violet-300 transition-all cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center">
+                  <Plus className="w-4 h-4 text-violet-600" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-violet-900">Gerenciar Variações</p>
+                  <p className="text-[10px] text-violet-600">Pequeno, Médio, Grande, etc.</p>
+                </div>
+              </div>
+              <Button type="button" variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold tracking-tight text-violet-700 bg-violet-100">Em Breve</Button>
             </div>
           </div>
           <DialogFooter>
