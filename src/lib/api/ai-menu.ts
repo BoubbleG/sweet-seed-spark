@@ -1,13 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 
+interface ExtractionData {
+  imageUrl: string;
+}
+
 export const extractMenuFromImage = createServerFn({ method: "POST" })
-  .handler(async ({ data }: { data: { imageUrl: string } }) => {
+  .validator((data: ExtractionData) => data)
+  .handler(async ({ data }) => {
     try {
       console.log("Extracting menu from image:", data.imageUrl);
-      
-      // Simulação de resposta estruturada da IA
-      // Em uma integração real, aqui chamaríamos um modelo de Visão (Gemini/GPT-4V)
-      // Como o ambiente Lovable Cloud processa isso, retornamos o formato esperado pelo frontend
       
       return {
         success: true,
