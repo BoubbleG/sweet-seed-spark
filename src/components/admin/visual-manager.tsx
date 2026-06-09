@@ -270,9 +270,9 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
                     </div>
                   )}
                 </div>
-                <h4 className="text-white font-bold text-lg mt-2">{restaurant.name}</h4>
-                <div className="w-20 h-1 bg-primary/30 rounded-full" style={{ backgroundColor: `${formData.primary_color}33` }} />
-                <p className="text-[10px] text-slate-400">Pizzaria & Delivery</p>
+                <h4 className="text-white font-bold text-lg mt-2 tracking-tight">{restaurant.name}</h4>
+                <div className="w-20 h-1 bg-primary/30 rounded-full" style={{ backgroundColor: `${formData.primary_color}33`, borderRadius: '999px' }} />
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Premium Delivery</p>
               </div>
 
               {/* Sample Product */}
