@@ -202,7 +202,7 @@ function ProductList({ restaurantId, categories }: { restaurantId: string, categ
   );
 }
 
-function ProductDialog({ restaurantId, categories, product, open, onOpenChange }: any) {
+function ProductDialog({ restaurantId, categories, product, open, onOpenChange }: { restaurantId: string, categories: Category[], product: Product | null, open: boolean, onOpenChange: (open: boolean) => void }) {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<Product>>(product || {
