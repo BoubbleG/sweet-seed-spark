@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,8 @@ import { Restaurant } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { Palette, Layout, Type, Upload, Trash2, Zap, Settings, Paintbrush, Monitor, Code, ChevronRight } from "lucide-react";
+import { Palette, Layout, Type, Upload, Trash2, Zap, Settings, Paintbrush, Monitor, Code, ChevronRight, Sparkles, Wand2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface VisualManagerProps {
   restaurant: Restaurant;
@@ -19,6 +20,8 @@ interface VisualManagerProps {
 export function VisualManager({ restaurant }: VisualManagerProps) {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const [isAiProcessing, setIsAiProcessing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<Partial<Restaurant>>(restaurant);
 
   useEffect(() => {
@@ -71,6 +74,47 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
     }
   };
 
+  const handleAiDesign = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsAiProcessing(true);
+    const toastId = toast.loading("IA analisando sua imagem...");
+
+    try {
+      // 1. Convert image to base64 for the AI to "see" it
+      const reader = new FileReader();
+      const base64Promise = new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+      const base64Image = await base64Promise;
+
+      // 2. Call our Edge Function
+      const { data, error } = await supabase.functions.invoke('ai-designer', {
+        body: { 
+          image: base64Image,
+          currentStyle: formData.visual_style
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.design) {
+        setFormData(prev => ({
+          ...prev,
+          ...data.design
+        }));
+        toast.success("IA definiu um novo estilo baseado na sua imagem!", { id: toastId });
+      }
+    } catch (error: any) {
+      console.error("AI Designer Error:", error);
+      toast.error("A IA teve um problema ao analisar a imagem.", { id: toastId });
+    } finally {
+      setIsAiProcessing(false);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-[1600px] mx-auto">
       {/* Settings Column */}
@@ -92,11 +136,88 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
                 <TabsTrigger value="identidade" className="rounded-xl data-[state=active]:bg-white">Identidade</TabsTrigger>
                 <TabsTrigger value="estilo" className="rounded-xl data-[state=active]:bg-white">Estilo</TabsTrigger>
                 <TabsTrigger value="layout" className="rounded-xl data-[state=active]:bg-white">Layout</TabsTrigger>
+                <TabsTrigger value="ai" className="rounded-xl data-[state=active]:bg-white flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" /> IA
+                </TabsTrigger>
                 <TabsTrigger value="avançado" className="rounded-xl data-[state=active]:bg-white">Expert</TabsTrigger>
               </TabsList>
             </div>
 
             <div className="p-8">
+              <TabsContent value="ai" className="space-y-8 mt-0 animate-in fade-in slide-in-from-bottom-2">
+                <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-[2.5rem] p-10 text-white relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] -mr-32 -mt-32 rounded-full" />
+                  <div className="relative z-10 max-w-lg">
+                    <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-6 backdrop-blur-xl border border-white/10">
+                      <Wand2 className="w-8 h-8 text-primary" />
+                    </div>
+                    <h4 className="text-3xl font-black tracking-tight mb-4">Design Intelligence System</h4>
+                    <p className="text-zinc-400 text-sm leading-relaxed mb-8">
+                      Envie uma foto de referência, um logotipo ou até mesmo o interior do seu restaurante. 
+                      Nossa IA analisará as formas, o sentimento e as cores para gerar uma paleta e tipografia 
+                      exclusiva que combine perfeitamente com a sua marca.
+                    </p>
+                    
+                    <div className="flex gap-4">
+                      <Button 
+                        disabled={isAiProcessing}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-primary text-white hover:bg-primary/90 rounded-2xl h-14 px-8 font-black uppercase tracking-widest transition-all shadow-xl shadow-primary/20 group-hover:scale-105 active:scale-95"
+                      >
+                        {isAiProcessing ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Processando...
+                          </div>
+                        ) : (
+                          <>Analisar Referência</>
+                        )}
+                      </Button>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleAiDesign} 
+                        accept="image/*" 
+                        className="hidden" 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="absolute bottom-0 right-0 p-8 hidden md:block">
+                    <div className="flex -space-x-4">
+                      {[1,2,3].map(i => (
+                        <div key={i} className={`w-12 h-12 rounded-full border-4 border-zinc-900 bg-zinc-800 flex items-center justify-center`}>
+                          <Palette className="w-5 h-5 text-zinc-600" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                   <div className="p-6 rounded-3xl bg-zinc-50 border border-zinc-100">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                        <Palette className="w-5 h-5 text-primary" />
+                      </div>
+                      <h5 className="font-bold text-zinc-900 mb-1">Paleta Inteligente</h5>
+                      <p className="text-[10px] text-zinc-500 uppercase font-black tracking-wider">Cores baseadas em contexto emocional</p>
+                   </div>
+                   <div className="p-6 rounded-3xl bg-zinc-50 border border-zinc-100">
+                      <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center mb-4">
+                        <Type className="w-5 h-5 text-violet-500" />
+                      </div>
+                      <h5 className="font-bold text-zinc-900 mb-1">Matching de Fontes</h5>
+                      <p className="text-[10px] text-zinc-500 uppercase font-black tracking-wider">Tipografia que conversa com seu estilo</p>
+                   </div>
+                   <div className="p-6 rounded-3xl bg-zinc-50 border border-zinc-100">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4">
+                        <Layout className="w-5 h-5 text-emerald-500" />
+                      </div>
+                      <h5 className="font-bold text-zinc-900 mb-1">Auto-Layout</h5>
+                      <p className="text-[10px] text-zinc-500 uppercase font-black tracking-wider">Arranjo de elementos otimizado</p>
+                   </div>
+                </div>
+              </TabsContent>
               <TabsContent value="identidade" className="space-y-8 mt-0 animate-in fade-in slide-in-from-bottom-2">
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-4">
