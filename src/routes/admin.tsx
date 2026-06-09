@@ -112,8 +112,8 @@ function AdminDashboard() {
           <div className="max-w-6xl mx-auto">
             <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
               <div>
-                <h1 className="text-4xl font-extrabold text-white tracking-tight">Dashboard</h1>
-                <p className="text-slate-400 mt-1">Gerencie seus clientes e cardápios online.</p>
+                <h1 className="text-4xl font-extrabold text-zinc-900 tracking-tight">Dashboard</h1>
+                <p className="text-zinc-500 mt-1">Gerencie seus clientes e cardápios online.</p>
               </div>
               <Button 
                 onClick={() => { setEditingRestaurant(null); setIsRestDialogOpen(true); }}
@@ -125,32 +125,32 @@ function AdminDashboard() {
 
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map(i => <div key={i} className="h-48 rounded-2xl bg-white/5 animate-pulse" />)}
+                {[1, 2, 3].map(i => <div key={i} className="h-48 rounded-2xl bg-zinc-200 animate-pulse" />)}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {restaurants.map(rest => (
-                  <Card key={rest.id} className="group bg-[#1e293b]/40 backdrop-blur-sm border-white/5 hover:border-white/10 transition-all rounded-2xl overflow-hidden shadow-xl">
+                  <Card key={rest.id} className="group bg-white border-zinc-200 hover:border-primary/30 transition-all rounded-2xl overflow-hidden shadow-sm hover:shadow-xl">
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start mb-2">
-                        <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full ${rest.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                        <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full ${rest.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
                           {rest.status === 'active' ? 'Ativo' : 'Inativo'}
                         </span>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-white" onClick={() => { setEditingRestaurant(rest); setIsRestDialogOpen(true); }}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-400 hover:text-zinc-900" onClick={() => { setEditingRestaurant(rest); setIsRestDialogOpen(true); }}>
                             <Settings className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
-                      <CardTitle className="text-xl text-white group-hover:text-primary transition-colors">{rest.name}</CardTitle>
+                      <CardTitle className="text-xl text-zinc-900 group-hover:text-primary transition-colors">{rest.name}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-slate-400 mb-6 line-clamp-1">{rest.address || 'Sem endereço'}</p>
+                      <p className="text-sm text-zinc-500 mb-6 line-clamp-1">{rest.address || 'Sem endereço'}</p>
                       <div className="flex gap-2">
                         <Button 
                           variant="secondary" 
                           size="sm" 
-                          className="flex-1 bg-white/5 hover:bg-white/10 text-white border-white/5"
+                          className="flex-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-200"
                           onClick={() => { setSelectedRestaurantId(rest.id); setActiveTab('menu'); }}
                         >
                           <Utensils className="w-4 h-4 mr-2" /> Cardápio
@@ -166,7 +166,7 @@ function AdminDashboard() {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="w-10 p-0 text-slate-400 hover:text-white"
+                          className="w-10 p-0 text-zinc-400 hover:text-zinc-900"
                           onClick={() => window.open(`/${rest.slug}`, '_blank')}
                         >
                           <ChevronRight className="w-5 h-5" />
@@ -182,27 +182,27 @@ function AdminDashboard() {
 
         {activeView === 'menu' && selectedRestaurantId && (
           <div className="max-w-4xl mx-auto">
-            <Button variant="ghost" onClick={() => setActiveTab('list')} className="mb-6 text-slate-400 hover:text-white">
+            <Button variant="ghost" onClick={() => setActiveTab('list')} className="mb-6 text-zinc-500 hover:text-zinc-900">
               &larr; Voltar para lista
             </Button>
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-white mb-2">Gerenciar Cardápio</h1>
-              <p className="text-slate-400">Editando menu de: <span className="text-primary font-medium">{selectedRestaurant?.name}</span></p>
+              <h1 className="text-3xl font-bold text-zinc-900 mb-2">Gerenciar Cardápio</h1>
+              <p className="text-zinc-500">Editando menu de: <span className="text-primary font-medium">{selectedRestaurant?.name}</span></p>
             </div>
             
-            <div className="bg-[#1e293b]/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl">
+            <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm">
               <MenuManager restaurantId={selectedRestaurantId} />
             </div>
           </div>
         )}
         {activeView === 'visual' && selectedRestaurant && (
           <div className="max-w-6xl mx-auto">
-            <Button variant="ghost" onClick={() => setActiveTab('list')} className="mb-6 text-slate-400 hover:text-white">
+            <Button variant="ghost" onClick={() => setActiveTab('list')} className="mb-6 text-zinc-500 hover:text-zinc-900">
               &larr; Voltar para lista
             </Button>
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-white mb-2">Design do Cardápio</h1>
-              <p className="text-slate-400">Personalizando identidade visual de: <span className="text-primary font-medium">{selectedRestaurant.name}</span></p>
+              <h1 className="text-3xl font-bold text-zinc-900 mb-2">Design do Cardápio</h1>
+              <p className="text-zinc-500">Personalizando identidade visual de: <span className="text-primary font-medium">{selectedRestaurant.name}</span></p>
             </div>
             
             <VisualManager restaurant={selectedRestaurant} />
@@ -211,13 +211,13 @@ function AdminDashboard() {
         {activeView === 'preview' && selectedRestaurant && (
           <div className="max-w-6xl mx-auto h-full flex flex-col">
             <div className="flex justify-between items-center mb-6">
-              <Button variant="ghost" onClick={() => setActiveTab('list')} className="text-slate-400 hover:text-white">
+              <Button variant="ghost" onClick={() => setActiveTab('list')} className="text-zinc-500 hover:text-zinc-900">
                 &larr; Voltar para lista
               </Button>
               <div className="flex gap-3">
                 <Button 
                   variant="outline" 
-                  className="bg-white/5 border-white/10 text-white"
+                  className="bg-zinc-100 border-zinc-200 text-zinc-900"
                   onClick={() => window.open(`/${selectedRestaurant.slug}`, '_blank')}
                 >
                   Abrir em nova aba
@@ -225,13 +225,13 @@ function AdminDashboard() {
               </div>
             </div>
             
-            <div className="flex-1 min-h-[700px] w-full rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-[#020617] relative">
+            <div className="flex-1 min-h-[700px] w-full rounded-3xl overflow-hidden border border-zinc-200 shadow-xl bg-white relative">
               <iframe 
                 src={`/${selectedRestaurant.slug}`} 
                 className="w-full h-full border-none"
                 title="Visualização do Cardápio"
               />
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-[10px] text-slate-400 uppercase tracking-widest font-bold pointer-events-none">
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-white/80 backdrop-blur-md border border-zinc-200 rounded-full text-[10px] text-zinc-500 uppercase tracking-widest font-bold pointer-events-none">
                 Modo Preview - Interação Limitada
               </div>
             </div>
@@ -260,7 +260,7 @@ function SidebarItem({ active, icon, label, onClick, disabled }: { active?: bool
         disabled ? 'opacity-30 cursor-not-allowed' : 
         active 
           ? 'bg-primary text-white shadow-lg' 
-          : 'text-slate-400 hover:bg-white/5 hover:text-white'
+          : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900'
       }`}
     >
       {icon}
