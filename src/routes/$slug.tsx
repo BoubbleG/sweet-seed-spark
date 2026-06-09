@@ -73,9 +73,15 @@ function RestaurantPublicMenu() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDF5E6] pb-32 selection:bg-[#E29B5D]/20" style={{ fontFamily }}>
+    <div className="min-h-screen pb-32 selection:bg-[#E29B5D]/20 overflow-x-hidden" style={{ fontFamily, backgroundColor: restaurant.background_color || '#FDF5E6', color: restaurant.text_color || '#3B2C24' }}>
+      {restaurant.custom_css && (
+        <style dangerouslySetInnerHTML={{ __html: restaurant.custom_css }} />
+      )}
       {/* Top Header Navigation */}
-      <nav className="fixed top-0 left-0 right-0 bg-[#FDF5E6]/80 backdrop-blur-md z-50 px-6 py-4 flex justify-between items-center border-b border-[#E29B5D]/10">
+      <nav 
+        className={`fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center border-b border-[#E29B5D]/10 transition-all ${restaurant.header_style === 'floating' ? 'm-4 rounded-2xl bg-white/80 shadow-lg' : 'bg-[#FDF5E6]/80 backdrop-blur-md'}`}
+        style={restaurant.header_style !== 'floating' ? { backgroundColor: `${restaurant.background_color || '#FDF5E6'}cc` } : {}}
+      >
         <div className="text-xs font-black text-zinc-400">9:41</div>
         <div className="flex items-center gap-1.5">
           <div className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
