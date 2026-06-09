@@ -24,7 +24,7 @@ function AdminDashboard() {
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
   const [activeView, setActiveTab] = useState<'list' | 'menu' | 'visual'>('list');
 
-  const { data: restaurants, isLoading } = useQuery({
+  const { data: restaurants, isLoading, error } = useQuery({
     queryKey: ['admin-restaurants'],
     queryFn: async () => {
       const { data, error } = await supabase.from('restaurants').select('*');
@@ -32,6 +32,8 @@ function AdminDashboard() {
       return data as Restaurant[];
     }
   });
+
+  console.log("Admin Dashboard State:", { activeView, selectedRestaurantId, restaurantsCount: restaurants?.length, isLoading, error });
 
   const selectedRestaurant = restaurants?.find(r => r.id === selectedRestaurantId);
 
