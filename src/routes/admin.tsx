@@ -6,6 +6,9 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Plus, Store, Utensils, List, Palette } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
+  head: () => ({
+    meta: [{ title: "Painel Administrativo - MenuMaster" }],
+  }),
   component: AdminDashboard,
 });
 
