@@ -1,10 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RestaurantDialog } from "@/components/admin/restaurant-dialog";
 import { MenuManager } from "@/components/admin/menu-manager";
 import { Restaurant } from "@/types";
@@ -18,19 +17,29 @@ export const Route = createFileRoute("/admin")({
 
 function AdminDashboard() {
   const navigate = useNavigate();
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isRestDialogOpen, setIsRestDialogOpen] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
   const [activeView, setActiveTab] = useState<'list' | 'menu' | 'visual'>('list');
 
-  const { data: restaurants, isLoading } = useQuery({
-    queryKey: ['admin-restaurants'],
-    queryFn: async () => {
+  async function loadData() {
+    setIsLoading(true);
+    try {
       const { data, error } = await supabase.from('restaurants').select('*');
       if (error) throw error;
-      return data as Restaurant[];
+      setRestaurants(data as Restaurant[]);
+    } catch (error) {
+      console.error("Error loading restaurants:", error);
+    } finally {
+      setIsLoading(false);
     }
-  });
+  }
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const selectedRestaurant = restaurants?.find(r => r.id === selectedRestaurantId);
 
@@ -163,7 +172,10 @@ function AdminDashboard() {
 
       <RestaurantDialog 
         open={isRestDialogOpen} 
-        onOpenChange={setIsRestDialogOpen} 
+        onOpenChange={(open) => {
+          setIsRestDialogOpen(open);
+          if (!open) loadData(); // Reload list after closing dialog
+        }} 
         restaurant={editingRestaurant} 
       />
     </div>
