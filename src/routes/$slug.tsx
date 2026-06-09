@@ -21,11 +21,17 @@ export const Route = createFileRoute("/$slug")({
 });
 
 function RestaurantPublicMenu() {
-  const { slug } = useParams({ from: '/$slug' });
-  const { data: restaurant, isLoading: restLoading } = useRestaurant(slug);
-  const { data: menu, isLoading: menuLoading } = useMenu(restaurant?.id || '');
+  const params = useParams({ from: '/$slug' });
+  const slug = params?.slug;
+  const { data: restaurant, isLoading: restLoading, error: restError } = useRestaurant(slug);
+  const { data: menu, isLoading: menuLoading, error: menuError } = useMenu(restaurant?.id || '');
   const { items, addItem, getTotal } = useCart();
   const [showOrder, setShowOrder] = useState(false);
+
+  if (restError || menuError) {
+    console.error("Menu fetch error:", restError || menuError);
+    throw restError || menuError;
+  }
 
   if (restLoading || menuLoading) return <div className="p-12 text-center">Carregando cardápio...</div>;
   if (!restaurant) return <div className="p-12 text-center">Restaurante não encontrado.</div>;
