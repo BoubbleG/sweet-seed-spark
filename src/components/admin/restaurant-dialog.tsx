@@ -9,8 +9,9 @@ import { Restaurant } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { Sparkles, Wand2, Upload, ChevronRight, Store, Palette, Globe } from "lucide-react";
+import { Sparkles, Wand2, Upload, ChevronRight, Store, Palette, Globe, Pipette } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { extractColorsFromImage } from "@/lib/color-extractor";
 
 interface RestaurantDialogProps {
   restaurant?: Restaurant | null;
@@ -261,13 +262,29 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
                     <motion.div 
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
-                      className="p-6 bg-zinc-50 border border-zinc-200 rounded-[2rem] flex items-center gap-6"
+                      className="p-6 bg-zinc-50 border border-zinc-200 rounded-[2rem]"
                     >
-                      <div className="w-14 h-14 rounded-2xl border-4 border-white shadow-lg shrink-0" style={{ backgroundColor: formData.primary_color }} />
-                      <div>
-                        <h4 className="font-black text-zinc-900 text-sm">Design System Ativo</h4>
-                        <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">IA definiu: {formData.visual_style} • {formData.font_family}</p>
+                      <div className="flex items-center gap-6 mb-6">
+                        <div className="w-14 h-14 rounded-2xl border-4 border-white shadow-lg shrink-0" style={{ backgroundColor: formData.primary_color }} />
+                        <div>
+                          <h4 className="font-black text-zinc-900 text-sm">Design System Ativo</h4>
+                          <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">IA definiu: {formData.visual_style} • {formData.font_family}</p>
+                        </div>
                       </div>
+                      
+                      {extractedColors.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                           {extractedColors.map(color => (
+                             <button
+                               key={color}
+                               type="button"
+                               onClick={() => setFormData({...formData, primary_color: color})}
+                               className={`w-8 h-8 rounded-full border-2 transition-all ${formData.primary_color === color ? 'border-zinc-900 scale-110 shadow-lg' : 'border-white hover:scale-110'}`}
+                               style={{ backgroundColor: color }}
+                             />
+                           ))}
+                        </div>
+                      )}
                     </motion.div>
                   )}
 
