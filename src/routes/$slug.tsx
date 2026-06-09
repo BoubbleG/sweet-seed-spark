@@ -91,35 +91,35 @@ function RestaurantPublicMenu() {
       </nav>
 
       {/* Hero Header */}
-      <header className="pt-20 px-6 pb-6">
+      <header className={`px-6 pb-6 ${restaurant.header_style === 'floating' ? 'pt-24' : 'pt-20'}`}>
         <div className="flex justify-between items-start mb-6">
           <div className="flex gap-4 items-center">
-            <div className="w-20 h-20 rounded-[1.5rem] bg-white shadow-xl flex items-center justify-center overflow-hidden border-2 border-white">
+            <div className="w-20 h-20 rounded-[1.5rem] bg-white shadow-xl flex items-center justify-center overflow-hidden border-2 border-white shrink-0">
               {restaurant.logo_url ? (
                 <img src={restaurant.logo_url} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-[#3B2C24] text-white flex items-center justify-center text-2xl font-black">
+                <div className="w-full h-full text-white flex items-center justify-center text-2xl font-black" style={{ backgroundColor: restaurant.primary_color || '#3B2C24' }}>
                   {restaurant.name.charAt(0)}
                 </div>
               )}
             </div>
-            <div>
-              <h1 className="text-2xl font-black text-[#3B2C24] tracking-tight break-words overflow-hidden leading-tight">{restaurant.name}</h1>
-              <div className="flex items-center gap-1.5 mt-1 text-[11px] font-bold text-[#A89284] flex-wrap">
-                <Star className="w-3.5 h-3.5 fill-[#E29B5D] text-[#E29B5D] shrink-0" />
-                <span className="text-[#3B2C24]">4,8</span>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl font-black tracking-tight break-words overflow-hidden leading-tight" style={{ color: restaurant.text_color || '#3B2C24' }}>{restaurant.name}</h1>
+              <div className="flex items-center gap-1.5 mt-1 text-[11px] font-bold opacity-60 flex-wrap" style={{ color: restaurant.text_color || '#3B2C24' }}>
+                <Star className="w-3.5 h-3.5 fill-current shrink-0" style={{ color: restaurant.primary_color || '#E29B5D' }} />
+                <span>4,8</span>
                 <span className="truncate max-w-[150px]">(312 avaliações)</span>
               </div>
-              <div className="flex items-center gap-2 mt-1.5 text-[11px] font-bold text-[#A89284] flex-wrap">
+              <div className="flex items-center gap-2 mt-1.5 text-[11px] font-bold opacity-60 flex-wrap" style={{ color: restaurant.text_color || '#3B2C24' }}>
                 <Clock className="w-3.5 h-3.5 shrink-0" />
                 <span className="truncate">Entrega • 30-45 min</span>
               </div>
-              <p className="text-[11px] font-bold text-[#A89284] mt-1 break-words">
+              <p className="text-[11px] font-bold mt-1 break-words opacity-60" style={{ color: restaurant.text_color || '#3B2C24' }}>
                 R$ {restaurant.delivery_fee.toFixed(2).replace('.', ',')} • Grátis acima de R$ 60
               </p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="rounded-full bg-white shadow-md w-10 h-10">
+          <Button variant="ghost" size="icon" className="rounded-full bg-white shadow-md w-10 h-10 shrink-0">
             <Heart className="w-5 h-5 text-zinc-300" />
           </Button>
         </div>
