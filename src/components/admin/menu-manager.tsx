@@ -120,7 +120,21 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-2xl border border-white/5">
+        <div className="flex items-center gap-3">
+          <Wand2 className="w-5 h-5 text-primary" />
+          <div>
+            <h4 className="font-bold text-white text-sm">Gerador de Cardápio IA</h4>
+            <p className="text-[10px] text-slate-400">Importe textos, imagens ou use sugestões inteligentes.</p>
+          </div>
+        </div>
+        <Button size="sm" variant="secondary" onClick={() => setShowImport(true)} className="bg-primary/10 text-primary hover:bg-primary/20 border-none rounded-full h-8 px-4">
+          <Sparkles className="w-3.5 h-3.5 mr-2" /> Importar Texto
+        </Button>
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+
         <TabsList className="grid w-full grid-cols-2 bg-slate-200/50 p-1 rounded-xl">
           <TabsTrigger value="categories" className="rounded-lg transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm">Categorias</TabsTrigger>
           <TabsTrigger value="products" className="rounded-lg transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm">Produtos</TabsTrigger>
@@ -174,7 +188,42 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
           <ProductList restaurantId={restaurantId} categories={categories || []} />
         </TabsContent>
       </Tabs>
+
+      <Dialog open={showImport} onOpenChange={setShowImport}>
+        <DialogContent className="sm:max-w-[600px] bg-[#1e293b] border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary" /> Importador de Texto
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 text-xs text-slate-300 leading-relaxed">
+              <p className="font-bold text-primary mb-1">Como usar:</p>
+              <p>1. Cole o texto do cardápio abaixo.</p>
+              <p>2. Use o formato: <span className="text-white font-mono">Produto - Preço - Descrição</span></p>
+              <p>3. Linhas em <span className="text-white font-bold">MAIÚSCULAS</span> criam novas categorias.</p>
+            </div>
+            <Textarea 
+              placeholder="Ex:&#10;HAMBÚRGUERES&#10;Classic Burger - 25,00 - Pão, carne e queijo&#10;BEBIDAS&#10;Coca Lata - 6,00" 
+              className="min-h-[250px] bg-white/5 border-white/10 text-white placeholder:text-slate-600 focus:ring-primary/20"
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowImport(false)} className="text-slate-400 hover:text-white">Cancelar</Button>
+            <Button 
+              onClick={handleTextImport} 
+              disabled={importLoading || !importText.trim()}
+              className="bg-primary hover:bg-primary/90 rounded-xl px-8"
+            >
+              {importLoading ? "Processando..." : "Importar Agora"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
 
