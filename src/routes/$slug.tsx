@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingCart, Clock, MapPin } from "lucide-react";
 import { useState } from "react";
 import { CartDrawer } from "@/components/cart-drawer";
+import { motion } from "framer-motion";
+
 
 
 export const Route = createFileRoute("/$slug")({
