@@ -255,7 +255,7 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
             </div>
 
             {/* Content Preview */}
-            <div className="px-4 -mt-12 relative z-10 pb-8" style={{ fontFamily: formData.font_family || 'Inter' }}>
+            <div className="px-4 -mt-12 relative z-10 pb-8" style={{ fontFamily: (formData.font_family || 'Outfit').replace(' (Quadrada)', '') }}>
               <div className={`p-4 border border-white/10 shadow-xl mb-6 text-center flex flex-col items-center gap-2 ${
                 formData.card_style === 'glass' ? 'bg-white/5 backdrop-blur-xl' :
                 formData.card_style === 'bordered' ? 'bg-transparent border-2 border-white/20' :
@@ -270,7 +270,7 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
                     </div>
                   )}
                 </div>
-                <h4 className="text-white font-bold text-lg mt-2 tracking-tight">{restaurant.name}</h4>
+                <h4 className="text-white font-bold text-lg mt-2 tracking-tight transition-all hover:scale-105 cursor-default">{restaurant.name}</h4>
                 <div className="w-20 h-1 bg-primary/30 rounded-full" style={{ backgroundColor: `${formData.primary_color}33`, borderRadius: '999px' }} />
                 <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Premium Delivery</p>
               </div>
@@ -283,7 +283,7 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
                   <div className="h-px flex-1 bg-white/10" />
                 </div>
 
-                <div className={`p-3 flex gap-3 border border-white/10 ${
+                <div className={`p-3 flex gap-3 border border-white/10 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group cursor-pointer ${
                   formData.card_style === 'glass' ? 'bg-white/5 backdrop-blur-xl' :
                   formData.card_style === 'bordered' ? 'bg-transparent border-2 border-white/20' :
                   formData.card_style === 'elevated' ? 'bg-slate-900 shadow-2xl' : 'bg-white/10'
