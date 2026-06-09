@@ -98,6 +98,8 @@ function LandingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="text-white">Debug: {isLoading ? "Loading..." : "Done!"} (Count: {restaurants.length})</div>
+          
           {isLoading ? (
             [1, 2, 3].map(i => (
               <div key={i} className="h-80 rounded-3xl bg-white/5 border border-white/10 animate-pulse" />
