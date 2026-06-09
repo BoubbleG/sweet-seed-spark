@@ -427,34 +427,56 @@ function ProductList({ restaurantId, categories }: { restaurantId: string, categ
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold text-slate-800">Produtos Cadastrados</h3>
-        <Button onClick={() => setShowAddForm(true)} size="sm" className="rounded-full px-6">
-          <Plus className="w-4 h-4 mr-2" /> Novo Produto
+        <div className="flex flex-col">
+          <h3 className="text-xl font-bold text-slate-900 tracking-tight">Produtos Cadastrados</h3>
+          <p className="text-xs text-slate-500">Gerencie preços, fotos e descrições dos seus itens.</p>
+        </div>
+        <Button onClick={() => setShowAddForm(true)} size="sm" className="bg-primary hover:bg-primary/90 text-white rounded-2xl px-6 h-11 font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all transform hover:-translate-y-0.5">
+          <Plus className="w-5 h-5 mr-2" /> Novo Produto
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {products?.map(prod => (
-          <Card key={prod.id} className="overflow-hidden hover:shadow-lg transition-all border-slate-200">
+          <Card key={prod.id} className="group overflow-hidden hover:shadow-2xl transition-all border-slate-200 rounded-3xl bg-white/50 backdrop-blur-sm hover:bg-white">
             <CardContent className="p-0 flex flex-col sm:flex-row h-full">
-              {prod.image_url ? (
-                <img src={prod.image_url} className="w-full sm:w-32 h-32 object-cover" alt={prod.name} />
-              ) : (
-                <div className="w-full sm:w-32 h-32 bg-slate-100 flex items-center justify-center text-slate-400">
-                  Sem Foto
-                </div>
-              )}
-              <div className="p-4 flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex justify-between items-start">
-                    <h4 className="font-bold text-slate-900">{prod.name}</h4>
-                    <span className="text-primary font-bold">R$ {prod.price.toFixed(2)}</span>
+              <div className="relative w-full sm:w-32 h-40 sm:h-auto overflow-hidden">
+                {prod.image_url ? (
+                  <img src={prod.image_url} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt={prod.name} />
+                ) : (
+                  <div className="w-full h-full bg-slate-100 flex flex-col items-center justify-center text-slate-400">
+                    <ImageIcon className="w-6 h-6 mb-1 opacity-20" />
+                    <span className="text-[10px] font-bold uppercase tracking-tighter opacity-40">Sem Foto</span>
                   </div>
-                  <p className="text-sm text-slate-500 line-clamp-2 mt-1">{prod.description}</p>
+                )}
+                {prod.is_featured && (
+                  <div className="absolute top-2 left-2 bg-amber-400 text-amber-950 text-[9px] font-black uppercase px-2 py-1 rounded-lg shadow-sm">
+                    Destaque
+                  </div>
+                )}
+              </div>
+              <div className="p-5 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-start mb-1">
+                    <h4 className="font-bold text-slate-900 text-lg tracking-tight group-hover:text-primary transition-colors">{prod.name}</h4>
+                    <div className="flex flex-col items-end">
+                      <span className="text-primary font-black text-lg">R$ {prod.price.toFixed(2)}</span>
+                      {prod.estimated_time && (
+                        <span className="text-[10px] text-slate-400 flex items-center gap-1 font-medium mt-0.5">
+                          <Clock className="w-3 h-3" /> {prod.estimated_time}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">{prod.description || "Sem descrição disponível."}</p>
                 </div>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button variant="outline" size="sm" className="h-8" onClick={() => setEditingProduct(prod)}>Editar</Button>
-                  <Button variant="outline" size="sm" className="h-8 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => deleteProduct(prod.id)}>Excluir</Button>
+                <div className="flex justify-end gap-2 mt-5">
+                  <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl border-slate-200 font-bold text-xs uppercase tracking-wider hover:bg-slate-50" onClick={() => setEditingProduct(prod)}>
+                    <Edit2 className="w-3.5 h-3.5 mr-2" /> Editar
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl border-slate-200 font-bold text-xs uppercase tracking-wider text-red-500 hover:text-red-600 hover:bg-red-50 hover:border-red-100" onClick={() => deleteProduct(prod.id)}>
+                    <Trash2 className="w-3.5 h-3.5 mr-2" /> Excluir
+                  </Button>
                 </div>
               </div>
             </CardContent>
