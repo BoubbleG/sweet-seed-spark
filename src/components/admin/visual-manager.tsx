@@ -150,8 +150,13 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
       {/* Preview Section */}
       <div className="relative flex justify-center lg:justify-start">
         <div className="sticky top-20">
-          <div className="w-[300px] h-[600px] rounded-[3rem] bg-white border-8 border-zinc-900 shadow-2xl relative overflow-hidden">
-            <div className="absolute inset-0 bg-zinc-50" />
+          <div className="relative w-[320px] h-[650px] rounded-[3.5rem] border-[10px] border-zinc-900 bg-white shadow-[0_0_0_2px_rgba(255,255,255,0.1),0_20px_50px_-10px_rgba(0,0,0,0.4)] overflow-hidden">
+            {/* Dynamic Island */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-zinc-900 rounded-b-2xl z-50 flex items-center justify-center">
+              <div className="w-8 h-1 bg-zinc-800 rounded-full" />
+            </div>
+            
+            <div className="absolute inset-0 bg-[#FDF5E6]" />
             
             {/* Preview Banner */}
             <div className="h-32 w-full relative">
