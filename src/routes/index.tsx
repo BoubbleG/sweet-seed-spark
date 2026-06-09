@@ -161,9 +161,9 @@ function LandingPage() {
           </div>
           <p className="text-zinc-400 text-sm font-medium">© 2026 MenuMaster Intelligence. Todos os direitos reservados.</p>
           <div className="flex gap-8">
-             <footerLink label="Privacidade" />
-             <footerLink label="Termos" />
-             <footerLink label="Suporte" />
+             <FooterLink label="Privacidade" />
+             <FooterLink label="Termos" />
+             <FooterLink label="Suporte" />
           </div>
         </div>
       </footer>
@@ -252,7 +252,7 @@ function StatItem({ value, label, icon }: { value: string, label: string, icon: 
   );
 }
 
-function footerLink({ label }: { label: string }) {
+function FooterLink({ label }: { label: string }) {
   return <span className="text-zinc-400 font-bold hover:text-zinc-900 transition-colors cursor-pointer text-sm">{label}</span>;
 }
 
