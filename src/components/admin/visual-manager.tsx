@@ -75,7 +75,7 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left Side: Controls */}
         <div className="space-y-6">
-          <Card className="bg-[#1e293b]/40 backdrop-blur-xl border-white/5 shadow-2xl overflow-hidden rounded-[2rem]">
+          <Card className="bg-[#1e293b]/40 backdrop-blur-xl border-white/5 shadow-2xl overflow-hidden rounded-[2rem] transition-all duration-500 hover:shadow-primary/5">
             <CardHeader className="border-b border-white/5 bg-white/5">
               <CardTitle className="flex items-center gap-2 text-white">
                 <Palette className="w-5 h-5 text-primary" />
@@ -107,7 +107,7 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <Label className="text-slate-400">Banner de Fundo</Label>
+                  <Label className="text-slate-400">Banner Superior (Hero)</Label>
                   <div className="relative group aspect-square rounded-2xl border-2 border-dashed border-white/10 overflow-hidden bg-white/5 flex flex-col items-center justify-center transition-all hover:border-primary/50">
                     {formData.banner_url ? (
                       <>
