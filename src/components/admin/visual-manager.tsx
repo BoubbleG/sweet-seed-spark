@@ -328,47 +328,82 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
              </div>
              
              <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ backgroundColor: formData.background_color || '#FDF5E6', fontFamily: formData.font_family || 'Outfit' }}>
-               {/* Hero Section Preview */}
-               <div className="relative h-48">
-                 {formData.banner_url ? (
-                   <img src={formData.banner_url} className="w-full h-full object-cover" />
-                 ) : (
-                   <div className="w-full h-full bg-zinc-200" />
-                 )}
-                 <div className="absolute inset-0 bg-black/10" />
+               {/* Custom CSS Injection for Preview */}
+               <style dangerouslySetInnerHTML={{ __html: formData.custom_css || '' }} />
+
+               {/* Header Navigation Preview */}
+               <div 
+                 className={`sticky top-0 left-0 right-0 z-40 px-6 py-4 flex justify-between items-center border-b border-black/5 transition-all ${formData.header_style === 'floating' ? 'm-4 rounded-2xl bg-white/80 shadow-lg' : ''}`}
+                 style={formData.header_style !== 'floating' ? { backgroundColor: `${formData.background_color || '#FDF5E6'}cc`, backdropFilter: 'blur(10px)' } : {}}
+               >
+                 <div className="w-4 h-4 rounded-full bg-zinc-900/10" />
+                 <div className="flex gap-1">
+                   <div className="w-1.5 h-1.5 rounded-full bg-zinc-900/20" />
+                   <div className="w-1.5 h-1.5 rounded-full bg-zinc-900/20" />
+                 </div>
                </div>
 
-               <div className="px-6 relative z-10 -mt-10 pb-10">
-                 <div className="w-20 h-20 rounded-2xl bg-white shadow-xl border-4 border-white mb-4 overflow-hidden flex items-center justify-center">
-                   {formData.logo_url ? <img src={formData.logo_url} className="w-full h-full object-cover" /> : <span className="text-2xl font-black text-zinc-300">{formData.name?.charAt(0)}</span>}
-                 </div>
-                 
-                 <h2 className="text-2xl font-black mb-1 truncate" style={{ color: formData.text_color || '#3B2C24' }}>{formData.name}</h2>
-                 <p className="text-[11px] font-medium opacity-60 line-clamp-2" style={{ color: formData.text_color || '#3B2C24' }}>{formData.description || 'Sua bio de restaurante aparecerá aqui...'}</p>
-
-                 <div className="mt-8 space-y-6">
-                    <div className="flex items-center gap-3">
-                       <div className="h-0.5 flex-1 bg-current opacity-10" style={{ color: formData.text_color || '#3B2C24' }} />
-                       <span className="text-[10px] font-black uppercase tracking-widest opacity-40" style={{ color: formData.text_color || '#3B2C24' }}>Preview de Seção</span>
-                       <div className="h-0.5 flex-1 bg-current opacity-10" style={{ color: formData.text_color || '#3B2C24' }} />
+               {/* Content Preview */}
+               <div className={`px-6 pb-10 ${formData.header_style === 'floating' ? 'pt-4' : 'pt-6'}`}>
+                 <div className="flex justify-between items-start mb-6">
+                    <div className="flex gap-4 items-center">
+                      <div className="w-20 h-20 rounded-[1.5rem] bg-white shadow-xl border-4 border-white overflow-hidden flex items-center justify-center shrink-0">
+                        {formData.logo_url ? <img src={formData.logo_url} className="w-full h-full object-cover" /> : <span className="text-2xl font-black text-zinc-300">{formData.name?.charAt(0)}</span>}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h2 className="text-xl font-black mb-1 truncate" style={{ color: formData.text_color || '#3B2C24' }}>{formData.name}</h2>
+                        <p className="text-[10px] font-medium opacity-60 line-clamp-1" style={{ color: formData.text_color || '#3B2C24' }}>{formData.description || 'Sua bio de restaurante...'}</p>
+                        <div className="flex gap-1.5 mt-1">
+                          <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                          <div className="w-10 h-2 bg-zinc-900/10 rounded-full self-center" />
+                        </div>
+                      </div>
                     </div>
+                 </div>
 
-                    <div className="space-y-4">
-                      {[1, 2].map(i => (
+                 {/* Categories Preview */}
+                 {formData.show_categories !== false && (
+                   <div className="flex gap-2 mb-8 overflow-x-hidden">
+                     {[1, 2, 3].map(i => (
+                       <div 
+                         key={i} 
+                         className={`rounded-[1.2rem] border transition-all ${i === 1 ? 'text-white' : 'bg-white border-zinc-100'} ${formData.category_layout === 'grid' ? 'w-12 h-12 flex items-center justify-center' : 'px-4 py-2 shrink-0'}`}
+                         style={i === 1 ? { backgroundColor: formData.primary_color, borderColor: formData.primary_color } : {}}
+                       >
+                         {formData.category_layout === 'grid' ? <div className="w-4 h-4 bg-current opacity-20 rounded" /> : <div className="w-8 h-2 bg-current opacity-20 rounded-full" />}
+                       </div>
+                     ))}
+                   </div>
+                 )}
+
+                 {/* Search Bar Preview */}
+                 {formData.show_search !== false && (
+                   <div className="h-10 bg-white border border-zinc-100 rounded-xl mb-8 flex items-center px-4 gap-3">
+                     <div className="w-3 h-3 border-2 border-zinc-300 rounded-full" />
+                     <div className="w-24 h-2 bg-zinc-200 rounded-full" />
+                   </div>
+                 )}
+
+                 <div className="space-y-6">
+                    <div className={formData.product_card_layout === 'grid' ? "grid grid-cols-2 gap-4" : "space-y-4"}>
+                      {[1, 2, 3, 4].map(i => (
                         <div 
                           key={i} 
-                          className="p-4 bg-white shadow-sm border border-zinc-100 flex gap-4 transition-all" 
+                          className={`bg-white shadow-sm border border-zinc-50 p-4 transition-all flex ${formData.product_card_layout === 'grid' ? 'flex-col' : 'flex-row gap-4'}`} 
                           style={{ 
                             borderRadius: formData.border_radius || '2rem',
                             ...(formData.card_style === 'glass' ? { background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)' } : {}),
                             ...(formData.card_style === 'elevated' ? { boxShadow: '0 15px 35px -5px rgba(0,0,0,0.1)' } : {})
                           }}
                         >
-                          <div className="w-16 h-16 rounded-xl bg-zinc-100 shrink-0" />
-                          <div className="flex-1 py-1">
-                            <div className="w-24 h-3 bg-zinc-900/10 rounded-full mb-2" />
-                            <div className="w-full h-2 bg-zinc-900/5 rounded-full mb-1" />
-                            <div className="w-2/3 h-2 bg-zinc-900/5 rounded-full" />
+                          <div className={`rounded-xl bg-zinc-100 shrink-0 ${formData.product_card_layout === 'grid' ? 'w-full aspect-square mb-3' : 'w-16 h-16'}`} />
+                          <div className="flex-1">
+                            <div className="w-16 h-2.5 bg-zinc-900/10 rounded-full mb-2" />
+                            <div className="w-full h-1.5 bg-zinc-900/5 rounded-full mb-1" />
+                            <div className="flex justify-between items-center mt-3">
+                               <div className="w-10 h-3 bg-zinc-900/10 rounded-full" />
+                               <div className="w-6 h-6 rounded-full" style={{ backgroundColor: formData.primary_color }} />
+                            </div>
                           </div>
                         </div>
                       ))}
