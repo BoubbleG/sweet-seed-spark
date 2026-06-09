@@ -56,13 +56,13 @@ function AdminDashboard() {
   const selectedRestaurant = restaurants?.find(r => r.id === selectedRestaurantId);
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-200 flex flex-col md:flex-row font-['Outfit']">
-      <aside className="w-full md:w-72 bg-[#1e293b]/50 backdrop-blur-xl border-r border-white/5 flex flex-col p-6 sticky top-0 md:h-screen z-20">
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 flex flex-col md:flex-row font-['Outfit']">
+      <aside className="w-full md:w-72 bg-white/70 backdrop-blur-xl border-r border-zinc-200 flex flex-col p-6 sticky top-0 md:h-screen z-20">
         <div className="flex items-center gap-3 mb-10 px-2">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-violet-500 flex items-center justify-center shadow-lg">
             <Store className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-xl font-bold tracking-tight text-white">MenuMaster</h2>
+          <h2 className="text-xl font-bold tracking-tight text-zinc-900">MenuMaster</h2>
         </div>
         
         <nav className="space-y-1 flex-1">
