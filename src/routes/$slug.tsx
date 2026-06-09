@@ -204,6 +204,7 @@ function RestaurantPublicMenu() {
             </div>
           </section>
         ))}
+        <div className="h-20" /> {/* Spacing for footer */}
       </main>
 
       {/* Tab Navigation */}
