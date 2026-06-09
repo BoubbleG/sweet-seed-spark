@@ -156,21 +156,34 @@ function RestaurantPublicMenu() {
 
       {/* Main Content */}
       <main className="px-6 space-y-10">
+        {restaurant.show_search !== false && (
+          <div className="relative mt-4">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A89284]" />
+            <input 
+              type="text" 
+              placeholder="O que você está procurando?" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-12 pl-12 pr-4 bg-white rounded-2xl border border-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-[#E29B5D]/20 shadow-sm"
+            />
+          </div>
+        )}
+
         {menu?.categories.map(cat => (
           <section key={cat.id} className="space-y-6">
             <div className="flex items-center gap-3">
               <Package className="w-5 h-5 text-[#E29B5D]" />
-              <h2 className="text-lg font-black text-[#3B2C24] tracking-tight truncate flex-1">{cat.name} em destaque</h2>
+              <h2 className="text-lg font-black tracking-tight truncate flex-1" style={{ color: restaurant.text_color || '#3B2C24' }}>{cat.name} em destaque</h2>
             </div>
             
-            <div className="space-y-4">
-              {menu.products.filter(p => p.category_id === cat.id).map(prod => (
+            <div className={restaurant.product_card_layout === 'grid' ? "grid grid-cols-2 gap-4" : "space-y-4"}>
+              {filteredProducts.filter(p => p.category_id === cat.id).map(prod => (
                 <motion.div
                   key={prod.id}
                   layout
-                  className="bg-white rounded-[2rem] p-5 flex gap-4 shadow-sm border border-zinc-50 relative group"
+                  className={`bg-white rounded-[2rem] p-5 flex shadow-sm border border-zinc-50 relative group ${restaurant.product_card_layout === 'grid' ? 'flex-col' : 'flex-row gap-4'}`}
                 >
-                  <div className="w-24 h-24 rounded-2xl bg-zinc-100 overflow-hidden flex-shrink-0">
+                  <div className={`rounded-2xl bg-zinc-100 overflow-hidden flex-shrink-0 ${restaurant.product_card_layout === 'grid' ? 'w-full aspect-square mb-3' : 'w-24 h-24'}`}>
                     {prod.image_url ? (
                       <img src={prod.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     ) : (
@@ -187,19 +200,20 @@ function RestaurantPublicMenu() {
                           MAIS PEDIDO
                         </div>
                       )}
-                      <h3 className="text-sm font-black text-[#3B2C24] mb-1 break-words line-clamp-2">{prod.name}</h3>
-                      <p className="text-[10px] text-[#A89284] line-clamp-2 leading-relaxed">
+                      <h3 className="text-sm font-black mb-1 break-words line-clamp-2" style={{ color: restaurant.text_color || '#3B2C24' }}>{prod.name}</h3>
+                      <p className="text-[10px] opacity-60 line-clamp-2 leading-relaxed" style={{ color: restaurant.text_color || '#3B2C24' }}>
                         {prod.description}
                       </p>
                     </div>
                     
                     <div className="flex items-center justify-between mt-3">
-                      <span className="text-sm font-black text-[#3B2C24]">
+                      <span className="text-sm font-black" style={{ color: restaurant.text_color || '#3B2C24' }}>
                         R$ {prod.price.toFixed(2).replace('.', ',')}
                       </span>
                       <button 
                         onClick={() => addItem(prod)}
-                        className="w-8 h-8 rounded-full bg-[#3B2C24] text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-90"
+                        className="w-8 h-8 rounded-full text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-90"
+                        style={{ backgroundColor: restaurant.button_color || restaurant.primary_color || '#3B2C24' }}
                       >
                         <Plus className="w-5 h-5" />
                       </button>
