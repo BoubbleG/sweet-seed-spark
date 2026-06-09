@@ -271,15 +271,19 @@ function AdminDashboard() {
                   </Button>
                 </div>
               </div>
-              <div className="flex-1 min-h-[700px] rounded-[3rem] border border-zinc-200 bg-white shadow-2xl overflow-hidden relative">
-                 <iframe 
-                    src={`/${selectedRestaurant?.slug}`} 
-                    className="w-full h-full border-none"
-                    title="Menu Live Preview"
-                 />
-                 <div className="absolute top-6 left-1/2 -translate-x-1/2 px-6 py-2 bg-white/90 backdrop-blur-md border border-zinc-200 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 shadow-xl">
-                   Visualização em Tempo Real
-                 </div>
+              <div className="flex-1 flex justify-center items-center p-4">
+                <div className="relative w-[375px] h-[760px] rounded-[3.5rem] border-[12px] border-zinc-900 bg-white shadow-[0_0_0_2px_rgba(255,255,255,0.1),0_20px_50px_-10px_rgba(0,0,0,0.5)] overflow-hidden">
+                   {/* Dynamic Island / Notch */}
+                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-7 bg-zinc-900 rounded-b-3xl z-50 flex items-center justify-center">
+                     <div className="w-10 h-1 bg-zinc-800 rounded-full" />
+                   </div>
+                   
+                   <iframe 
+                      src={`/${selectedRestaurant?.slug}`} 
+                      className="w-full h-full border-none"
+                      title="Menu Live Preview"
+                   />
+                </div>
               </div>
             </motion.div>
           )}
