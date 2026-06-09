@@ -231,18 +231,21 @@ function RestaurantPublicMenu() {
       </main>
 
       {/* Tab Navigation */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-zinc-100 px-8 py-4 flex justify-between items-center z-50">
-        <TabButton icon={<Search className="w-6 h-6" />} label="Início" active={activeTab === 'inicio'} onClick={() => setActiveTab('inicio')} />
-        <TabButton icon={<MenuIcon className="w-6 h-6" />} label="Cardápio" active={activeTab === 'cardapio'} onClick={() => setActiveTab('cardapio')} />
+      <footer 
+        className="fixed bottom-0 left-0 right-0 backdrop-blur-xl border-t border-zinc-100 px-8 py-4 flex justify-between items-center z-50 transition-colors"
+        style={{ backgroundColor: `${restaurant.background_color || '#FDF5E6'}cc`, color: restaurant.text_color || '#3B2C24' }}
+      >
+        <TabButton icon={<Search className="w-6 h-6" />} label="Início" active={activeTab === 'inicio'} onClick={() => setActiveTab('inicio')} textColor={restaurant.text_color} />
+        <TabButton icon={<MenuIcon className="w-6 h-6" />} label="Cardápio" active={activeTab === 'cardapio'} onClick={() => setActiveTab('cardapio')} textColor={restaurant.text_color} />
         <div className="relative">
-          <TabButton icon={<ShoppingCart className="w-6 h-6" />} label="Meu pedido" active={activeTab === 'pedido'} onClick={() => { setActiveTab('pedido'); setShowOrder(true); }} />
+          <TabButton icon={<ShoppingCart className="w-6 h-6" />} label="Meu pedido" active={activeTab === 'pedido'} onClick={() => { setActiveTab('pedido'); setShowOrder(true); }} textColor={restaurant.text_color} />
           {items.length > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#E29B5D] text-white text-[8px] font-black rounded-full flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-4 h-4 text-white text-[8px] font-black rounded-full flex items-center justify-center shadow-sm" style={{ backgroundColor: restaurant.primary_color || '#E29B5D' }}>
               {items.reduce((acc, i) => acc + i.quantity, 0)}
             </span>
           )}
         </div>
-        <TabButton icon={<User className="w-6 h-6" />} label="Mais" active={activeTab === 'mais'} onClick={() => setActiveTab('mais')} />
+        <TabButton icon={<User className="w-6 h-6" />} label="Mais" active={activeTab === 'mais'} onClick={() => setActiveTab('mais')} textColor={restaurant.text_color} />
       </footer>
 
       <CartDrawer 
