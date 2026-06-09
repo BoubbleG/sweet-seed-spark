@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut, Eye, LayoutDashboard, Share2, TrendingUp } from "lucide-react";
+import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut, Eye, LayoutDashboard, Share2, TrendingUp, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Restaurant } from "@/types";
 import { RestaurantDialog } from "@/components/admin/restaurant-dialog";
@@ -197,6 +197,23 @@ function AdminDashboard() {
                             onClick={() => { setEditingRestaurant(rest); setIsRestDialogOpen(true); }}
                           >
                             <Settings className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                             variant="ghost"
+                             size="icon"
+                             className="w-12 h-10 rounded-2xl text-rose-400 hover:text-rose-600 hover:bg-rose-50"
+                             onClick={async () => {
+                               if (confirm(`Tem certeza que deseja excluir o cardápio "${rest.name}"? Esta ação é irreversível.`)) {
+                                 const { error } = await sb.from('restaurants').delete().eq('id', rest.id);
+                                 if (error) {
+                                   alert('Erro ao excluir restaurante: ' + error.message);
+                                 } else {
+                                   loadData();
+                                 }
+                               }
+                             }}
+                          >
+                             <Trash2 className="w-4 h-4" />
                           </Button>
                           <Button 
                              onClick={() => { setSelectedRestaurantId(rest.id); setActiveTab('preview'); }}
