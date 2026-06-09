@@ -25,8 +25,11 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("categories");
   const [showImport, setShowImport] = useState(false);
+  const [showAIUpload, setShowAIUpload] = useState(false);
   const [importText, setImportText] = useState("");
   const [importLoading, setImportLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
 
   // Fetch Categories
