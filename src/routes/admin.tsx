@@ -1,13 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Restaurant } from "@/types";
 import { RestaurantDialog } from "@/components/admin/restaurant-dialog";
 import { MenuManager } from "@/components/admin/menu-manager";
-import { Restaurant } from "@/types";
+
+const SUPABASE_URL = "https://mrjkizqyrmljtlvusgta.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yamtpenF5cm1sanRsdnVzZ3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NTY3NDAsImV4cCI6MjA5NjUzMjc0MH0.JTDSgPn20PipEOx6GIFtnXc-M2T2o3S4oM7t0saIwVY";
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -28,7 +31,6 @@ function AdminDashboard() {
   async function loadData() {
     setIsLoading(true);
     try {
-      const sb = createClient("https://mrjkizqyrmljtlvusgta.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yamtpenF5cm1sanRsdnVzZ3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NzAwMDIsIm5iZiI6MTc4MDk2NjQwMiwiaWF0IjoxNzgwOTY2NDAyfQ.djk6DEZIfLfIWVOh-ehoNUXoeWYsmrAhLfmD2Hz1L2CIm_Qhbr93EtjzK7CWdFFBYp0_Xu1PDy5xORTn1lxnWzHRsrV9YMUSu_45FyMi1BP6Iwbk8wh3UMh6_1IYQAqNPcX8wZsvbLWhGNq0SdjRkjxVQHDbVXyy224-8jUf9vEmbyukfgE9o6_r0cyVRHz1TqwqTfsCO36X8rStQEQ_KwjsKo6QRV6tzf_kBMCoKiPmJyaCUIo8xTxI-qbTtVD5P8pjKoAncUi6P4Uhc2_USA64iyDB0TRWSnBNHBiS_tNCgcaON7CWx6RDBhMOYa9A_qLvkgQc75nkcOT0upmzxqoJFPLpg7RTlPFmZsfKdWFJArvCyw37FUVNQ1nO_iKkr7_-teBWWpeZJ0Q-Tyj9Z5zJxXDckJlvkubVdhnxdHCOZUIVbFIYtyKDeAokZ_U5IUTLgaj3lQfpUYVG6J52UV8bJDrJlzNWhEzQ9vwD8Ix9rgz7rAewfXFtD3jyfyUdcBEhFxCLNKmaEe_3XhWz0vYxqEi4HNm7MGcyg6bBM124to3-8UvyXajg7ynWYEwyRPxVGIRy0CTFpUsZSjmK-vusCVHsz_JAJQPTYfxtjFjJ5cb52UrAyO2U3wMJAZ2x_cTvWK_qO0lMxu3k31e2A3BWOD3zUXtz5sVwEDxRxpw");
       const { data, error } = await sb.from('restaurants').select('*');
       if (error) throw error;
       setRestaurants(data as Restaurant[]);
@@ -49,7 +51,7 @@ function AdminDashboard() {
     <div className="min-h-screen bg-[#0f172a] text-slate-200 flex flex-col md:flex-row font-['Inter']">
       <aside className="w-full md:w-72 bg-[#1e293b]/50 backdrop-blur-xl border-r border-white/5 flex flex-col p-6 sticky top-0 md:h-screen z-20">
         <div className="flex items-center gap-3 mb-10 px-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-violet-500 flex items-center justify-center shadow-lg shadow-primary/20">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-violet-500 flex items-center justify-center shadow-lg">
             <Store className="w-6 h-6 text-white" />
           </div>
           <h2 className="text-xl font-bold tracking-tight text-white">MenuMaster</h2>
@@ -100,7 +102,7 @@ function AdminDashboard() {
               </div>
               <Button 
                 onClick={() => { setEditingRestaurant(null); setIsRestDialogOpen(true); }}
-                className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 h-12 shadow-lg shadow-primary/20 transition-all hover:scale-105"
+                className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 h-12 shadow-lg"
               >
                 <Plus className="w-5 h-5 mr-2" /> Novo Restaurante
               </Button>
@@ -112,8 +114,8 @@ function AdminDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {restaurants?.map(rest => (
-                  <Card key={rest.id} className="group bg-[#1e293b]/40 backdrop-blur-sm border-white/5 hover:border-white/10 transition-all hover:shadow-2xl hover:shadow-black/20 rounded-2xl overflow-hidden">
+                {restaurants.map(rest => (
+                  <Card key={rest.id} className="group bg-[#1e293b]/40 backdrop-blur-sm border-white/5 hover:border-white/10 transition-all rounded-2xl overflow-hidden shadow-xl">
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start mb-2">
                         <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full ${rest.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
@@ -165,7 +167,7 @@ function AdminDashboard() {
               <p className="text-slate-400">Editando menu de: <span className="text-primary font-medium">{selectedRestaurant?.name}</span></p>
             </div>
             
-            <div className="bg-[#1e293b]/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl shadow-black/40">
+            <div className="bg-[#1e293b]/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl">
               <MenuManager restaurantId={selectedRestaurantId} />
             </div>
           </div>
@@ -176,7 +178,7 @@ function AdminDashboard() {
         open={isRestDialogOpen} 
         onOpenChange={(open) => {
           setIsRestDialogOpen(open);
-          if (!open) loadData(); // Reload list after closing dialog
+          if (!open) loadData();
         }} 
         restaurant={editingRestaurant} 
       />
@@ -192,7 +194,7 @@ function SidebarItem({ active, icon, label, onClick, disabled }: { active?: bool
       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
         disabled ? 'opacity-30 cursor-not-allowed' : 
         active 
-          ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+          ? 'bg-primary text-white shadow-lg' 
           : 'text-slate-400 hover:bg-white/5 hover:text-white'
       }`}
     >
