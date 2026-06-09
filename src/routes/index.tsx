@@ -1,13 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { UtensilsCrossed, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-
-
+import { Restaurant } from "@/types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,32 +19,28 @@ export const Route = createFileRoute("/")({
 
 function LandingPage() {
   const navigate = useNavigate();
-  const [debugData, setDebugData] = useState<any>(null);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log("LandingPage mounted. Testing direct supabase call...");
-    supabase.from('restaurants').select('*').then(({ data, error }) => {
-      console.log("Direct test result:", { data, error });
-      setDebugData(data);
-    });
-  }, []);
-
-  
-  const { data: restaurants, isLoading, isError, error } = useQuery({
-    queryKey: ['restaurants'],
-    queryFn: async () => {
-      console.log("Fetching restaurants...");
-      const { data, error } = await supabase
-        .from('restaurants')
-        .select('*')
-        .eq('status', 'active');
-      console.log("Fetch result:", { dataCount: data?.length, error });
-      if (error) throw error;
-      return data;
+    async function loadData() {
+      try {
+        console.log("LandingPage fetching...");
+        const { data, error } = await supabase
+          .from('restaurants')
+          .select('*')
+          .eq('status', 'active');
+        if (error) throw error;
+        console.log("LandingPage data loaded:", data?.length);
+        setRestaurants(data as Restaurant[]);
+      } catch (error) {
+        console.error("Error loading restaurants:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
-  });
-
-  console.log("Landing Page State:", { isLoading, isError, error, dataCount: restaurants?.length });
+    loadData();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-100 flex flex-col font-['Outfit'] selection:bg-primary/30">
@@ -104,11 +98,12 @@ function LandingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {isLoading && (
-            <div className="text-white">Carregando restaurantes...</div>
-          )}
-          
-          {!isLoading && restaurants?.map((rest, index) => (
+          {isLoading ? (
+            [1, 2, 3].map(i => (
+              <div key={i} className="h-80 rounded-3xl bg-white/5 border border-white/10 animate-pulse" />
+            ))
+          ) : (
+            restaurants.map((rest, index) => (
               <motion.div
                 key={rest.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -169,8 +164,8 @@ function LandingPage() {
                   </CardFooter>
                 </Card>
               </motion.div>
-          ))}
-
+            ))
+          )}
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -210,4 +205,3 @@ function LandingPage() {
     </div>
   );
 }
-
