@@ -140,16 +140,20 @@ export type Database = {
         Row: {
           address: string | null
           average_delivery_time: string | null
+          background_color: string | null
           banner_url: string | null
           border_radius: string | null
           business_type: string
           button_color: string | null
           card_style: string | null
+          category_layout: string | null
           city: string | null
           created_at: string | null
+          custom_css: string | null
           delivery_fee: number | null
           description: string | null
           font_family: string | null
+          header_style: string | null
           id: string
           instagram: string | null
           logo_url: string | null
@@ -157,10 +161,14 @@ export type Database = {
           name: string
           opening_hours: string | null
           primary_color: string | null
+          product_card_layout: string | null
           secondary_color: string | null
+          show_categories: boolean | null
           show_delivery_status: boolean | null
+          show_search: boolean | null
           slug: string
           status: string | null
+          text_color: string | null
           updated_at: string | null
           visual_style: string | null
           whatsapp: string
@@ -168,16 +176,20 @@ export type Database = {
         Insert: {
           address?: string | null
           average_delivery_time?: string | null
+          background_color?: string | null
           banner_url?: string | null
           border_radius?: string | null
           business_type: string
           button_color?: string | null
           card_style?: string | null
+          category_layout?: string | null
           city?: string | null
           created_at?: string | null
+          custom_css?: string | null
           delivery_fee?: number | null
           description?: string | null
           font_family?: string | null
+          header_style?: string | null
           id?: string
           instagram?: string | null
           logo_url?: string | null
@@ -185,10 +197,14 @@ export type Database = {
           name: string
           opening_hours?: string | null
           primary_color?: string | null
+          product_card_layout?: string | null
           secondary_color?: string | null
+          show_categories?: boolean | null
           show_delivery_status?: boolean | null
+          show_search?: boolean | null
           slug: string
           status?: string | null
+          text_color?: string | null
           updated_at?: string | null
           visual_style?: string | null
           whatsapp: string
@@ -196,16 +212,20 @@ export type Database = {
         Update: {
           address?: string | null
           average_delivery_time?: string | null
+          background_color?: string | null
           banner_url?: string | null
           border_radius?: string | null
           business_type?: string
           button_color?: string | null
           card_style?: string | null
+          category_layout?: string | null
           city?: string | null
           created_at?: string | null
+          custom_css?: string | null
           delivery_fee?: number | null
           description?: string | null
           font_family?: string | null
+          header_style?: string | null
           id?: string
           instagram?: string | null
           logo_url?: string | null
@@ -213,10 +233,14 @@ export type Database = {
           name?: string
           opening_hours?: string | null
           primary_color?: string | null
+          product_card_layout?: string | null
           secondary_color?: string | null
+          show_categories?: boolean | null
           show_delivery_status?: boolean | null
+          show_search?: boolean | null
           slug?: string
           status?: string | null
+          text_color?: string | null
           updated_at?: string | null
           visual_style?: string | null
           whatsapp?: string
