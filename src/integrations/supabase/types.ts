@@ -14,7 +14,191 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          banner_url: string | null
+          created_at: string | null
+          display_order: number | null
+          icon: string | null
+          id: string
+          name: string
+          restaurant_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          name: string
+          restaurant_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          name?: string
+          restaurant_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          internal_notes: string | null
+          is_available: boolean | null
+          is_best_seller: boolean | null
+          is_featured: boolean | null
+          name: string
+          options: Json | null
+          price: number
+          restaurant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          internal_notes?: string | null
+          is_available?: boolean | null
+          is_best_seller?: boolean | null
+          is_featured?: boolean | null
+          name: string
+          options?: Json | null
+          price: number
+          restaurant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          internal_notes?: string | null
+          is_available?: boolean | null
+          is_best_seller?: boolean | null
+          is_featured?: boolean | null
+          name?: string
+          options?: Json | null
+          price?: number
+          restaurant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurants: {
+        Row: {
+          address: string | null
+          average_delivery_time: string | null
+          banner_url: string | null
+          business_type: string
+          button_color: string | null
+          city: string | null
+          created_at: string | null
+          delivery_fee: number | null
+          description: string | null
+          id: string
+          instagram: string | null
+          logo_url: string | null
+          min_order_for_free_delivery: number | null
+          name: string
+          opening_hours: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          slug: string
+          status: string | null
+          updated_at: string | null
+          visual_style: string | null
+          whatsapp: string
+        }
+        Insert: {
+          address?: string | null
+          average_delivery_time?: string | null
+          banner_url?: string | null
+          business_type: string
+          button_color?: string | null
+          city?: string | null
+          created_at?: string | null
+          delivery_fee?: number | null
+          description?: string | null
+          id?: string
+          instagram?: string | null
+          logo_url?: string | null
+          min_order_for_free_delivery?: number | null
+          name: string
+          opening_hours?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          slug: string
+          status?: string | null
+          updated_at?: string | null
+          visual_style?: string | null
+          whatsapp: string
+        }
+        Update: {
+          address?: string | null
+          average_delivery_time?: string | null
+          banner_url?: string | null
+          business_type?: string
+          button_color?: string | null
+          city?: string | null
+          created_at?: string | null
+          delivery_fee?: number | null
+          description?: string | null
+          id?: string
+          instagram?: string | null
+          logo_url?: string | null
+          min_order_for_free_delivery?: number | null
+          name?: string
+          opening_hours?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          slug?: string
+          status?: string | null
+          updated_at?: string | null
+          visual_style?: string | null
+          whatsapp?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
