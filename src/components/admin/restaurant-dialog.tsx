@@ -146,118 +146,142 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome do Restaurante</Label>
-              <Input 
-                id="name" 
-                value={formData.name} 
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                required 
-                className="transition-all focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="slug">Link Personalizado (Slug)</Label>
-              <Input 
-                id="slug" 
-                value={formData.slug} 
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/ /g, "-") })} 
-                placeholder="ex: burger-do-bairro"
-                required 
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="business_type">Tipo de Negócio</Label>
-              <Select 
-                value={formData.business_type} 
-                onValueChange={(v) => setFormData({ ...formData, business_type: v })}
+        <div className="mt-6">
+          {!restaurant && (
+            <div className="flex p-1 bg-zinc-100 rounded-2xl mb-6">
+              <button 
+                type="button"
+                onClick={() => setCreationMode('ai')}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${creationMode === 'ai' ? 'bg-zinc-900 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-900'}`}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hamburgueria">Hamburgueria</SelectItem>
-                  <SelectItem value="pizzaria">Pizzaria</SelectItem>
-                  <SelectItem value="marmitaria">Marmitaria</SelectItem>
-                  <SelectItem value="cafeteria">Cafeteria</SelectItem>
-                  <SelectItem value="açaiteria">Açaíteria</SelectItem>
-                  <SelectItem value="restaurante">Restaurante Geral</SelectItem>
-                </SelectContent>
-              </Select>
+                <Sparkles className="w-4 h-4" /> Criação com IA
+              </button>
+              <button 
+                type="button"
+                onClick={() => setCreationMode('manual')}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${creationMode === 'manual' ? 'bg-zinc-900 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-900'}`}
+              >
+                <Wand2 className="w-4 h-4" /> Manual
+              </button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="whatsapp">WhatsApp (com DDD)</Label>
-              <Input 
-                id="whatsapp" 
-                value={formData.whatsapp} 
-                onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, "") })} 
-                placeholder="ex: 5511999999999"
-                required 
-              />
-            </div>
-          </div>
+          )}
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Descrição Curta</Label>
-            <Textarea 
-              id="description" 
-              value={formData.description || ""} 
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
-              rows={2}
-            />
-          </div>
+          <AnimatePresence mode="wait">
+            {creationMode === 'ai' && !restaurant ? (
+              <motion.div 
+                key="ai-mode"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="py-10 text-center"
+              >
+                <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-violet-500/20 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 border border-white shadow-2xl">
+                  <Sparkles className="w-10 h-10 text-primary animate-pulse" />
+                </div>
+                <h3 className="text-2xl font-black text-zinc-900 mb-4 tracking-tight">Identidade Visual Automática</h3>
+                <p className="text-zinc-500 text-sm max-w-xs mx-auto mb-10">
+                  Envie o logotipo ou uma foto do estabelecimento e nossa IA criará o Design System completo instantaneamente.
+                </p>
+                
+                <Button 
+                  disabled={isAiProcessing}
+                  onClick={() => aiFileInputRef.current?.click()}
+                  className="w-full h-16 bg-zinc-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest hover:bg-primary transition-all shadow-xl shadow-zinc-900/10 group"
+                >
+                  {isAiProcessing ? "Analisando Marca..." : "Selecionar Referência"}
+                  {!isAiProcessing && <Upload className="ml-3 w-5 h-5 group-hover:translate-y-[-2px] transition-transform" />}
+                </Button>
+                <input type="file" ref={aiFileInputRef} className="hidden" accept="image/*" onChange={handleAiCreation} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="manual-mode"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Nome do Restaurante</Label>
+                      <Input 
+                        id="name" 
+                        value={formData.name} 
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                        required 
+                        className="h-12 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="slug" className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Slug (URL Única)</Label>
+                      <Input 
+                        id="slug" 
+                        value={formData.slug} 
+                        onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/ /g, "-") })} 
+                        placeholder="ex: burger-prime"
+                        required 
+                        className="h-12 rounded-xl"
+                      />
+                    </div>
+                  </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="address">Endereço</Label>
-              <Input id="address" value={formData.address || ""} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="city">Cidade</Label>
-              <Input id="city" value={formData.city || ""} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
-            </div>
-          </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="business_type" className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Segmento</Label>
+                      <Select 
+                        value={formData.business_type} 
+                        onValueChange={(v) => setFormData({ ...formData, business_type: v })}
+                      >
+                        <SelectTrigger className="h-12 rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="hamburgueria">Hamburgueria</SelectItem>
+                          <SelectItem value="pizzaria">Pizzaria</SelectItem>
+                          <SelectItem value="cafeteria">Cafeteria</SelectItem>
+                          <SelectItem value="restaurante">Restaurante Geral</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="whatsapp" className="text-[10px] font-black uppercase tracking-widest text-zinc-400">WhatsApp Comercial</Label>
+                      <Input 
+                        id="whatsapp" 
+                        value={formData.whatsapp} 
+                        onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, "") })} 
+                        placeholder="5511..."
+                        required 
+                        className="h-12 rounded-xl"
+                      />
+                    </div>
+                  </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="delivery_fee">Taxa de Entrega (R$)</Label>
-              <Input 
-                id="delivery_fee" 
-                type="number" 
-                step="0.01" 
-                value={formData.delivery_fee} 
-                onChange={(e) => setFormData({ ...formData, delivery_fee: parseFloat(e.target.value) })} 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="min_order">Valor Mín. Entrega Grátis</Label>
-              <Input 
-                id="min_order" 
-                type="number" 
-                step="0.01" 
-                value={formData.min_order_for_free_delivery || 0} 
-                onChange={(e) => setFormData({ ...formData, min_order_for_free_delivery: parseFloat(e.target.value) })} 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="delivery_time">Tempo Médio</Label>
-              <Input id="delivery_time" value={formData.average_delivery_time || ""} onChange={(e) => setFormData({ ...formData, average_delivery_time: e.target.value })} />
-            </div>
-          </div>
+                  {/* AI Design Feedback Area */}
+                  {formData.primary_color && creationMode === 'manual' && !restaurant && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="p-6 bg-zinc-50 border border-zinc-200 rounded-[2rem] flex items-center gap-6"
+                    >
+                      <div className="w-14 h-14 rounded-2xl border-4 border-white shadow-lg" style={{ backgroundColor: formData.primary_color }} />
+                      <div>
+                        <h4 className="font-black text-zinc-900 text-sm">Design System Gerado</h4>
+                        <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">IA definiu: {formData.visual_style} • {formData.font_family}</p>
+                      </div>
+                    </motion.div>
+                  )}
 
-          <div className="border-t pt-6 mt-6">
-            <h3 className="font-semibold mb-4 text-slate-800">Preview & Identidade Visual</h3>
-            <p className="text-xs text-slate-500 mb-6">
-              As opções detalhadas de cores, tipografia e estilos agora estão no menu <b>Personalização</b> na barra lateral após criar o restaurante.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
+                  <DialogFooter className="pt-8 mt-6 border-t">
+                    <Button variant="ghost" type="button" onClick={() => onOpenChange(false)} className="rounded-xl font-bold uppercase text-[10px] tracking-widest">Cancelar</Button>
+                    <Button type="submit" disabled={loading} className="bg-zinc-900 text-white hover:bg-primary transition-all rounded-xl h-12 px-8 font-black uppercase tracking-widest shadow-xl shadow-zinc-900/10">
+                      {loading ? "Processando..." : (restaurant ? "Salvar" : "Finalizar Projeto")}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
                 <Label htmlFor="primary_color">Cor Principal</Label>
                 <div className="flex gap-2">
                   <Input 
