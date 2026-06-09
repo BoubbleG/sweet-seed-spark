@@ -129,12 +129,15 @@ export type Database = {
           address: string | null
           average_delivery_time: string | null
           banner_url: string | null
+          border_radius: string | null
           business_type: string
           button_color: string | null
+          card_style: string | null
           city: string | null
           created_at: string | null
           delivery_fee: number | null
           description: string | null
+          font_family: string | null
           id: string
           instagram: string | null
           logo_url: string | null
@@ -143,6 +146,7 @@ export type Database = {
           opening_hours: string | null
           primary_color: string | null
           secondary_color: string | null
+          show_delivery_status: boolean | null
           slug: string
           status: string | null
           updated_at: string | null
@@ -153,12 +157,15 @@ export type Database = {
           address?: string | null
           average_delivery_time?: string | null
           banner_url?: string | null
+          border_radius?: string | null
           business_type: string
           button_color?: string | null
+          card_style?: string | null
           city?: string | null
           created_at?: string | null
           delivery_fee?: number | null
           description?: string | null
+          font_family?: string | null
           id?: string
           instagram?: string | null
           logo_url?: string | null
@@ -167,6 +174,7 @@ export type Database = {
           opening_hours?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          show_delivery_status?: boolean | null
           slug: string
           status?: string | null
           updated_at?: string | null
@@ -177,12 +185,15 @@ export type Database = {
           address?: string | null
           average_delivery_time?: string | null
           banner_url?: string | null
+          border_radius?: string | null
           business_type?: string
           button_color?: string | null
+          card_style?: string | null
           city?: string | null
           created_at?: string | null
           delivery_fee?: number | null
           description?: string | null
+          font_family?: string | null
           id?: string
           instagram?: string | null
           logo_url?: string | null
@@ -191,6 +202,7 @@ export type Database = {
           opening_hours?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          show_delivery_status?: boolean | null
           slug?: string
           status?: string | null
           updated_at?: string | null

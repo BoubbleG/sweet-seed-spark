@@ -19,6 +19,10 @@ export interface Restaurant {
   secondary_color: string;
   button_color: string;
   visual_style: string;
+  font_family?: string;
+  border_radius?: string;
+  card_style?: string;
+  show_delivery_status?: boolean;
   created_at?: string;
 }
 
