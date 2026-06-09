@@ -67,14 +67,14 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
       if (restaurant?.id) {
         const { error } = await supabase
           .from("restaurants")
-          .update(formData)
+          .update(formData as any)
           .eq("id", restaurant.id);
         if (error) throw error;
         toast.success("Restaurante atualizado com sucesso!");
       } else {
         const { error } = await supabase
           .from("restaurants")
-          .insert([formData]);
+          .insert([formData as any]);
         if (error) throw error;
         toast.success("Restaurante cadastrado com sucesso!");
       }
