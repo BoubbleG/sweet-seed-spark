@@ -158,10 +158,10 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Inter">Inter (Padrão)</SelectItem>
                       <SelectItem value="Outfit">Outfit (Moderna)</SelectItem>
+                      <SelectItem value="Inter">Inter</SelectItem>
                       <SelectItem value="Roboto">Roboto</SelectItem>
-                      <SelectItem value="Poppins">Poppins</SelectItem>
+                      <SelectItem value="Space Grotesk">Space Grotesk</SelectItem>
                       <SelectItem value="Montserrat">Montserrat</SelectItem>
                     </SelectContent>
                   </Select>
