@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Category, Product } from "@/types";
@@ -329,11 +329,27 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
                   </div>
 
                   <div className="flex items-center justify-between mt-2 pt-4 border-t border-slate-50">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${cat.is_active !== false ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                        {cat.is_active !== false ? 'Ativa' : 'Inativa'}
-                      </span>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Switch 
+                          checked={cat.is_active !== false} 
+                          onCheckedChange={async (checked) => {
+                            const { error } = await supabase
+                              .from('categories')
+                              .update({ is_active: checked })
+                              .eq('id', cat.id);
+                            if (error) toast.error("Erro ao atualizar status");
+                            else {
+                              queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
+                              toast.success(`Categoria ${checked ? 'ativada' : 'desativada'}`);
+                            }
+                          }}
+                          className="scale-75"
+                        />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                          {cat.is_active !== false ? 'Ativa' : 'Inativa'}
+                        </span>
+                      </div>
                     </div>
                     <Button variant="link" size="sm" className="h-auto p-0 text-[10px] font-bold uppercase text-primary hover:no-underline" onClick={() => setActiveTab("products")}>
                       Ver Produtos
@@ -506,7 +522,9 @@ function ProductDialog({ restaurantId, categories, product, open, onOpenChange }
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [formData, setFormData] = useState<Partial<Product>>(product || {
+  
+  // Use a state that updates when the product prop changes
+  const [formData, setFormData] = useState<Partial<Product>>({
     name: "",
     description: "",
     price: 0,
@@ -519,6 +537,35 @@ function ProductDialog({ restaurantId, categories, product, open, onOpenChange }
     nutritional_info: "",
     variants: []
   });
+
+  // Effect to sync formData with the product being edited
+  useState(() => {
+    if (product) {
+      setFormData(product);
+    }
+  });
+
+  // Using useEffect to sync when product changes (for switching between edit and add)
+  import { useEffect } from "react";
+  useEffect(() => {
+    if (product) {
+      setFormData(product);
+    } else {
+      setFormData({
+        name: "",
+        description: "",
+        price: 0,
+        category_id: categories[0]?.id || "",
+        is_available: true,
+        is_featured: false,
+        restaurant_id: restaurantId,
+        image_url: "",
+        estimated_time: "",
+        nutritional_info: "",
+        variants: []
+      });
+    }
+  }, [product, open, restaurantId, categories]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
