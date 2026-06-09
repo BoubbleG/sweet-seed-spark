@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { Restaurant } from "@/types";
 import { RestaurantDialog } from "@/components/admin/restaurant-dialog";
 import { MenuManager } from "@/components/admin/menu-manager";
+import { VisualManager } from "@/components/admin/visual-manager";
 
 const SUPABASE_URL = "https://mrjkizqyrmljtlvusgta.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yamtpenF5cm1sanRsdnVzZ3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NTY3NDAsImV4cCI6MjA5NjUzMjc0MH0.JTDSgPn20PipEOx6GIFtnXc-M2T2o3S4oM7t0saIwVY";
@@ -170,6 +171,19 @@ function AdminDashboard() {
             <div className="bg-[#1e293b]/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl">
               <MenuManager restaurantId={selectedRestaurantId} />
             </div>
+          </div>
+        )}
+        {activeView === 'visual' && selectedRestaurant && (
+          <div className="max-w-6xl mx-auto">
+            <Button variant="ghost" onClick={() => setActiveTab('list')} className="mb-6 text-slate-400 hover:text-white">
+              &larr; Voltar para lista
+            </Button>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-white mb-2">Design do Cardápio</h1>
+              <p className="text-slate-400">Personalizando identidade visual de: <span className="text-primary font-medium">{selectedRestaurant.name}</span></p>
+            </div>
+            
+            <VisualManager restaurant={selectedRestaurant} />
           </div>
         )}
       </main>
