@@ -3,8 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { UtensilsCrossed, Plus, LayoutDashboard } from "lucide-react";
+import { UtensilsCrossed, Plus } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+
 
 
 export const Route = createFileRoute("/")({
@@ -19,6 +21,16 @@ export const Route = createFileRoute("/")({
 
 function LandingPage() {
   const navigate = useNavigate();
+  const [debugData, setDebugData] = useState<any>(null);
+
+  useEffect(() => {
+    console.log("LandingPage mounted. Testing direct supabase call...");
+    supabase.from('restaurants').select('*').then(({ data, error }) => {
+      console.log("Direct test result:", { data, error });
+      setDebugData(data);
+    });
+  }, []);
+
   
   const { data: restaurants, isLoading, isError, error } = useQuery({
     queryKey: ['restaurants'],
