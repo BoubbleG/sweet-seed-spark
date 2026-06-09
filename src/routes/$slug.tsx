@@ -98,17 +98,17 @@ function RestaurantPublicMenu() {
               )}
             </div>
             <div>
-              <h1 className="text-2xl font-black text-[#3B2C24] tracking-tight">{restaurant.name}</h1>
-              <div className="flex items-center gap-1.5 mt-1 text-[11px] font-bold text-[#A89284]">
-                <Star className="w-3.5 h-3.5 fill-[#E29B5D] text-[#E29B5D]" />
+              <h1 className="text-2xl font-black text-[#3B2C24] tracking-tight break-words overflow-hidden leading-tight">{restaurant.name}</h1>
+              <div className="flex items-center gap-1.5 mt-1 text-[11px] font-bold text-[#A89284] flex-wrap">
+                <Star className="w-3.5 h-3.5 fill-[#E29B5D] text-[#E29B5D] shrink-0" />
                 <span className="text-[#3B2C24]">4,8</span>
-                <span>(312 avaliações)</span>
+                <span className="truncate max-w-[150px]">(312 avaliações)</span>
               </div>
-              <div className="flex items-center gap-2 mt-1.5 text-[11px] font-bold text-[#A89284]">
-                <Clock className="w-3.5 h-3.5" />
-                <span>Entrega • 30-45 min</span>
+              <div className="flex items-center gap-2 mt-1.5 text-[11px] font-bold text-[#A89284] flex-wrap">
+                <Clock className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Entrega • 30-45 min</span>
               </div>
-              <p className="text-[11px] font-bold text-[#A89284] mt-1">
+              <p className="text-[11px] font-bold text-[#A89284] mt-1 break-words">
                 R$ {restaurant.delivery_fee.toFixed(2).replace('.', ',')} • Grátis acima de R$ 60
               </p>
             </div>
@@ -154,7 +154,7 @@ function RestaurantPublicMenu() {
           <section key={cat.id} className="space-y-6">
             <div className="flex items-center gap-3">
               <Package className="w-5 h-5 text-[#E29B5D]" />
-              <h2 className="text-lg font-black text-[#3B2C24] tracking-tight">{cat.name} em destaque</h2>
+              <h2 className="text-lg font-black text-[#3B2C24] tracking-tight truncate flex-1">{cat.name} em destaque</h2>
             </div>
             
             <div className="space-y-4">
@@ -181,7 +181,7 @@ function RestaurantPublicMenu() {
                           MAIS PEDIDO
                         </div>
                       )}
-                      <h3 className="text-sm font-black text-[#3B2C24] mb-1">{prod.name}</h3>
+                      <h3 className="text-sm font-black text-[#3B2C24] mb-1 break-words line-clamp-2">{prod.name}</h3>
                       <p className="text-[10px] text-[#A89284] line-clamp-2 leading-relaxed">
                         {prod.description}
                       </p>

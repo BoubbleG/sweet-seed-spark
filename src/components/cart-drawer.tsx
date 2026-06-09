@@ -87,7 +87,7 @@ export function CartDrawer({ isOpen, onClose, restaurant }: CartDrawerProps) {
                   )}
                   <div className="flex-1 flex flex-col justify-between py-0.5">
                     <div className="flex justify-between items-start">
-                      <h4 className="text-sm font-black text-[#3B2C24]">{item.name}</h4>
+                      <h4 className="text-sm font-black text-[#3B2C24] break-words line-clamp-2">{item.name}</h4>
                     </div>
                     <p className="text-xs font-black text-[#3B2C24]">{formatCurrency(item.price)}</p>
                   </div>
