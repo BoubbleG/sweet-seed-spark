@@ -6,6 +6,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { UtensilsCrossed, Plus, LayoutDashboard } from "lucide-react";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Gerador de Cardápios Online - MenuMaster" },
+      { name: "description", content: "Crie cardápios personalizados e receba pedidos no WhatsApp." },
+    ],
+  }),
   component: LandingPage,
 });
 
