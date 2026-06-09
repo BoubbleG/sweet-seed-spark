@@ -23,6 +23,14 @@ export interface Restaurant {
   border_radius?: string;
   card_style?: string;
   show_delivery_status?: boolean;
+  header_style?: string;
+  category_layout?: string;
+  product_card_layout?: string;
+  background_color?: string;
+  text_color?: string;
+  show_search?: boolean;
+  show_categories?: boolean;
+  custom_css?: string;
   created_at?: string;
 }
 
