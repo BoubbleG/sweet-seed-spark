@@ -8,8 +8,8 @@ import { Restaurant } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { Palette, Layout, Type, Smartphone, Check, Upload, Trash2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { Palette, Layout, Type, Smartphone, Check, Upload, Trash2, Sliders } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface VisualManagerProps {
   restaurant: Restaurant;
@@ -71,237 +71,194 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left Side: Controls */}
-        <div className="space-y-6">
-          <Card className="bg-[#1e293b]/40 backdrop-blur-xl border-white/5 shadow-2xl overflow-hidden rounded-[2rem] transition-all duration-500 hover:shadow-primary/5">
-            <CardHeader className="border-b border-white/5 bg-white/5">
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Palette className="w-5 h-5 text-primary" />
-                Identidade Visual
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              {/* Logo & Banner Upload */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <Label className="text-slate-400">Logotipo</Label>
-                  <div className="relative group aspect-square rounded-2xl border-2 border-dashed border-white/10 overflow-hidden bg-white/5 flex flex-col items-center justify-center transition-all hover:border-primary/50">
-                    {formData.logo_url ? (
-                      <>
-                        <img src={formData.logo_url} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" onClick={() => setFormData(prev => ({ ...prev, logo_url: "" }))}>
-                            <Trash2 className="w-5 h-5 text-rose-500" />
-                          </Button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-6 h-6 text-slate-500 mb-2" />
-                        <span className="text-[10px] text-slate-500">Subir Logo</span>
-                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo_url')} />
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <Label className="text-slate-400">Banner Superior (Hero)</Label>
-                  <div className="relative group aspect-square rounded-2xl border-2 border-dashed border-white/10 overflow-hidden bg-white/5 flex flex-col items-center justify-center transition-all hover:border-primary/50">
-                    {formData.banner_url ? (
-                      <>
-                        <img src={formData.banner_url} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" onClick={() => setFormData(prev => ({ ...prev, banner_url: "" }))}>
-                            <Trash2 className="w-5 h-5 text-rose-500" />
-                          </Button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-6 h-6 text-slate-500 mb-2" />
-                        <span className="text-[10px] text-slate-500">Subir Banner</span>
-                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onChange={(e) => handleFileUpload(e, 'banner_url')} />
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Colors */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-slate-400">Cor Primária</Label>
-                  <div className="flex gap-2">
-                    <Input type="color" value={formData.primary_color} onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })} className="w-12 h-10 p-1 bg-white/5 border-white/10" />
-                    <Input value={formData.primary_color} onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })} className="flex-1 bg-white/5 border-white/10 text-white" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-slate-400">Cor do Botão</Label>
-                  <div className="flex gap-2">
-                    <Input type="color" value={formData.button_color || formData.primary_color} onChange={(e) => setFormData({ ...formData, button_color: e.target.value })} className="w-12 h-10 p-1 bg-white/5 border-white/10" />
-                    <Input value={formData.button_color || formData.primary_color} onChange={(e) => setFormData({ ...formData, button_color: e.target.value })} className="flex-1 bg-white/5 border-white/10 text-white" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Layout & Style */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <Label className="text-slate-400 flex items-center gap-2">
-                    <Type className="w-4 h-4" /> Tipografia do Título
-                  </Label>
-                  <Select value={formData.font_family || 'Outfit'} onValueChange={(v) => setFormData({ ...formData, font_family: v })}>
-                    <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl h-11">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Outfit">Outfit (Moderna)</SelectItem>
-                      <SelectItem value="Space Grotesk">Space Grotesk (Quadrada)</SelectItem>
-                      <SelectItem value="Inter">Inter</SelectItem>
-                      <SelectItem value="Montserrat">Montserrat</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-3">
-                  <Label className="text-slate-400 flex items-center gap-2">
-                    <Layout className="w-4 h-4" /> Estilo dos Cards
-                  </Label>
-                  <Select value={formData.card_style || 'glass'} onValueChange={(v) => setFormData({ ...formData, card_style: v })}>
-                    <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl h-11">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="glass">Glassmorphism (Transparente)</SelectItem>
-                      <SelectItem value="flat">Flat (Sólido)</SelectItem>
-                      <SelectItem value="bordered">Bordered (Com Borda)</SelectItem>
-                      <SelectItem value="elevated">Elevated (Sombra Profunda)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <Label className="text-slate-400">Arredondamento de Cantos</Label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {['0', '0.5rem', '1rem', '1.5rem', '2.5rem'].map((radius) => (
-                      <button
-                        key={radius}
-                        onClick={() => setFormData({ ...formData, border_radius: radius })}
-                        className={`h-10 rounded-lg border transition-all ${
-                          formData.border_radius === radius 
-                            ? 'bg-primary border-primary text-white shadow-lg' 
-                            : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
-                        }`}
-                      >
-                        {radius === '0' ? 'None' : radius.replace('rem', '')}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <Label className="text-slate-400">Modo de Exibição</Label>
-                  <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/5">
-                    <Button 
-                      variant="ghost" 
-                      className={`flex-1 rounded-lg h-9 text-xs ${formData.visual_style !== 'premium' ? 'bg-white/10 text-white' : 'text-slate-500'}`}
-                      onClick={() => setFormData({ ...formData, visual_style: 'modern' })}
-                    >
-                      Claro/Auto
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      className={`flex-1 rounded-lg h-9 text-xs ${formData.visual_style === 'premium' ? 'bg-white/10 text-white' : 'text-slate-500'}`}
-                      onClick={() => setFormData({ ...formData, visual_style: 'premium' })}
-                    >
-                      Dark Force
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4">
-                <Button 
-                  onClick={handleUpdate} 
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-primary to-violet-600 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all h-12 rounded-xl font-bold text-white"
-                >
-                  {loading ? "Salvando Configurações..." : "Salvar Design Master"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right Side: Preview */}
-        <div className="space-y-4 sticky top-12">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-400 flex items-center gap-2 uppercase tracking-widest">
-              <Smartphone className="w-4 h-4" /> Visualização Mobile
-            </h3>
-            <span className="text-[10px] text-slate-500">Visualização em tempo real</span>
-          </div>
-          
-          <div className="relative w-full max-w-[320px] mx-auto aspect-[9/19] rounded-[3rem] border-8 border-slate-800 bg-[#020617] shadow-2xl overflow-hidden overflow-y-auto scrollbar-hide">
-            {/* Header Banner Preview */}
-            <div className="relative h-40 w-full overflow-hidden bg-slate-900">
-              {formData.banner_url && (
-                <img src={formData.banner_url} className="w-full h-full object-cover" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#020617] to-transparent" />
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 animate-in fade-in duration-700">
+      {/* Settings Column */}
+      <div className="lg:col-span-7 space-y-8">
+        <section className="bg-white border border-zinc-200 rounded-[2.5rem] overflow-hidden shadow-sm">
+          <header className="px-8 py-6 border-b border-zinc-100 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+              <Palette className="w-5 h-5" />
             </div>
+            <div>
+              <h3 className="text-xl font-black text-zinc-900 tracking-tight">Identidade Master</h3>
+              <p className="text-xs text-zinc-500">Controle o DNA visual do seu cardápio</p>
+            </div>
+          </header>
 
-            {/* Content Preview */}
-            <div className="px-4 -mt-12 relative z-10 pb-8" style={{ fontFamily: (formData.font_family || 'Outfit').replace(' (Quadrada)', '') }}>
-              <div className={`p-4 border border-white/10 shadow-xl mb-6 text-center flex flex-col items-center gap-2 ${
-                formData.card_style === 'glass' ? 'bg-white/5 backdrop-blur-xl' :
-                formData.card_style === 'bordered' ? 'bg-transparent border-2 border-white/20' :
-                formData.card_style === 'elevated' ? 'bg-slate-900 shadow-2xl' : 'bg-white/10'
-              }`} style={{ borderRadius: formData.border_radius || '1rem' }}>
-                <div className="w-16 h-16 rounded-2xl bg-white shadow-lg -mt-12 overflow-hidden flex items-center justify-center">
+          <div className="p-8 space-y-10">
+            {/* Visual Assets */}
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <Label className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">Logotipo Principal</Label>
+                <div className="relative aspect-square rounded-3xl border-2 border-dashed border-zinc-200 bg-zinc-50 flex flex-col items-center justify-center hover:bg-white hover:border-primary/50 transition-all overflow-hidden group">
                   {formData.logo_url ? (
-                    <img src={formData.logo_url} className="w-full h-full object-cover" />
+                    <>
+                      <img src={formData.logo_url} className="w-full h-full object-cover p-4" />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" onClick={() => setFormData(p => ({...p, logo_url: ''}))} className="text-white">
+                          <Trash2 className="w-5 h-5" />
+                        </Button>
+                      </div>
+                    </>
                   ) : (
-                    <div className="w-full h-full bg-primary flex items-center justify-center text-white font-bold text-2xl">
-                      {restaurant.name.charAt(0)}
+                    <div className="text-center p-4">
+                      <Upload className="w-6 h-6 text-zinc-400 mx-auto mb-2" />
+                      <span className="text-[10px] font-bold text-zinc-400">Subir Logo</span>
+                      <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => handleFileUpload(e, 'logo_url')} />
                     </div>
                   )}
                 </div>
-                <h4 className="text-white font-bold text-lg mt-2 tracking-tight transition-all hover:scale-105 cursor-default">{restaurant.name}</h4>
-                <div className="w-20 h-1 bg-primary/30 rounded-full" style={{ backgroundColor: `${formData.primary_color}33`, borderRadius: '999px' }} />
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Premium Delivery</p>
               </div>
-
-              {/* Sample Product */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-px flex-1 bg-white/10" />
-                  <span className="text-[10px] text-slate-500 uppercase font-bold">Populares</span>
-                  <div className="h-px flex-1 bg-white/10" />
-                </div>
-
-                <div className={`p-3 flex gap-3 border border-white/10 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group cursor-pointer ${
-                  formData.card_style === 'glass' ? 'bg-white/5 backdrop-blur-xl' :
-                  formData.card_style === 'bordered' ? 'bg-transparent border-2 border-white/20' :
-                  formData.card_style === 'elevated' ? 'bg-slate-900 shadow-2xl' : 'bg-white/10'
-                }`} style={{ borderRadius: `calc(${formData.border_radius || '1rem'} * 0.8)` }}>
-                  <div className="flex-1 space-y-2">
-                    <h5 className="text-xs font-bold text-white">Classic Burger</h5>
-                    <p className="text-[10px] text-slate-400 line-clamp-1">Pão brioche, carne, queijo...</p>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="text-sm font-bold text-white">R$ 35,00</span>
-                      <Button size="sm" className="h-7 px-3 text-[10px] rounded-full shadow-lg" style={{ backgroundColor: formData.button_color || formData.primary_color }}>
-                        Adicionar
-                      </Button>
+              <div className="space-y-3">
+                <Label className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">Banner de Capa (Hero)</Label>
+                <div className="relative aspect-square rounded-3xl border-2 border-dashed border-zinc-200 bg-zinc-50 flex flex-col items-center justify-center hover:bg-white hover:border-primary/50 transition-all overflow-hidden group">
+                  {formData.banner_url ? (
+                    <>
+                      <img src={formData.banner_url} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" onClick={() => setFormData(p => ({...p, banner_url: ''}))} className="text-white">
+                          <Trash2 className="w-5 h-5" />
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center p-4">
+                      <Upload className="w-6 h-6 text-zinc-400 mx-auto mb-2" />
+                      <span className="text-[10px] font-bold text-zinc-400">Subir Hero</span>
+                      <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => handleFileUpload(e, 'banner_url')} />
                     </div>
-                  </div>
-                  <div className="w-20 h-20 rounded-xl bg-slate-800" />
+                  )}
                 </div>
               </div>
             </div>
+
+            {/* Typography & Style */}
+            <div className="grid grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <Label className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] flex items-center gap-2">
+                  <Type className="w-4 h-4" /> Tipografia
+                </Label>
+                <Select value={formData.font_family || 'Outfit'} onValueChange={v => setFormData({...formData, font_family: v})}>
+                  <SelectTrigger className="rounded-2xl border-zinc-200 h-12">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Outfit">Outfit (Moderna)</SelectItem>
+                    <SelectItem value="Space Grotesk">Space Grotesk (Tech)</SelectItem>
+                    <SelectItem value="Inter">Inter (Sleek)</SelectItem>
+                    <SelectItem value="Montserrat">Montserrat (Classic)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-4">
+                <Label className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] flex items-center gap-2">
+                  <Layout className="w-4 h-4" /> Estilo de Design
+                </Label>
+                <Select value={formData.card_style || 'glass'} onValueChange={v => setFormData({...formData, card_style: v})}>
+                  <SelectTrigger className="rounded-2xl border-zinc-200 h-12">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="glass">Glassmorphism</SelectItem>
+                    <SelectItem value="flat">Minimal Flat</SelectItem>
+                    <SelectItem value="elevated">Deep Shadow</SelectItem>
+                    <SelectItem value="bordered">Outlined</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Colors */}
+            <div className="grid grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <Label className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">Cores de Marca</Label>
+                <div className="flex gap-3">
+                  <div className="flex-1 space-y-2">
+                    <div className="h-10 rounded-xl border border-zinc-200 flex items-center px-3 gap-2 bg-white">
+                      <input type="color" value={formData.primary_color} onChange={e => setFormData({...formData, primary_color: e.target.value})} className="w-6 h-6 rounded-full border-none p-0 cursor-pointer" />
+                      <span className="text-[10px] font-mono text-zinc-500 uppercase">{formData.primary_color}</span>
+                    </div>
+                    <span className="text-[10px] text-zinc-400 block text-center">Primária</span>
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-10 rounded-xl border border-zinc-200 flex items-center px-3 gap-2 bg-white">
+                      <input type="color" value={formData.button_color || formData.primary_color} onChange={e => setFormData({...formData, button_color: e.target.value})} className="w-6 h-6 rounded-full border-none p-0 cursor-pointer" />
+                      <span className="text-[10px] font-mono text-zinc-500 uppercase">{formData.button_color || formData.primary_color}</span>
+                    </div>
+                    <span className="text-[10px] text-zinc-400 block text-center">Botões</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <Label className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">Arredondamento</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {['0', '1rem', '2rem', '999px'].map(r => (
+                    <button 
+                      key={r} 
+                      onClick={() => setFormData({...formData, border_radius: r})}
+                      className={`h-10 rounded-xl border transition-all ${formData.border_radius === r ? 'bg-zinc-900 border-zinc-900 text-white' : 'bg-white border-zinc-200 text-zinc-400 hover:border-zinc-300'}`}
+                    >
+                      <span className="text-[10px] font-bold">{r === '999px' ? 'Full' : r === '0' ? 'None' : r.replace('rem', '')}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <Button onClick={handleUpdate} disabled={loading} className="w-full h-14 rounded-2xl bg-zinc-900 text-white font-black uppercase tracking-widest hover:bg-primary transition-all shadow-xl shadow-zinc-900/10">
+              {loading ? 'Sincronizando...' : 'Publicar Alterações Visuais'}
+            </Button>
+          </div>
+        </section>
+      </div>
+
+      {/* Mobile Preview Column */}
+      <div className="lg:col-span-5 relative">
+        <div className="sticky top-10 flex flex-col items-center gap-6">
+          <div className="flex items-center gap-2 px-4 py-2 bg-zinc-100 rounded-full">
+            <Smartphone className="w-4 h-4 text-zinc-500" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Live Preview</span>
+          </div>
+          
+          <div className="relative w-[320px] h-[650px] rounded-[3.5rem] border-[12px] border-zinc-900 bg-white shadow-2xl shadow-zinc-900/20 overflow-hidden overflow-y-auto scrollbar-hide">
+             {/* Mock Content */}
+             <div className="relative h-40 bg-zinc-100">
+               {formData.banner_url && <img src={formData.banner_url} className="w-full h-full object-cover" />}
+               <div className="absolute inset-0 bg-gradient-to-t from-white to-transparent" />
+             </div>
+             
+             <div className="px-6 -mt-12 relative z-10 pb-10" style={{ fontFamily: formData.font_family || 'Outfit' }}>
+                <div className="flex flex-col items-center gap-4 p-6 bg-white border border-zinc-100 shadow-xl" style={{ borderRadius: formData.border_radius || '2rem' }}>
+                  <div className="w-20 h-20 rounded-[1.5rem] bg-white shadow-lg -mt-16 overflow-hidden flex items-center justify-center border-4 border-white">
+                    {formData.logo_url ? <img src={formData.logo_url} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-primary flex items-center justify-center text-white text-2xl font-black">{restaurant.name.charAt(0)}</div>}
+                  </div>
+                  <h4 className="text-xl font-black text-zinc-900">{restaurant.name}</h4>
+                  <div className="w-12 h-1 rounded-full" style={{ backgroundColor: formData.primary_color }} />
+                </div>
+
+                <div className="mt-10 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-black text-sm uppercase tracking-widest text-zinc-900">Best Sellers</h5>
+                    <Sliders className="w-4 h-4 text-zinc-400" />
+                  </div>
+
+                  <div className="space-y-4">
+                    {[1, 2].map(i => (
+                      <div key={i} className={`p-4 flex gap-4 border border-zinc-100 transition-all ${formData.card_style === 'glass' ? 'bg-zinc-50/50 backdrop-blur-md' : 'bg-white shadow-sm'}`} style={{ borderRadius: `calc(${formData.border_radius || '1.5rem'} * 0.7)` }}>
+                        <div className="flex-1">
+                          <h6 className="font-bold text-zinc-900 text-sm">Gourmet Burger Deluxe</h6>
+                          <p className="text-[10px] text-zinc-400 mt-1 line-clamp-1">Brioche, 200g angus, queijo cheddar...</p>
+                          <div className="mt-3 flex justify-between items-center">
+                            <span className="font-black text-zinc-900">R$ 45,00</span>
+                            <div className="h-8 px-4 rounded-full flex items-center justify-center text-[10px] font-black uppercase text-white shadow-lg" style={{ backgroundColor: formData.button_color || formData.primary_color }}>Add</div>
+                          </div>
+                        </div>
+                        <div className="w-20 h-20 rounded-2xl bg-zinc-100" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+             </div>
           </div>
         </div>
       </div>
