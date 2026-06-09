@@ -5,7 +5,7 @@ import { useCart } from "@/hooks/use-cart";
 import { formatCurrency, generateWhatsAppMessage } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShoppingCart, Phone, Clock, MapPin, Instagram } from "lucide-react";
+import { ShoppingCart, Phone, Clock, MapPin } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/$slug")({
@@ -39,7 +39,7 @@ function RestaurantPublicMenu() {
           <div className="flex flex-wrap gap-4 text-sm text-slate-600 mb-4">
             <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {restaurant.average_delivery_time}</span>
             <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {restaurant.city}</span>
-            {restaurant.instagram && <span className="flex items-center gap-1"><Instagram className="w-4 h-4" /> {restaurant.instagram}</span>}
+            {restaurant.instagram && <span className="flex items-center gap-1"> {restaurant.instagram}</span>}
           </div>
         </div>
 
