@@ -104,12 +104,11 @@ function LandingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {isLoading ? (
-            [1, 2, 3].map(i => (
-              <div key={i} className="h-80 rounded-3xl bg-white/5 border border-white/10 animate-pulse" />
-            ))
-          ) : (
-            restaurants?.map((rest, index) => (
+          {isLoading && (
+            <div className="text-white">Carregando restaurantes...</div>
+          )}
+          
+          {!isLoading && restaurants?.map((rest, index) => (
               <motion.div
                 key={rest.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -170,8 +169,8 @@ function LandingPage() {
                   </CardFooter>
                 </Card>
               </motion.div>
-            ))
-          )}
+          ))}
+
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
