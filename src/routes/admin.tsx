@@ -2,12 +2,13 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut, Eye } from "lucide-react";
+import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut, Eye, LayoutDashboard, Share2, TrendingUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Restaurant } from "@/types";
 import { RestaurantDialog } from "@/components/admin/restaurant-dialog";
 import { MenuManager } from "@/components/admin/menu-manager";
 import { VisualManager } from "@/components/admin/visual-manager";
+import { motion, AnimatePresence } from "framer-motion";
 
 const SUPABASE_URL = "https://mrjkizqyrmljtlvusgta.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yamtpenF5cm1sanRsdnVzZ3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NTY3NDAsImV4cCI6MjA5NjUzMjc0MH0.JTDSgPn20PipEOx6GIFtnXc-M2T2o3S4oM7t0saIwVY";
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/admin")({
     };
   },
   head: () => ({
-    meta: [{ title: "Painel Administrativo - MenuMaster" }],
+    meta: [{ title: "Painel Admin Master - MenuMaster" }],
   }),
   component: AdminDashboard,
 });
@@ -56,187 +57,233 @@ function AdminDashboard() {
   const selectedRestaurant = restaurants?.find(r => r.id === selectedRestaurantId);
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 flex flex-col md:flex-row font-['Outfit']">
-      <aside className="w-full md:w-72 bg-white/70 backdrop-blur-xl border-r border-zinc-200 flex flex-col p-6 sticky top-0 md:h-screen z-20">
-        <div className="flex items-center gap-3 mb-10 px-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-violet-500 flex items-center justify-center shadow-lg">
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 flex flex-col md:flex-row font-['Outfit'] selection:bg-primary/10 selection:text-primary">
+      {/* Dynamic Sidebar */}
+      <aside className="w-full md:w-80 bg-white border-r border-zinc-200 flex flex-col p-8 sticky top-0 md:h-screen z-40">
+        <div className="flex items-center gap-4 mb-12 group cursor-pointer" onClick={() => navigate({ to: '/' })}>
+          <div className="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center shadow-2xl shadow-zinc-900/20 group-hover:scale-110 transition-transform">
             <Store className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-xl font-bold tracking-tight text-zinc-900">MenuMaster</h2>
+          <div>
+            <h2 className="text-xl font-black tracking-tight text-zinc-900 leading-none">MenuMaster</h2>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Pro Edition</span>
+          </div>
         </div>
         
-        <nav className="space-y-1 flex-1">
+        <nav className="space-y-2 flex-1">
           <SidebarItem 
             active={activeView === 'list'} 
             onClick={() => { setActiveTab('list'); setSelectedRestaurantId(null); }}
-            icon={<List className="w-5 h-5" />} 
-            label="Restaurantes" 
+            icon={<LayoutDashboard className="w-5 h-5" />} 
+            label="Dashboard" 
           />
+          <div className="pt-6 pb-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 px-4">Gerenciamento</span>
+          </div>
           <SidebarItem 
             active={activeView === 'menu'} 
             disabled={!selectedRestaurantId}
             onClick={() => setActiveTab('menu')}
             icon={<Utensils className="w-5 h-5" />} 
-            label="Cardápios" 
+            label="Cardápio Digital" 
           />
           <SidebarItem 
             active={activeView === 'visual'} 
             disabled={!selectedRestaurantId}
             onClick={() => setActiveTab('visual')}
             icon={<Palette className="w-5 h-5" />} 
-            label="Personalização" 
+            label="Design Master" 
           />
           <SidebarItem 
             active={activeView === 'preview'} 
             disabled={!selectedRestaurantId}
             onClick={() => setActiveTab('preview')}
             icon={<Eye className="w-5 h-5" />} 
-            label="Visualizar Cardápio" 
+            label="Visualização Real" 
           />
-          <div className="pt-4 mt-4 border-t border-white/5">
+          
+          <div className="pt-8 border-t border-zinc-100 mt-6 space-y-2">
             <SidebarItem icon={<Settings className="w-5 h-5" />} label="Configurações" />
-            <SidebarItem icon={<LogOut className="w-5 h-5" />} label="Sair" onClick={() => navigate({ to: '/' })} />
+            <SidebarItem icon={<LogOut className="w-5 h-5 text-rose-500" />} label="Desconectar" onClick={() => navigate({ to: '/' })} />
           </div>
         </nav>
 
         {selectedRestaurant && (
-          <div className="mt-auto p-4 rounded-2xl bg-white/5 border border-white/10">
-            <p className="text-xs text-slate-500 uppercase tracking-widest mb-2">Editando agora</p>
-            <p className="font-bold text-white truncate">{selectedRestaurant.name}</p>
-          </div>
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-auto p-5 rounded-[2rem] bg-zinc-900 text-white shadow-2xl shadow-zinc-900/20"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-black uppercase">
+                {selectedRestaurant.name.charAt(0)}
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Ativo Agora</span>
+            </div>
+            <p className="font-bold text-sm truncate">{selectedRestaurant.name}</p>
+          </motion.div>
         )}
       </aside>
 
-      <main className="flex-1 p-6 md:p-10 lg:p-12 overflow-y-auto">
-        {activeView === 'list' && (
-          <div className="max-w-6xl mx-auto">
-            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
-              <div>
-                <h1 className="text-4xl font-extrabold text-zinc-900 tracking-tight">Dashboard</h1>
-                <p className="text-zinc-500 mt-1">Gerencie seus clientes e cardápios online.</p>
-              </div>
-              <Button 
-                onClick={() => { setEditingRestaurant(null); setIsRestDialogOpen(true); }}
-                className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 h-12 shadow-lg"
-              >
-                <Plus className="w-5 h-5 mr-2" /> Novo Restaurante
-              </Button>
-            </header>
+      {/* Main Content Area */}
+      <main className="flex-1 p-8 md:p-16 overflow-y-auto">
+        <AnimatePresence mode="wait">
+          {activeView === 'list' && (
+            <motion.div 
+              key="list"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="max-w-7xl mx-auto"
+            >
+              <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-16">
+                <div>
+                  <h1 className="text-5xl font-black text-zinc-900 tracking-tighter mb-2">Bem-vindo, Designer</h1>
+                  <p className="text-zinc-500 text-lg">Aqui estão seus projetos de cardápios ativos.</p>
+                </div>
+                <Button 
+                  onClick={() => { setEditingRestaurant(null); setIsRestDialogOpen(true); }}
+                  className="bg-zinc-900 text-white hover:bg-primary transition-all rounded-full h-14 px-10 font-black uppercase tracking-widest shadow-xl shadow-zinc-900/10"
+                >
+                  <Plus className="w-5 h-5 mr-2" /> Novo Projeto
+                </Button>
+              </header>
 
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map(i => <div key={i} className="h-48 rounded-2xl bg-zinc-200 animate-pulse" />)}
+              {/* Stats Bar */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+                <StatCard label="Total de Projetos" value={restaurants.length.toString()} icon={<TrendingUp className="text-emerald-500" />} />
+                <StatCard label="Pedidos Hoje" value="24" icon={<Utensils className="text-primary" />} />
+                <StatCard label="Taxa de Conversão" value="12%" icon={<Share2 className="text-violet-500" />} />
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {restaurants.map(rest => (
-                  <Card key={rest.id} className="group bg-white border-zinc-200 hover:border-primary/30 transition-all rounded-2xl overflow-hidden shadow-sm hover:shadow-xl">
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full ${rest.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                          {rest.status === 'active' ? 'Ativo' : 'Inativo'}
-                        </span>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-400 hover:text-zinc-900" onClick={() => { setEditingRestaurant(rest); setIsRestDialogOpen(true); }}>
-                            <Settings className="w-4 h-4" />
-                          </Button>
+
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                  {[1, 2, 3].map(i => <div key={i} className="h-64 rounded-[2.5rem] bg-zinc-200 animate-pulse" />)}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                  {restaurants.map(rest => (
+                    <Card key={rest.id} className="group bg-white border-zinc-200 hover:border-primary/30 transition-all rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl">
+                      <div className="h-32 bg-zinc-100 relative overflow-hidden">
+                        {rest.banner_url && <img src={rest.banner_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />}
+                        <div className="absolute inset-0 bg-gradient-to-t from-white to-transparent" />
+                        <div className="absolute top-6 left-6 flex gap-2">
+                           <span className={`text-[9px] uppercase font-black tracking-widest px-3 py-1 rounded-full ${rest.status === 'active' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-rose-500 text-white shadow-lg shadow-rose-500/20'}`}>
+                             {rest.status === 'active' ? 'Online' : 'Offline'}
+                           </span>
                         </div>
                       </div>
-                      <CardTitle className="text-xl text-zinc-900 group-hover:text-primary transition-colors">{rest.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-zinc-500 mb-6 line-clamp-1">{rest.address || 'Sem endereço'}</p>
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="secondary" 
-                          size="sm" 
-                          className="flex-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-200"
-                          onClick={() => { setSelectedRestaurantId(rest.id); setActiveTab('menu'); }}
-                        >
-                          <Utensils className="w-4 h-4 mr-2" /> Cardápio
-                        </Button>
-                        <Button 
-                          variant="secondary" 
-                          size="sm" 
-                          className="bg-primary/20 hover:bg-primary/30 text-primary border-primary/10"
-                          onClick={() => { setSelectedRestaurantId(rest.id); setActiveTab('preview'); }}
-                        >
-                          <Eye className="w-4 h-4 mr-2" /> Ver
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="w-10 p-0 text-zinc-400 hover:text-zinc-900"
-                          onClick={() => window.open(`/${rest.slug}`, '_blank')}
-                        >
-                          <ChevronRight className="w-5 h-5" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+                      <CardHeader className="px-8 pb-4 pt-0 -mt-10 relative z-10">
+                        <div className="w-16 h-16 rounded-2xl bg-white shadow-xl flex items-center justify-center border-4 border-white overflow-hidden mb-4 group-hover:rotate-6 transition-transform">
+                          {rest.logo_url ? <img src={rest.logo_url} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-primary flex items-center justify-center text-white text-xl font-black">{rest.name.charAt(0)}</div>}
+                        </div>
+                        <CardTitle className="text-2xl font-black text-zinc-900 mb-1 group-hover:text-primary transition-colors">{rest.name}</CardTitle>
+                        <p className="text-xs text-zinc-500 font-medium tracking-tight truncate">{rest.address || 'Sem endereço configurado'}</p>
+                      </CardHeader>
+                      <CardContent className="px-8 pb-8">
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="secondary" 
+                            size="sm" 
+                            className="flex-1 rounded-2xl bg-zinc-100 text-zinc-900 font-bold border-zinc-100 hover:bg-zinc-200 transition-colors"
+                            onClick={() => { setSelectedRestaurantId(rest.id); setActiveTab('menu'); }}
+                          >
+                            Editar Menu
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="w-12 h-10 rounded-2xl text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100"
+                            onClick={() => { setEditingRestaurant(rest); setIsRestDialogOpen(true); }}
+                          >
+                            <Settings className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                             onClick={() => { setSelectedRestaurantId(rest.id); setActiveTab('preview'); }}
+                             className="w-12 h-10 rounded-2xl bg-zinc-900 text-white hover:bg-primary transition-all shadow-lg shadow-zinc-900/10"
+                          >
+                             <Eye className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
 
-        {activeView === 'menu' && selectedRestaurantId && (
-          <div className="max-w-4xl mx-auto">
-            <Button variant="ghost" onClick={() => setActiveTab('list')} className="mb-6 text-zinc-500 hover:text-zinc-900">
-              &larr; Voltar para lista
-            </Button>
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-zinc-900 mb-2">Gerenciar Cardápio</h1>
-              <p className="text-zinc-500">Editando menu de: <span className="text-primary font-medium">{selectedRestaurant?.name}</span></p>
-            </div>
-            
-            <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm">
-              <MenuManager restaurantId={selectedRestaurantId} />
-            </div>
-          </div>
-        )}
-        {activeView === 'visual' && selectedRestaurant && (
-          <div className="max-w-6xl mx-auto">
-            <Button variant="ghost" onClick={() => setActiveTab('list')} className="mb-6 text-zinc-500 hover:text-zinc-900">
-              &larr; Voltar para lista
-            </Button>
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-zinc-900 mb-2">Design do Cardápio</h1>
-              <p className="text-zinc-500">Personalizando identidade visual de: <span className="text-primary font-medium">{selectedRestaurant.name}</span></p>
-            </div>
-            
-            <VisualManager restaurant={selectedRestaurant} />
-          </div>
-        )}
-        {activeView === 'preview' && selectedRestaurant && (
-          <div className="max-w-6xl mx-auto h-full flex flex-col">
-            <div className="flex justify-between items-center mb-6">
-              <Button variant="ghost" onClick={() => setActiveTab('list')} className="text-zinc-500 hover:text-zinc-900">
-                &larr; Voltar para lista
-              </Button>
-              <div className="flex gap-3">
-                <Button 
-                  variant="outline" 
-                  className="bg-zinc-100 border-zinc-200 text-zinc-900"
-                  onClick={() => window.open(`/${selectedRestaurant.slug}`, '_blank')}
-                >
-                  Abrir em nova aba
+          {activeView === 'menu' && (
+            <motion.div 
+              key="menu"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="max-w-5xl mx-auto"
+            >
+              <div className="flex justify-between items-center mb-12">
+                <div>
+                  <h1 className="text-4xl font-black text-zinc-900 tracking-tight">Arquitetura de Menu</h1>
+                  <p className="text-zinc-500 font-medium mt-1">Projetando a experiência gastronômica de <span className="text-primary">{selectedRestaurant?.name}</span></p>
+                </div>
+                <Button variant="ghost" onClick={() => setActiveTab('list')} className="rounded-full text-zinc-500 font-black uppercase tracking-widest text-[10px] hover:text-zinc-900 transition-colors">
+                  &larr; Voltar
                 </Button>
               </div>
-            </div>
-            
-            <div className="flex-1 min-h-[700px] w-full rounded-3xl overflow-hidden border border-zinc-200 shadow-xl bg-white relative">
-              <iframe 
-                src={`/${selectedRestaurant.slug}`} 
-                className="w-full h-full border-none"
-                title="Visualização do Cardápio"
-              />
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-white/80 backdrop-blur-md border border-zinc-200 rounded-full text-[10px] text-zinc-500 uppercase tracking-widest font-bold pointer-events-none">
-                Modo Preview - Interação Limitada
+              <MenuManager restaurantId={selectedRestaurantId!} />
+            </motion.div>
+          )}
+
+          {activeView === 'visual' && (
+            <motion.div 
+              key="visual"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="max-w-7xl mx-auto"
+            >
+              <div className="flex justify-between items-center mb-12">
+                <div>
+                  <h1 className="text-4xl font-black text-zinc-900 tracking-tight">Estúdio de Design</h1>
+                  <p className="text-zinc-500 font-medium mt-1">Personalizando o DNA visual de <span className="text-primary">{selectedRestaurant?.name}</span></p>
+                </div>
+                <Button variant="ghost" onClick={() => setActiveTab('list')} className="rounded-full text-zinc-500 font-black uppercase tracking-widest text-[10px] hover:text-zinc-900 transition-colors">
+                  &larr; Voltar
+                </Button>
               </div>
-            </div>
-          </div>
-        )}
+              <VisualManager restaurant={selectedRestaurant!} />
+            </motion.div>
+          )}
+
+          {activeView === 'preview' && (
+            <motion.div 
+              key="preview"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="h-full max-w-7xl mx-auto flex flex-col"
+            >
+              <div className="flex justify-between items-center mb-10">
+                <h1 className="text-3xl font-black text-zinc-900 tracking-tight">Visualização Master</h1>
+                <div className="flex gap-4">
+                  <Button variant="ghost" onClick={() => setActiveTab('list')} className="rounded-full text-zinc-500 font-black uppercase tracking-widest text-[10px] hover:text-zinc-900 transition-colors">
+                    Sair do Preview
+                  </Button>
+                  <Button onClick={() => window.open(`/${selectedRestaurant?.slug}`, '_blank')} className="rounded-full px-8 bg-zinc-900 text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-zinc-900/10 hover:bg-primary transition-all">
+                     Abrir Link Público
+                  </Button>
+                </div>
+              </div>
+              <div className="flex-1 min-h-[700px] rounded-[3rem] border border-zinc-200 bg-white shadow-2xl overflow-hidden relative">
+                 <iframe 
+                    src={`/${selectedRestaurant?.slug}`} 
+                    className="w-full h-full border-none"
+                    title="Menu Live Preview"
+                 />
+                 <div className="absolute top-6 left-1/2 -translate-x-1/2 px-6 py-2 bg-white/90 backdrop-blur-md border border-zinc-200 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 shadow-xl">
+                   Visualização em Tempo Real
+                 </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       <RestaurantDialog 
@@ -256,15 +303,30 @@ function SidebarItem({ active, icon, label, onClick, disabled }: { active?: bool
     <button 
       onClick={onClick}
       disabled={disabled}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-        disabled ? 'opacity-30 cursor-not-allowed' : 
+      className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 ${
+        disabled ? 'opacity-20 cursor-not-allowed grayscale' : 
         active 
-          ? 'bg-primary text-white shadow-lg' 
-          : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900'
+          ? 'bg-zinc-900 text-white shadow-2xl shadow-zinc-900/20 translate-x-1' 
+          : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 hover:translate-x-1'
       }`}
     >
-      {icon}
-      <span className="font-medium">{label}</span>
+      <div className={`transition-colors ${active ? 'text-primary' : ''}`}>
+        {icon}
+      </div>
+      <span className="font-bold text-sm tracking-tight">{label}</span>
+      {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
     </button>
+  );
+}
+
+function StatCard({ label, value, icon }: { label: string, value: string, icon: React.ReactNode }) {
+  return (
+    <div className="bg-white p-8 rounded-[2rem] border border-zinc-200 shadow-sm hover:shadow-xl transition-all">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{label}</span>
+        <div className="p-2 bg-zinc-50 rounded-xl">{icon}</div>
+      </div>
+      <p className="text-4xl font-black text-zinc-900 tracking-tighter">{value}</p>
+    </div>
   );
 }
