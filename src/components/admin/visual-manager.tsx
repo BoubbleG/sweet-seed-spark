@@ -10,7 +10,7 @@ import { Restaurant } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { Palette, Layout, Type, Upload, Trash2, Zap, Settings, Paintbrush, Monitor, Code } from "lucide-react";
+import { Palette, Layout, Type, Upload, Trash2, Zap, Settings, Paintbrush, Monitor, Code, ChevronRight } from "lucide-react";
 
 interface VisualManagerProps {
   restaurant: Restaurant;
