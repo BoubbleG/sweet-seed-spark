@@ -2,11 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useParams } from "@tanstack/react-router";
 import { useRestaurant, useMenu } from "@/hooks/use-restaurant";
 import { useCart } from "@/hooks/use-cart";
-import { formatCurrency, generateWhatsAppMessage } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShoppingCart, Phone, Clock, MapPin } from "lucide-react";
+import { ShoppingCart, Clock, MapPin } from "lucide-react";
 import { useState } from "react";
+import { CartDrawer } from "@/components/cart-drawer";
+
 
 export const Route = createFileRoute("/$slug")({
   component: RestaurantPublicMenu,
@@ -75,6 +77,12 @@ function RestaurantPublicMenu() {
           </Button>
         </div>
       )}
+
+      <CartDrawer 
+        isOpen={showOrder} 
+        onClose={() => setShowOrder(false)} 
+        restaurant={restaurant} 
+      />
     </div>
   );
 }
