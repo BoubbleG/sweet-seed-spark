@@ -85,7 +85,6 @@ function AdminDashboard() {
 
       {/* Main Content Area */}
       <main className="flex-1 p-6 md:p-10 lg:p-12 overflow-y-auto">
-        <AnimatePresence mode="wait">
           {activeView === 'list' && (
             <motion.div 
               key="list-view"
@@ -153,7 +152,6 @@ function AdminDashboard() {
                   ))}
                 </div>
               )}
-            </motion.div>
           )}
 
           {activeView === 'menu' && selectedRestaurantId && (
