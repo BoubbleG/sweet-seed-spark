@@ -205,43 +205,78 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
           </div>
 
           <div className="border-t pt-6 mt-6">
-            <h3 className="font-semibold mb-4 text-slate-800">Identidade Visual</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="primary_color">Cor Principal</Label>
-                <div className="flex gap-2">
-                  <Input 
-                    type="color" 
-                    id="primary_color" 
-                    value={formData.primary_color} 
-                    onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })} 
-                    className="w-12 h-10 p-1 cursor-pointer"
-                  />
-                  <Input 
-                    value={formData.primary_color} 
-                    onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })} 
-                    className="flex-1"
-                  />
+            <h3 className="font-semibold mb-4 text-slate-800">Identidade Visual & Customização</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Cores da Marca</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-slate-500 uppercase">Primária</span>
+                      <div className="flex gap-2">
+                        <Input type="color" value={formData.primary_color} onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })} className="w-10 h-10 p-1" />
+                        <Input value={formData.primary_color} onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })} className="text-xs" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-slate-500 uppercase">Botões</span>
+                      <div className="flex gap-2">
+                        <Input type="color" value={formData.button_color || formData.primary_color} onChange={(e) => setFormData({ ...formData, button_color: e.target.value })} className="w-10 h-10 p-1" />
+                        <Input value={formData.button_color || formData.primary_color} onChange={(e) => setFormData({ ...formData, button_color: e.target.value })} className="text-xs" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Tipografia</Label>
+                  <Select value={formData.font_family || 'Inter'} onValueChange={(v) => setFormData({ ...formData, font_family: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Inter">Inter (Padrão)</SelectItem>
+                      <SelectItem value="Outfit">Outfit (Moderna)</SelectItem>
+                      <SelectItem value="Roboto">Roboto</SelectItem>
+                      <SelectItem value="Poppins">Poppins</SelectItem>
+                      <SelectItem value="Montserrat">Montserrat</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="visual_style">Estilo Visual</Label>
-                <Select 
-                  value={formData.visual_style} 
-                  onValueChange={(v) => setFormData({ ...formData, visual_style: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o estilo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="popular">Popular</SelectItem>
-                    <SelectItem value="modern">Moderno</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
-                    <SelectItem value="artesanal">Artesanal</SelectItem>
-                    <SelectItem value="divertido">Divertido</SelectItem>
-                    <SelectItem value="minimalista">Minimalista</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Estilo dos Cards</Label>
+                  <Select value={formData.card_style || 'glass'} onValueChange={(v) => setFormData({ ...formData, card_style: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="glass">Glassmorphism (Transparente)</SelectItem>
+                      <SelectItem value="flat">Flat (Sólido)</SelectItem>
+                      <SelectItem value="bordered">Bordered (Com Borda)</SelectItem>
+                      <SelectItem value="elevated">Elevated (Com Sombra)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Arredondamento</Label>
+                  <Select value={formData.border_radius || '1rem'} onValueChange={(v) => setFormData({ ...formData, border_radius: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Quadrado</SelectItem>
+                      <SelectItem value="0.5rem">Suave (8px)</SelectItem>
+                      <SelectItem value="1rem">Padrão (16px)</SelectItem>
+                      <SelectItem value="1.5rem">Arredondado (24px)</SelectItem>
+                      <SelectItem value="2.5rem">Extra (40px)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </div>
