@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { UtensilsCrossed, Plus, LayoutDashboard } from "lucide-react";
+import { motion } from "framer-motion";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -140,7 +142,7 @@ function LandingPage() {
                   
                   <CardFooter className="px-8 pb-8 flex flex-col gap-4">
                     <div className="flex justify-between w-full text-[11px] font-bold text-slate-500 uppercase tracking-widest border-t border-white/5 pt-4">
-                      <span>Entrega: {rest.delivery_fee > 0 ? `R$ ${rest.delivery_fee.toFixed(2)}` : 'Grátis'}</span>
+                      <span>Entrega: {(rest.delivery_fee ?? 0) > 0 ? `R$ ${(rest.delivery_fee ?? 0).toFixed(2)}` : 'Grátis'}</span>
                       <span>{rest.average_delivery_time}</span>
                     </div>
                     <Button 
