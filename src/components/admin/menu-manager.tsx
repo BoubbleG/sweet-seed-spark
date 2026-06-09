@@ -10,9 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Edit2, GripVertical } from "lucide-react";
+import { Plus, Trash2, Edit2, GripVertical, FileText, Sparkles, Wand2 } from "lucide-react";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+
 
 
 interface MenuManagerProps {
@@ -22,6 +23,10 @@ interface MenuManagerProps {
 export function MenuManager({ restaurantId }: MenuManagerProps) {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("categories");
+  const [showImport, setShowImport] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importLoading, setImportLoading] = useState(false);
+
 
   // Fetch Categories
   const { data: categories, isLoading: catsLoading } = useQuery({
@@ -59,6 +64,59 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
       toast.success("Categoria removida!");
     }
   };
+
+  const handleTextImport = async () => {
+    if (!importText.trim()) return;
+    setImportLoading(true);
+    try {
+      // Simple parser for "Product Name - Price - Description"
+      const lines = importText.split('\n');
+      const newProducts = [];
+      let currentCategory = categories?.[0]?.id;
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        
+        // If line is uppercase or short, assume it's a category name
+        if (line === line.toUpperCase() && line.length < 30) {
+          const { data: cat } = await supabase
+            .from('categories')
+            .insert([{ restaurant_id: restaurantId, name: line, display_order: (categories?.length || 0) + 1 }])
+            .select()
+            .single();
+          if (cat) currentCategory = cat.id;
+          continue;
+        }
+
+        const parts = line.split('-').map(p => p.trim());
+        if (parts.length >= 2) {
+          newProducts.push({
+            restaurant_id: restaurantId,
+            category_id: currentCategory,
+            name: parts[0],
+            price: parseFloat(parts[1].replace('R$', '').replace(',', '.').trim()) || 0,
+            description: parts[2] || "",
+            is_available: true
+          });
+        }
+      }
+
+      if (newProducts.length > 0) {
+        const { error } = await supabase.from('products').insert(newProducts);
+        if (error) throw error;
+        toast.success(`${newProducts.length} produtos importados!`);
+        queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+        queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
+        setShowImport(false);
+        setImportText("");
+      }
+    } catch (error: any) {
+      toast.error("Erro na importação: " + error.message);
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
 
   return (
     <div className="space-y-6">
