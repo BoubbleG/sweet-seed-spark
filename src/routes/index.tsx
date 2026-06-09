@@ -22,10 +22,13 @@ function LandingPage() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
 
   useEffect(() => {
-    supabase.from('restaurants').select('*').eq('status', 'active').then(({ data }) => {
-      if (data) setRestaurants(data as Restaurant[]);
+    console.log("LandingPage useEffect running...");
+    supabase.from('restaurants').select('*').eq('status', 'active').then((res) => {
+      console.log("Supabase response:", res);
+      if (res.data) setRestaurants(res.data as Restaurant[]);
     });
   }, []);
+
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-100 flex flex-col font-['Outfit'] selection:bg-primary/30">
