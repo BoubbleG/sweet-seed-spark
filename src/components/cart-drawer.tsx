@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Trash2, Plus, Minus, X } from "lucide-react";
+import { Trash2, Plus, Minus, X, Clock, MapPin, User } from "lucide-react";
 import { Restaurant } from "@/types";
 
 interface CartDrawerProps {
