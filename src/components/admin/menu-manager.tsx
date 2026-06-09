@@ -556,14 +556,6 @@ function ProductDialog({ restaurantId, categories, product, open, onOpenChange }
       });
     }
   }, [product, open, restaurantId, categories]);
-        restaurant_id: restaurantId,
-        image_url: "",
-        estimated_time: "",
-        nutritional_info: "",
-        variants: []
-      });
-    }
-  }, [product, open, restaurantId, categories]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
