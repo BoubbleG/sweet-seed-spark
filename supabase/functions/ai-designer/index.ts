@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,61 +11,70 @@ serve(async (req) => {
   }
 
   try {
-    const { image, currentStyle } = await req.json()
+    const { image, extractedColors, currentStyle } = await req.json()
+    const apiKey = Deno.env.get('LOVABLE_API_KEY')
 
-    // Simulate AI vision analysis
-    // In a real scenario, we would use an LLM with Vision capabilities (like GPT-4o or Claude 3.5 Sonnet)
-    // For this implementation, we'll use a sophisticated rule-based generator that "simulates" the AI analysis
-    // based on the context of common restaurant styles.
-    
-    // We analyze the "image" (which would be a base64 string or URL)
-    // and return a refined palette and style.
+    let designSuggestion = {
+      visual_style: 'modern',
+      primary_color: extractedColors?.[0] || '#7c3aed',
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      font_family: 'Outfit',
+      header_style: 'standard',
+      border_radius: '1.5rem'
+    }
 
-    // Mocking the AI vision response
-    const styles = ['modern', 'minimalista', 'premium', 'artesanal'];
-    const selectedStyle = styles[Math.floor(Math.random() * styles.length)];
-    
-    const palettes = {
-      modern: {
-        primary: '#7c3aed', // Purple
-        background: '#ffffff',
-        text: '#1f2937',
-        font: 'Outfit'
-      },
-      minimalista: {
-        primary: '#000000',
-        background: '#fafafa',
-        text: '#171717',
-        font: 'Inter'
-      },
-      premium: {
-        primary: '#10b981', // Emerald
-        background: '#09090b', // Zinc 950
-        text: '#f4f4f5',
-        font: 'Space Grotesk'
-      },
-      artesanal: {
-        primary: '#ea580c', // Orange
-        background: '#fdf5e6', // Oldlace
-        text: '#431407',
-        font: 'Montserrat'
+    // If we have a real API key, we call the Lovable AI Gateway for a high-quality decision
+    if (apiKey) {
+      try {
+        const response = await fetch('https://api.lovable.app/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: {
+            model: 'gpt-4o',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are an expert UI/UX designer specializing in restaurant digital menus. Based on the provided image and extracted colors, suggest a professional design system. Return ONLY JSON.'
+              },
+              {
+                role: 'user',
+                content: [
+                  { type: 'text', text: `Extracted colors: ${extractedColors?.join(', ') || 'none'}. Current style: ${currentStyle || 'modern'}. Suggest visual_style (modern, minimalista, premium, artesanal), background_color, text_color, font_family (Outfit, Inter, Space Grotesk, Montserrat), header_style (standard, floating), and border_radius (0.75rem, 1.5rem, 2.5rem).` },
+                  { type: 'image_url', image_url: { url: image } }
+                ]
+              }
+            ],
+            response_format: { type: 'json_object' }
+          }
+        })
+        
+        const aiData = await response.json()
+        if (aiData.choices?.[0]?.message?.content) {
+          const aiDesign = JSON.parse(aiData.choices[0].message.content)
+          designSuggestion = { ...designSuggestion, ...aiDesign }
+        }
+      } catch (aiError) {
+        console.error("AI Gateway Error:", aiError)
+        // Fallback to deterministic logic if AI fails
       }
-    };
+    }
 
-    const result = palettes[selectedStyle as keyof typeof palettes];
+    // Deterministic logic if AI is not available or failed
+    if (extractedColors && extractedColors.length > 0) {
+      designSuggestion.primary_color = extractedColors[0]
+      // Try to find a good background color based on the primary color (light version)
+      designSuggestion.background_color = '#ffffff'
+      designSuggestion.text_color = '#1f2937'
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        design: {
-          visual_style: selectedStyle,
-          primary_color: result.primary,
-          background_color: result.background,
-          text_color: result.text,
-          font_family: result.font,
-          header_style: selectedStyle === 'premium' ? 'floating' : 'standard',
-          border_radius: selectedStyle === 'modern' ? '1.5rem' : '0.75rem'
-        }
+        design: designSuggestion
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
