@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { UtensilsCrossed, Plus, LayoutDashboard } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { UtensilsCrossed, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Restaurant } from "@/types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -17,95 +18,65 @@ export const Route = createFileRoute("/")({
 
 function LandingPage() {
   const navigate = useNavigate();
-  
-  const { data: restaurants } = useQuery({
-    queryKey: ['restaurants'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('restaurants')
-        .select('*')
-        .eq('status', 'active');
-      if (error) throw error;
-      return data;
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+
+  useEffect(() => {
+    async function load() {
+      const sb = createClient("https://mrjkizqyrmljtlvusgta.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yamtpenF5cm1sanRsdnVzZ3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NTY3NDAsImV4cCI6MjA5NjUzMjc0MH0.JTDSgPn20PipEOx6GIFtnXc-M2T2o3S4oM7t0saIwVY");
+      const { data, error } = await sb.from('restaurants').select('*');
+      console.log("FINAL LANDING LOAD:", { data, error });
+      if (data) setRestaurants(data as Restaurant[]);
     }
-  });
+    load();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-10">
-        <div className="flex items-center gap-2 font-bold text-xl text-primary">
-          <UtensilsCrossed className="w-6 h-6" />
-          <span>MenuMaster</span>
+    <div className="min-h-screen bg-[#020617] text-slate-100 flex flex-col font-['Outfit']">
+      <header className="bg-white/5 backdrop-blur-md border-b border-white/10 px-8 py-5 flex justify-between items-center sticky top-0 z-50">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-violet-500 flex items-center justify-center shadow-lg">
+            <UtensilsCrossed className="w-6 h-6 text-white" />
+          </div>
+          <span className="font-black text-2xl tracking-tighter text-white uppercase italic">MenuMaster</span>
         </div>
         <div className="flex gap-4">
-          <Button variant="ghost" onClick={() => navigate({ to: '/admin' })}>
-            <LayoutDashboard className="w-4 h-4 mr-2" />
-            Painel Admin
-          </Button>
+          <Button variant="ghost" className="text-slate-300 rounded-full px-6" onClick={() => navigate({ to: '/admin' })}>Admin</Button>
+          <Button className="bg-primary text-white rounded-full px-6" onClick={() => navigate({ to: '/admin' })}>Começar</Button>
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full p-6 md:p-12">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 mb-4 tracking-tight">
-            Crie Cardápios Online <span className="text-primary">Incríveis</span>
-          </h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            A ferramenta completa para gerenciar seus clientes e criar cardápios mobile-first que convertem pedidos direto no WhatsApp.
-          </p>
+      <main className="flex-1 max-w-7xl mx-auto w-full p-8 md:p-16 lg:p-24 relative z-10">
+        <div className="text-center mb-24 max-w-4xl mx-auto">
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-8 tracking-tighter">Seu cardápio <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-violet-500">no WhatsApp</span></h1>
+          <p className="text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed">Crie cardápios profissionais e receba pedidos organizados direto no seu celular.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {restaurants?.map((rest) => (
-            <Card key={rest.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="h-32 bg-slate-200 relative">
-                {rest.banner_url ? (
-                  <img src={rest.banner_url} alt={rest.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-primary/10">
-                    <UtensilsCrossed className="w-12 h-12 text-primary/20" />
-                  </div>
-                )}
-                <div className="absolute -bottom-6 left-6 w-12 h-12 rounded-full border-4 border-white overflow-hidden bg-white">
-                  {rest.logo_url ? (
-                    <img src={rest.logo_url} alt={rest.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-slate-100 font-bold text-primary">
-                      {rest.name.charAt(0)}
-                    </div>
-                  )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {restaurants.map((rest) => (
+            <Card key={rest.id} className="group relative bg-[#1e293b]/40 backdrop-blur-xl border-white/5 hover:border-white/20 rounded-[2.5rem] overflow-hidden">
+              <div className="h-48 bg-slate-800 relative">
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent" />
+                <div className="absolute -bottom-8 left-8 w-20 h-20 rounded-3xl border-4 border-[#1e293b] overflow-hidden bg-white shadow-xl flex items-center justify-center bg-gradient-to-br from-primary to-violet-600 text-white font-black text-2xl">
+                  {rest.name.charAt(0)}
                 </div>
               </div>
-              <CardHeader className="pt-8">
-                <CardTitle>{rest.name}</CardTitle>
-                <CardDescription className="capitalize">{rest.business_type}</CardDescription>
+              <CardHeader className="pt-12 px-8">
+                <div className="flex justify-between items-center mb-2"><span className="text-[10px] uppercase font-black tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">{rest.business_type}</span></div>
+                <CardTitle className="text-2xl text-white font-bold">{rest.name}</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-slate-500 line-clamp-2">
-                  {rest.description || 'Sem descrição disponível.'}
-                </p>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full" onClick={() => window.open(`/${rest.slug}`, '_blank')}>
-                  Ver Cardápio Público
-                </Button>
+              <CardContent className="px-8 pb-4"><p className="text-sm text-slate-400 line-clamp-2 min-h-[2.5rem]">{rest.description}</p></CardContent>
+              <CardFooter className="px-8 pb-8 flex flex-col gap-4">
+                <Button className="w-full bg-white text-slate-950 hover:bg-primary hover:text-white rounded-2xl h-12 font-bold transition-all" onClick={() => navigate({ to: `/${rest.slug}` })}>Ver Cardápio</Button>
               </CardFooter>
             </Card>
           ))}
 
-          <Card className="border-dashed border-2 flex flex-col items-center justify-center p-8 text-center cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => navigate({ to: '/admin' })}>
-            <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center mb-4">
-              <Plus className="w-6 h-6 text-slate-600" />
-            </div>
-            <h3 className="font-semibold text-slate-900">Novo Restaurante</h3>
-            <p className="text-sm text-slate-500">Cadastre um novo cliente no painel administrativo.</p>
+          <Card className="h-full border-2 border-dashed border-white/10 bg-transparent flex flex-col items-center justify-center p-12 text-center cursor-pointer hover:bg-white/5 rounded-[2.5rem]" onClick={() => navigate({ to: '/admin' })}>
+            <div className="w-16 h-16 rounded-[2rem] bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover:bg-primary transition-all duration-500"><Plus className="w-8 h-8 text-slate-400 group-hover:text-white" /></div>
+            <h3 className="text-xl font-bold text-white mb-2">Novo Cliente</h3>
           </Card>
         </div>
       </main>
-
-      <footer className="bg-white border-t py-8 text-center text-slate-500 text-sm">
-        <p>&copy; 2026 MenuMaster Generator. Todos os direitos reservados.</p>
-      </footer>
     </div>
   );
 }
