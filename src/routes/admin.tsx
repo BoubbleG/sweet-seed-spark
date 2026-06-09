@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut } from "lucide-react";
+import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut, Eye } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Restaurant } from "@/types";
 import { RestaurantDialog } from "@/components/admin/restaurant-dialog";
@@ -27,7 +27,7 @@ function AdminDashboard() {
   const [isRestDialogOpen, setIsRestDialogOpen] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
-  const [activeView, setActiveTab] = useState<'list' | 'menu' | 'visual'>('list');
+  const [activeView, setActiveTab] = useState<'list' | 'menu' | 'visual' | 'preview'>('list');
 
   async function loadData() {
     setIsLoading(true);
@@ -78,6 +78,13 @@ function AdminDashboard() {
             onClick={() => setActiveTab('visual')}
             icon={<Palette className="w-5 h-5" />} 
             label="Personalização" 
+          />
+          <SidebarItem 
+            active={activeView === 'preview'} 
+            disabled={!selectedRestaurantId}
+            onClick={() => setActiveTab('preview')}
+            icon={<Eye className="w-5 h-5" />} 
+            label="Visualizar Cardápio" 
           />
           <div className="pt-4 mt-4 border-t border-white/5">
             <SidebarItem icon={<Settings className="w-5 h-5" />} label="Configurações" />
@@ -142,6 +149,14 @@ function AdminDashboard() {
                           <Utensils className="w-4 h-4 mr-2" /> Cardápio
                         </Button>
                         <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          className="bg-primary/20 hover:bg-primary/30 text-primary border-primary/10"
+                          onClick={() => { setSelectedRestaurantId(rest.id); setActiveTab('preview'); }}
+                        >
+                          <Eye className="w-4 h-4 mr-2" /> Ver
+                        </Button>
+                        <Button 
                           variant="ghost" 
                           size="sm" 
                           className="w-10 p-0 text-slate-400 hover:text-white"
@@ -184,6 +199,35 @@ function AdminDashboard() {
             </div>
             
             <VisualManager restaurant={selectedRestaurant} />
+          </div>
+        )}
+        {activeView === 'preview' && selectedRestaurant && (
+          <div className="max-w-6xl mx-auto h-full flex flex-col">
+            <div className="flex justify-between items-center mb-6">
+              <Button variant="ghost" onClick={() => setActiveTab('list')} className="text-slate-400 hover:text-white">
+                &larr; Voltar para lista
+              </Button>
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  className="bg-white/5 border-white/10 text-white"
+                  onClick={() => window.open(`/${selectedRestaurant.slug}`, '_blank')}
+                >
+                  Abrir em nova aba
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex-1 min-h-[700px] w-full rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-[#020617] relative">
+              <iframe 
+                src={`/${selectedRestaurant.slug}`} 
+                className="w-full h-full border-none"
+                title="Visualização do Cardápio"
+              />
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-[10px] text-slate-400 uppercase tracking-widest font-bold pointer-events-none">
+                Modo Preview - Interação Limitada
+              </div>
+            </div>
           </div>
         )}
       </main>
