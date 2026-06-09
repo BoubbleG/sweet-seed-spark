@@ -89,7 +89,7 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
         }
 
         const parts = line.split('-').map(p => p.trim());
-        if (parts.length >= 2) {
+        if (parts.length >= 2 && currentCategory) {
           newProducts.push({
             restaurant_id: restaurantId,
             category_id: currentCategory,
