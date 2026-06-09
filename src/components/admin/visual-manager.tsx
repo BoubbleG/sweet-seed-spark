@@ -170,7 +170,7 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
                  {formData.logo_url ? <img src={formData.logo_url} className="w-full h-full object-cover" /> : <span className="text-2xl font-black">{restaurant.name.charAt(0)}</span>}
               </div>
               
-              <h2 className="text-lg font-black text-zinc-900 mb-6">{restaurant.name}</h2>
+              <h2 className="text-lg font-black text-zinc-900 mb-6 truncate">{restaurant.name}</h2>
               
               <div className="space-y-4">
                 {[1, 2].map(i => (
