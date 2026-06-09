@@ -44,6 +44,7 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
   useEffect(() => {
     if (restaurant) {
       setFormData(restaurant);
+      setCreationMode('manual');
     } else {
       setFormData({
         name: "",
@@ -61,8 +62,8 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
         primary_color: "#ef4444",
         visual_style: "modern"
       });
+      setCreationMode('ai');
     }
-    if (!restaurant) setCreationMode('ai');
   }, [restaurant, open]);
 
   const handleAiCreation = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,7 +91,7 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
         setFormData(prev => ({
           ...prev,
           ...data.design,
-          name: "Restaurante Inteligente", // Placeholder detectado
+          name: "Restaurante Inteligente",
           slug: "restaurante-ia-" + Math.random().toString(36).substring(7),
           business_type: "restaurante",
           status: "active"
@@ -136,32 +137,32 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-md border-white/20 shadow-2xl">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-md border-white/20 shadow-2xl rounded-[2.5rem]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-            {restaurant ? "Editar Restaurante" : "Novo Restaurante"}
+          <DialogTitle className="text-3xl font-black bg-gradient-to-r from-zinc-900 to-zinc-600 bg-clip-text text-transparent tracking-tighter">
+            {restaurant ? "Editar Configurações" : "Novo Projeto Master"}
           </DialogTitle>
-          <DialogDescription>
-            Configure as informações básicas e o estilo visual do seu cliente.
+          <DialogDescription className="font-medium text-zinc-500">
+            {restaurant ? "Ajuste os parâmetros básicos do restaurante." : "Inicie um novo cardápio digital de alta performance."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="mt-6">
           {!restaurant && (
-            <div className="flex p-1 bg-zinc-100 rounded-2xl mb-6">
+            <div className="flex p-1 bg-zinc-100 rounded-2xl mb-8">
               <button 
                 type="button"
                 onClick={() => setCreationMode('ai')}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${creationMode === 'ai' ? 'bg-zinc-900 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-900'}`}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${creationMode === 'ai' ? 'bg-zinc-900 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-900'}`}
               >
-                <Sparkles className="w-4 h-4" /> Criação com IA
+                <Sparkles className="w-3.5 h-3.5" /> IA Designer
               </button>
               <button 
                 type="button"
                 onClick={() => setCreationMode('manual')}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${creationMode === 'manual' ? 'bg-zinc-900 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-900'}`}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${creationMode === 'manual' ? 'bg-zinc-900 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-900'}`}
               >
-                <Wand2 className="w-4 h-4" /> Manual
+                <Wand2 className="w-3.5 h-3.5" /> Manual
               </button>
             </div>
           )}
@@ -178,9 +179,9 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
                 <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-violet-500/20 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 border border-white shadow-2xl">
                   <Sparkles className="w-10 h-10 text-primary animate-pulse" />
                 </div>
-                <h3 className="text-2xl font-black text-zinc-900 mb-4 tracking-tight">Identidade Visual Automática</h3>
-                <p className="text-zinc-500 text-sm max-w-xs mx-auto mb-10">
-                  Envie o logotipo ou uma foto do estabelecimento e nossa IA criará o Design System completo instantaneamente.
+                <h3 className="text-2xl font-black text-zinc-900 mb-4 tracking-tight">Criação Instantânea por IA</h3>
+                <p className="text-zinc-500 text-sm max-w-xs mx-auto mb-10 leading-relaxed font-medium">
+                  Envie o logotipo ou uma foto do local. Nossa IA criará todo o Design System, cores e fontes em segundos.
                 </p>
                 
                 <Button 
@@ -188,7 +189,7 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
                   onClick={() => aiFileInputRef.current?.click()}
                   className="w-full h-16 bg-zinc-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest hover:bg-primary transition-all shadow-xl shadow-zinc-900/10 group"
                 >
-                  {isAiProcessing ? "Analisando Marca..." : "Selecionar Referência"}
+                  {isAiProcessing ? "Analisando..." : "Selecionar Referência"}
                   {!isAiProcessing && <Upload className="ml-3 w-5 h-5 group-hover:translate-y-[-2px] transition-transform" />}
                 </Button>
                 <input type="file" ref={aiFileInputRef} className="hidden" accept="image/*" onChange={handleAiCreation} />
@@ -209,18 +210,18 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
                         value={formData.name} 
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
                         required 
-                        className="h-12 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all"
+                        className="h-12 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all font-medium"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="slug" className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Slug (URL Única)</Label>
+                      <Label htmlFor="slug" className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Slug (URL)</Label>
                       <Input 
                         id="slug" 
                         value={formData.slug} 
                         onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/ /g, "-") })} 
                         placeholder="ex: burger-prime"
                         required 
-                        className="h-12 rounded-xl"
+                        className="h-12 rounded-xl font-medium"
                       />
                     </div>
                   </div>
@@ -232,7 +233,7 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
                         value={formData.business_type} 
                         onValueChange={(v) => setFormData({ ...formData, business_type: v })}
                       >
-                        <SelectTrigger className="h-12 rounded-xl">
+                        <SelectTrigger className="h-12 rounded-xl font-medium">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -251,30 +252,29 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
                         onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, "") })} 
                         placeholder="5511..."
                         required 
-                        className="h-12 rounded-xl"
+                        className="h-12 rounded-xl font-medium"
                       />
                     </div>
                   </div>
 
-                  {/* AI Design Feedback Area */}
                   {formData.primary_color && creationMode === 'manual' && !restaurant && (
                     <motion.div 
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       className="p-6 bg-zinc-50 border border-zinc-200 rounded-[2rem] flex items-center gap-6"
                     >
-                      <div className="w-14 h-14 rounded-2xl border-4 border-white shadow-lg" style={{ backgroundColor: formData.primary_color }} />
+                      <div className="w-14 h-14 rounded-2xl border-4 border-white shadow-lg shrink-0" style={{ backgroundColor: formData.primary_color }} />
                       <div>
-                        <h4 className="font-black text-zinc-900 text-sm">Design System Gerado</h4>
+                        <h4 className="font-black text-zinc-900 text-sm">Design System Ativo</h4>
                         <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">IA definiu: {formData.visual_style} • {formData.font_family}</p>
                       </div>
                     </motion.div>
                   )}
 
-                  <DialogFooter className="pt-8 mt-6 border-t">
-                    <Button variant="ghost" type="button" onClick={() => onOpenChange(false)} className="rounded-xl font-bold uppercase text-[10px] tracking-widest">Cancelar</Button>
+                  <DialogFooter className="pt-8 mt-6 border-t gap-3">
+                    <Button variant="ghost" type="button" onClick={() => onOpenChange(false)} className="rounded-xl font-black uppercase text-[10px] tracking-widest text-zinc-400 hover:text-zinc-900 transition-colors">Cancelar</Button>
                     <Button type="submit" disabled={loading} className="bg-zinc-900 text-white hover:bg-primary transition-all rounded-xl h-12 px-8 font-black uppercase tracking-widest shadow-xl shadow-zinc-900/10">
-                      {loading ? "Processando..." : (restaurant ? "Salvar" : "Finalizar Projeto")}
+                      {loading ? "Salvando..." : (restaurant ? "Salvar Alterações" : "Finalizar Projeto")}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -282,49 +282,6 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
             )}
           </AnimatePresence>
         </div>
-                <Label htmlFor="primary_color">Cor Principal</Label>
-                <div className="flex gap-2">
-                  <Input 
-                    type="color" 
-                    id="primary_color" 
-                    value={formData.primary_color} 
-                    onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })} 
-                    className="w-12 h-10 p-1 cursor-pointer"
-                  />
-                  <Input 
-                    value={formData.primary_color} 
-                    onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })} 
-                    className="flex-1"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="visual_style">Tema Base</Label>
-                <Select 
-                  value={formData.visual_style} 
-                  onValueChange={(v) => setFormData({ ...formData, visual_style: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o estilo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="modern">Moderno (Glassmorphism)</SelectItem>
-                    <SelectItem value="minimalista">Minimalista</SelectItem>
-                    <SelectItem value="premium">Premium (Dark Mode)</SelectItem>
-                    <SelectItem value="artesanal">Artesanal</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="sticky bottom-0 bg-white/80 backdrop-blur-sm pt-4 border-t">
-            <Button variant="ghost" type="button" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" disabled={loading} className="bg-gradient-to-r from-primary to-primary/80 hover:shadow-lg transition-all">
-              {loading ? "Salvando..." : (restaurant ? "Salvar Alterações" : "Criar Restaurante")}
-            </Button>
-          </DialogFooter>
-        </form>
       </DialogContent>
     </Dialog>
   );
