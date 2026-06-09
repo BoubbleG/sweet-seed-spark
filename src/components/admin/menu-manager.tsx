@@ -523,7 +523,6 @@ function ProductDialog({ restaurantId, categories, product, open, onOpenChange }
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Use a state that updates when the product prop changes
   const [formData, setFormData] = useState<Partial<Product>>({
     name: "",
     description: "",
@@ -538,19 +537,10 @@ function ProductDialog({ restaurantId, categories, product, open, onOpenChange }
     variants: []
   });
 
-  // Effect to sync formData with the product being edited
-  useState(() => {
-    if (product) {
-      setFormData(product);
-    }
-  });
-
-  // Using useEffect to sync when product changes (for switching between edit and add)
-  import { useEffect } from "react";
   useEffect(() => {
     if (product) {
       setFormData(product);
-    } else {
+    } else if (open) {
       setFormData({
         name: "",
         description: "",
@@ -558,6 +548,14 @@ function ProductDialog({ restaurantId, categories, product, open, onOpenChange }
         category_id: categories[0]?.id || "",
         is_available: true,
         is_featured: false,
+        restaurant_id: restaurantId,
+        image_url: "",
+        estimated_time: "",
+        nutritional_info: "",
+        variants: []
+      });
+    }
+  }, [product, open, restaurantId, categories]);
         restaurant_id: restaurantId,
         image_url: "",
         estimated_time: "",
