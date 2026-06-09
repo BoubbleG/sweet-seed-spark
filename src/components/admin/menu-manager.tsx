@@ -242,7 +242,34 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
             <Upload className="w-3.5 h-3.5 mr-2" /> Subir Arquivo
           </Button>
         </div>
-      </div>
+    </div>
+
+      <Dialog open={showAIUpload} onOpenChange={setShowAIUpload}>
+        <DialogContent className="sm:max-w-[400px] bg-[#0f172a] border-white/10 text-white text-center p-10">
+          <div className="flex flex-col items-center gap-6">
+            <div className="relative">
+              <div className="w-20 h-20 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Wand2 className="w-8 h-8 text-violet-400 animate-pulse" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white mb-2">IA Vision em Ação</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                Estamos digitalizando seu cardápio, identificando produtos, preços e descrições automaticamente.
+              </p>
+            </div>
+            <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+              <motion.div 
+                className="bg-gradient-to-r from-violet-600 to-primary h-full"
+                animate={{ x: ["-100%", "100%"] }}
+                transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
