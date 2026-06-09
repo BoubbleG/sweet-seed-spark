@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { Palette, Layout, Type, Upload, Trash2, Zap, Settings, Paintbrush, Monitor, Code, ChevronRight, Sparkles, Wand2, Pipette } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { extractColorsFromImage } from "@/lib/color-extractor";
+import { extractDetailedDesignFromImage } from "@/lib/color-extractor";
 
 interface VisualManagerProps {
   restaurant: Restaurant;
@@ -81,17 +81,17 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
     if (!file) return;
 
     setIsAiProcessing(true);
-    const toastId = toast.loading("Processando imagem e extraindo cores reais...");
+    const toastId = toast.loading("Análise profunda da imagem em curso...");
 
     try {
       // 1. Convert to URL for extraction
       const imageUrl = URL.createObjectURL(file);
       
-      // 2. Extract REAL colors from image pixels
-      const colors = await extractColorsFromImage(imageUrl);
-      setExtractedColors(colors);
+      // 2. Extract DETAILED REAL colors and styles
+      const designDetails = await extractDetailedDesignFromImage(imageUrl);
+      setExtractedColors(designDetails.allColors);
 
-      // 3. Call AI for style suggestion (passing extracted colors)
+      // 3. Call AI for style suggestion (passing detailed data)
       const reader = new FileReader();
       const base64Promise = new Promise((resolve) => {
         reader.onload = () => resolve(reader.result);
@@ -102,7 +102,7 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
       const { data, error } = await supabase.functions.invoke('ai-designer', {
         body: { 
           image: base64Image,
-          extractedColors: colors,
+          extractedDesign: designDetails,
           currentStyle: formData.visual_style
         }
       });
@@ -113,14 +113,15 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
         setFormData(prev => ({
           ...prev,
           ...data.design,
-          // Force primary color to be the most prominent extracted color
-          primary_color: colors[0] || data.design.primary_color
+          primary_color: designDetails.primary,
+          background_color: designDetails.background,
+          text_color: designDetails.text,
         }));
-        toast.success("Design gerado com cores extraídas da sua imagem!", { id: toastId });
+        toast.success("Design completo gerado com base nos detalhes reais!", { id: toastId });
       }
     } catch (error: any) {
       console.error("AI Designer Error:", error);
-      toast.error("Erro ao analisar imagem.", { id: toastId });
+      toast.error("Erro na análise profunda.", { id: toastId });
     } finally {
       setIsAiProcessing(false);
     }

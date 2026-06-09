@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { Sparkles, Wand2, Upload, ChevronRight, Store, Palette, Globe, Pipette } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { extractColorsFromImage } from "@/lib/color-extractor";
+import { extractDetailedDesignFromImage } from "@/lib/color-extractor";
 
 interface RestaurantDialogProps {
   restaurant?: Restaurant | null;
@@ -74,13 +74,13 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
     if (!file) return;
 
     setIsAiProcessing(true);
-    const toastId = toast.loading("Extraindo cores reais e gerando estilo...");
+    const toastId = toast.loading("Extraindo detalhes profundos e gerando identidade...");
 
     try {
-      // 1. Extract REAL colors first (deterministic and accurate)
+      // 1. Extract DETAILED REAL colors first
       const imageUrl = URL.createObjectURL(file);
-      const colors = await extractColorsFromImage(imageUrl);
-      setExtractedColors(colors);
+      const designDetails = await extractDetailedDesignFromImage(imageUrl);
+      setExtractedColors(designDetails.allColors);
 
       // 2. Call AI for style suggestion
       const reader = new FileReader();
@@ -93,7 +93,7 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
       const { data, error } = await supabase.functions.invoke('ai-designer', {
         body: { 
           image: base64Image,
-          extractedColors: colors
+          extractedDesign: designDetails
         }
       });
 
@@ -103,16 +103,17 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
         setFormData(prev => ({
           ...prev,
           ...data.design,
-          name: "Novo Restaurante", 
+          name: "Novo Restaurante Master", 
           slug: "restaurante-ia-" + Math.random().toString(36).substring(7),
-          primary_color: colors[0] || data.design.primary_color,
+          primary_color: designDetails.primary,
+          background_color: designDetails.background,
+          text_color: designDetails.text,
           status: "active"
         }));
         setCreationMode('manual');
-        toast.success("Identidade visual aplicada com cores reais da imagem!", { id: toastId });
+        toast.success("Design completo identificado com sucesso!", { id: toastId });
       }
     } catch (error: any) {
-      console.error("Creation error:", error);
       toast.error("Erro ao processar imagem.", { id: toastId });
     } finally {
       setIsAiProcessing(false);
