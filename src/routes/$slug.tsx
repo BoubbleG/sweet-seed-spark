@@ -5,10 +5,10 @@ import { useCart } from "@/hooks/use-cart";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShoppingCart, Clock, MapPin } from "lucide-react";
-import { useState } from "react";
+import { ShoppingCart, Clock, MapPin, Heart, Plus, Search, ChevronRight, Menu as MenuIcon, User, Package, Star } from "lucide-react";
+import { useState, useMemo } from "react";
 import { CartDrawer } from "@/components/cart-drawer";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 
 
@@ -29,6 +29,18 @@ function RestaurantPublicMenu() {
   const { data: menu, isLoading: menuLoading, error: menuError } = useMenu(restaurant?.id || '');
   const { items, addItem, getTotal } = useCart();
   const [showOrder, setShowOrder] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<'inicio' | 'cardapio' | 'pedido' | 'mais'>('inicio');
+
+  const filteredProducts = useMemo(() => {
+    if (!menu?.products) return [];
+    if (!searchQuery) return menu.products;
+    return menu.products.filter(p => 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      p.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [menu?.products, searchQuery]);
 
   if (restError || menuError) {
     console.error("Menu fetch error:", restError || menuError);
@@ -61,144 +73,154 @@ function RestaurantPublicMenu() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] pb-32" style={{ fontFamily }}>
-      {/* Header Banner */}
-      <div className="relative h-64 md:h-80 w-full overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-[2s] hover:scale-110" 
-          style={{ backgroundImage: `url(${restaurant.banner_url || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836'})` }} 
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/40 to-transparent" />
-      </div>
-      
-      <div className="max-w-3xl mx-auto px-6 -mt-20 relative z-10">
-        <header className={`${getCardStyle()} p-8 border border-white/10 shadow-2xl mb-12`} style={{ borderRadius }}>
-          <div className="flex flex-col items-center text-center gap-4">
-            <div className="w-24 h-24 rounded-3xl border-4 border-[#020617] overflow-hidden bg-white shadow-xl -mt-20">
+    <div className="min-h-screen bg-[#FDF5E6] pb-32 selection:bg-[#E29B5D]/20" style={{ fontFamily }}>
+      {/* Top Header Navigation */}
+      <nav className="fixed top-0 left-0 right-0 bg-[#FDF5E6]/80 backdrop-blur-md z-50 px-6 py-4 flex justify-between items-center border-b border-[#E29B5D]/10">
+        <div className="text-xs font-black text-zinc-400">9:41</div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+          <div className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+          <div className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+        </div>
+      </nav>
+
+      {/* Hero Header */}
+      <header className="pt-20 px-6 pb-6">
+        <div className="flex justify-between items-start mb-6">
+          <div className="flex gap-4 items-center">
+            <div className="w-20 h-20 rounded-[1.5rem] bg-white shadow-xl flex items-center justify-center overflow-hidden border-2 border-white">
               {restaurant.logo_url ? (
                 <img src={restaurant.logo_url} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-violet-600 text-white font-black text-3xl">
+                <div className="w-full h-full bg-[#3B2C24] text-white flex items-center justify-center text-2xl font-black">
                   {restaurant.name.charAt(0)}
                 </div>
               )}
             </div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-1">{restaurant.name}</h1>
-              <p className="text-primary font-bold uppercase tracking-widest text-xs">{restaurant.business_type}</p>
-            </div>
-            
-            <div className="flex flex-wrap justify-center gap-6 mt-2">
-              <div className="flex items-center gap-2 text-slate-300 bg-white/5 px-4 py-2 rounded-2xl border border-white/5">
-                <Clock className="w-4 h-4 text-primary" /> 
-                <span className="text-sm font-medium">{restaurant.average_delivery_time}</span>
+              <h1 className="text-2xl font-black text-[#3B2C24] tracking-tight">{restaurant.name}</h1>
+              <div className="flex items-center gap-1.5 mt-1 text-[11px] font-bold text-[#A89284]">
+                <Star className="w-3.5 h-3.5 fill-[#E29B5D] text-[#E29B5D]" />
+                <span className="text-[#3B2C24]">4,8</span>
+                <span>(312 avaliações)</span>
               </div>
-              <div className="flex items-center gap-2 text-slate-300 bg-white/5 px-4 py-2 rounded-2xl border border-white/5">
-                <MapPin className="w-4 h-4 text-primary" /> 
-                <span className="text-sm font-medium">{restaurant.city}</span>
+              <div className="flex items-center gap-2 mt-1.5 text-[11px] font-bold text-[#A89284]">
+                <Clock className="w-3.5 h-3.5" />
+                <span>Entrega • 30-45 min</span>
               </div>
-            </div>
-
-            {restaurant.description && (
-              <p className="text-slate-400 text-sm leading-relaxed max-w-md mt-2">
-                {restaurant.description}
+              <p className="text-[11px] font-bold text-[#A89284] mt-1">
+                R$ {restaurant.delivery_fee.toFixed(2).replace('.', ',')} • Grátis acima de R$ 60
               </p>
-            )}
+            </div>
           </div>
-        </header>
+          <Button variant="ghost" size="icon" className="rounded-full bg-white shadow-md w-10 h-10">
+            <Heart className="w-5 h-5 text-zinc-300" />
+          </Button>
+        </div>
 
-        {/* Categories Nav */}
-        <div className="sticky top-24 z-20 mb-10 overflow-x-auto pb-4 scrollbar-hide">
-          <div className="flex gap-3 whitespace-nowrap">
-            {menu?.categories.map(cat => (
-              <Button 
-                key={cat.id}
-                variant="ghost"
-                className="bg-white/5 hover:bg-primary hover:text-white text-slate-300 border border-white/5 rounded-2xl px-6 h-11 font-bold transition-all"
-                onClick={() => document.getElementById(`cat-${cat.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-              >
-                {cat.name}
-              </Button>
-            ))}
+        {/* Featured Slider Mock */}
+        <div className="relative h-48 rounded-[2rem] overflow-hidden mb-8 shadow-2xl">
+          <img 
+            src={restaurant.banner_url || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836'} 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-white" />
+            <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
+            <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
           </div>
         </div>
 
-        {/* Products Grid */}
-        <div className="space-y-16">
+        {/* Categories Pills */}
+        <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-6 px-6">
           {menu?.categories.map(cat => (
-            <section key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-40">
-              <div className="flex items-center gap-4 mb-8">
-                <h2 className="text-2xl font-black text-white tracking-tight">{cat.name}</h2>
-                <div className="flex-1 h-px bg-white/10" />
+            <button 
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`flex flex-col items-center gap-2 min-w-[90px] p-3 rounded-[1.5rem] transition-all border ${activeCategory === cat.id ? 'bg-[#3B2C24] border-[#3B2C24] text-white' : 'bg-white border-zinc-100 text-[#3B2C24]'}`}
+            >
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${activeCategory === cat.id ? 'bg-white/10' : 'bg-zinc-50'}`}>
+                <Package className="w-5 h-5" />
               </div>
-              
-              <div className="grid gap-6">
-                {menu.products.filter(p => p.category_id === cat.id).map(prod => (
-                  <motion.div
-                    key={prod.id}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Card className={`${getCardStyle()} border-white/10 overflow-hidden hover:border-primary/30 transition-all group`} style={{ borderRadius: `calc(${borderRadius} * 0.8)` }}>
-                      <CardContent className="p-0 flex flex-col sm:flex-row min-h-[140px]">
-                        <div className="p-6 flex-1 flex flex-col justify-between">
-                          <div>
-                            <h3 className="text-lg font-bold text-white group-hover:text-primary transition-colors">{prod.name}</h3>
-                            <p className="text-sm text-slate-400 line-clamp-2 mt-1 font-light leading-relaxed">
-                              {prod.description}
-                            </p>
-                          </div>
-                          <div className="flex justify-between items-center mt-6">
-                            <span className="text-xl font-black text-white">
-                              {formatCurrency(prod.price)}
-                            </span>
-                            <Button 
-                              size="sm" 
-                              className="bg-primary hover:bg-primary/90 text-white rounded-2xl px-6 h-10 font-bold shadow-lg shadow-primary/20 transition-all"
-                              onClick={() => addItem(prod)}
-                            >
-                              Adicionar
-                            </Button>
-                          </div>
-                        </div>
-                        {prod.image_url && (
-                          <div className="w-full sm:w-48 h-48 sm:h-auto overflow-hidden">
-                            <img src={prod.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={prod.name} />
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
-            </section>
+              <span className="text-[10px] font-black uppercase tracking-widest">{cat.name}</span>
+            </button>
           ))}
         </div>
-      </div>
+      </header>
 
-      {items.length > 0 && (
-        <motion.div 
-          initial={{ y: 100 }}
-          animate={{ y: 0 }}
-          className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[calc(100%-3rem)] max-w-lg z-50"
-        >
-          <Button 
-            className="w-full h-16 text-lg font-black bg-primary hover:bg-primary/90 text-white rounded-[2rem] shadow-[0_20px_40px_rgba(239,68,68,0.3)] transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-between px-8"
-            onClick={() => setShowOrder(true)}
-          >
+      {/* Main Content */}
+      <main className="px-6 space-y-10">
+        {menu?.categories.map(cat => (
+          <section key={cat.id} className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="relative">
-                <ShoppingCart className="w-6 h-6" />
-                <span className="absolute -top-2 -right-2 w-5 h-5 bg-white text-primary text-[10px] font-black rounded-full flex items-center justify-center border-2 border-primary">
-                  {items.reduce((acc, i) => acc + i.quantity, 0)}
-                </span>
-              </div>
-              <span>Ver Carrinho</span>
+              <Package className="w-5 h-5 text-[#E29B5D]" />
+              <h2 className="text-lg font-black text-[#3B2C24] tracking-tight">{cat.name} em destaque</h2>
             </div>
-            <span>{formatCurrency(getTotal())}</span>
-          </Button>
-        </motion.div>
-      )}
+            
+            <div className="space-y-4">
+              {menu.products.filter(p => p.category_id === cat.id).map(prod => (
+                <motion.div
+                  key={prod.id}
+                  layout
+                  className="bg-white rounded-[2rem] p-5 flex gap-4 shadow-sm border border-zinc-50 relative group"
+                >
+                  <div className="w-24 h-24 rounded-2xl bg-zinc-100 overflow-hidden flex-shrink-0">
+                    {prod.image_url ? (
+                      <img src={prod.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-zinc-300">
+                        <Package className="w-8 h-8" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 flex flex-col justify-between">
+                    <div>
+                      {prod.is_best_seller && (
+                        <div className="bg-[#E29B5D] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full w-fit mb-1.5">
+                          MAIS PEDIDO
+                        </div>
+                      )}
+                      <h3 className="text-sm font-black text-[#3B2C24] mb-1">{prod.name}</h3>
+                      <p className="text-[10px] text-[#A89284] line-clamp-2 leading-relaxed">
+                        {prod.description}
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="text-sm font-black text-[#3B2C24]">
+                        R$ {prod.price.toFixed(2).replace('.', ',')}
+                      </span>
+                      <button 
+                        onClick={() => addItem(prod)}
+                        className="w-8 h-8 rounded-full bg-[#3B2C24] text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-90"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        ))}
+        <div className="h-20" /> {/* Spacing for footer */}
+      </main>
+
+      {/* Tab Navigation */}
+      <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-zinc-100 px-8 py-4 flex justify-between items-center z-50">
+        <TabButton icon={<Search className="w-6 h-6" />} label="Início" active={activeTab === 'inicio'} onClick={() => setActiveTab('inicio')} />
+        <TabButton icon={<MenuIcon className="w-6 h-6" />} label="Cardápio" active={activeTab === 'cardapio'} onClick={() => setActiveTab('cardapio')} />
+        <div className="relative">
+          <TabButton icon={<ShoppingCart className="w-6 h-6" />} label="Meu pedido" active={activeTab === 'pedido'} onClick={() => { setActiveTab('pedido'); setShowOrder(true); }} />
+          {items.length > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#E29B5D] text-white text-[8px] font-black rounded-full flex items-center justify-center">
+              {items.reduce((acc, i) => acc + i.quantity, 0)}
+            </span>
+          )}
+        </div>
+        <TabButton icon={<User className="w-6 h-6" />} label="Mais" active={activeTab === 'mais'} onClick={() => setActiveTab('mais')} />
+      </footer>
 
       <CartDrawer 
         isOpen={showOrder} 
@@ -206,5 +228,17 @@ function RestaurantPublicMenu() {
         restaurant={restaurant} 
       />
     </div>
+  );
+}
+
+function TabButton({ icon, label, active, onClick }: { icon: React.ReactNode, label: string, active?: boolean, onClick: () => void }) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`flex flex-col items-center gap-1 transition-all ${active ? 'text-[#3B2C24]' : 'text-zinc-300 hover:text-zinc-400'}`}
+    >
+      {icon}
+      <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
+    </button>
   );
 }
