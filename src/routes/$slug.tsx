@@ -138,20 +138,23 @@ function RestaurantPublicMenu() {
         </div>
 
         {/* Categories Pills */}
-        <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-6 px-6">
-          {menu?.categories.map(cat => (
-            <button 
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`flex flex-col items-center gap-2 min-w-[90px] p-3 rounded-[1.5rem] transition-all border ${activeCategory === cat.id ? 'bg-[#3B2C24] border-[#3B2C24] text-white' : 'bg-white border-zinc-100 text-[#3B2C24]'}`}
-            >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${activeCategory === cat.id ? 'bg-white/10' : 'bg-zinc-50'}`}>
-                <Package className="w-5 h-5" />
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-widest">{cat.name}</span>
-            </button>
-          ))}
-        </div>
+        {restaurant.show_categories !== false && (
+          <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-6 px-6">
+            {menu?.categories.map(cat => (
+              <button 
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex flex-col items-center gap-2 transition-all border ${restaurant.category_layout === 'grid' ? 'min-w-[70px] p-2' : 'min-w-[90px] p-3'} rounded-[1.5rem] ${activeCategory === cat.id ? 'bg-[#3B2C24] border-[#3B2C24] text-white shadow-lg' : 'bg-white border-zinc-100 text-[#3B2C24]'}`}
+                style={activeCategory === cat.id ? { backgroundColor: restaurant.primary_color, borderColor: restaurant.primary_color } : {}}
+              >
+                <div className={`rounded-xl flex items-center justify-center ${restaurant.category_layout === 'grid' ? 'w-8 h-8' : 'w-10 h-10'} ${activeCategory === cat.id ? 'bg-white/10' : 'bg-zinc-50'}`}>
+                  <Package className={restaurant.category_layout === 'grid' ? 'w-4 h-4' : 'w-5 h-5'} />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest">{cat.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </header>
 
       {/* Main Content */}
