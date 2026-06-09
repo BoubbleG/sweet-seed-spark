@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -14,6 +14,12 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export const Route = createFileRoute("/admin")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      restaurantId: (search.restaurantId as string) || undefined,
+      view: (search.view as 'list' | 'menu' | 'visual' | 'preview') || undefined,
+    };
+  },
   head: () => ({
     meta: [{ title: "Painel Administrativo - MenuMaster" }],
   }),
@@ -22,12 +28,13 @@ export const Route = createFileRoute("/admin")({
 
 function AdminDashboard() {
   const navigate = useNavigate();
+  const search = useSearch({ from: '/admin' });
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRestDialogOpen, setIsRestDialogOpen] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
-  const [activeView, setActiveTab] = useState<'list' | 'menu' | 'visual' | 'preview'>('list');
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(search.restaurantId || null);
+  const [activeView, setActiveTab] = useState<'list' | 'menu' | 'visual' | 'preview'>(search.view || 'list');
 
   async function loadData() {
     setIsLoading(true);

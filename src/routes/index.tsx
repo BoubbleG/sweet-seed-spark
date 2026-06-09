@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { UtensilsCrossed, Plus } from "lucide-react";
+import { UtensilsCrossed, Plus, Eye } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Restaurant } from "@/types";
 
@@ -55,18 +55,46 @@ function LandingPage() {
           {restaurants.map((rest) => (
             <Card key={rest.id} className="group relative bg-[#1e293b]/40 backdrop-blur-xl border-white/5 hover:border-white/20 rounded-[2.5rem] overflow-hidden">
               <div className="h-48 bg-slate-800 relative">
+                {rest.banner_url ? (
+                  <img src={rest.banner_url} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-slate-800" />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent" />
                 <div className="absolute -bottom-8 left-8 w-20 h-20 rounded-3xl border-4 border-[#1e293b] overflow-hidden bg-white shadow-xl flex items-center justify-center bg-gradient-to-br from-primary to-violet-600 text-white font-black text-2xl">
-                  {rest.name.charAt(0)}
+                  {rest.logo_url ? (
+                    <img src={rest.logo_url} className="w-full h-full object-cover" />
+                  ) : (
+                    rest.name.charAt(0)
+                  )}
                 </div>
               </div>
               <CardHeader className="pt-12 px-8">
-                <div className="flex justify-between items-center mb-2"><span className="text-[10px] uppercase font-black tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">{rest.business_type}</span></div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[10px] uppercase font-black tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">{rest.business_type}</span>
+                </div>
                 <CardTitle className="text-2xl text-white font-bold">{rest.name}</CardTitle>
               </CardHeader>
-              <CardContent className="px-8 pb-4"><p className="text-sm text-slate-400 line-clamp-2 min-h-[2.5rem]">{rest.description}</p></CardContent>
+              <CardContent className="px-8 pb-4">
+                <p className="text-sm text-slate-400 line-clamp-2 min-h-[2.5rem]">{rest.description}</p>
+              </CardContent>
               <CardFooter className="px-8 pb-8 flex flex-col gap-4">
-                <Button className="w-full bg-white text-slate-950 hover:bg-primary hover:text-white rounded-2xl h-12 font-bold transition-all" onClick={() => navigate({ to: `/${rest.slug}` })}>Ver Cardápio</Button>
+                <div className="flex gap-2 w-full">
+                  <Button 
+                    className="flex-1 bg-white text-slate-950 hover:bg-primary hover:text-white rounded-2xl h-12 font-bold transition-all" 
+                    onClick={() => navigate({ to: `/${rest.slug}` })}
+                  >
+                    Ver Cardápio
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="aspect-square p-0 bg-white/5 border-white/10 text-white rounded-2xl h-12 w-12 hover:bg-white/10"
+                    onClick={() => navigate({ to: `/admin`, search: { restaurantId: rest.id, view: 'preview' } })}
+                    title="Preview Rápido"
+                  >
+                    <Eye className="w-5 h-5" />
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
           ))}
