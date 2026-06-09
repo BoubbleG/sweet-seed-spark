@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,8 @@ import { Restaurant } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { Sparkles, Wand2, Upload, ChevronRight, Store, Palette, Globe } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface RestaurantDialogProps {
   restaurant?: Restaurant | null;
@@ -19,6 +21,9 @@ interface RestaurantDialogProps {
 export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantDialogProps) {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const [creationMode, setCreationMode] = useState<'manual' | 'ai'>(restaurant ? 'manual' : 'ai');
+  const [isAiProcessing, setIsAiProcessing] = useState(false);
+  const aiFileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<Partial<Restaurant>>({
     name: "",
     slug: "",
@@ -39,6 +44,7 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
   useEffect(() => {
     if (restaurant) {
       setFormData(restaurant);
+      setCreationMode('manual');
     } else {
       setFormData({
         name: "",
@@ -56,8 +62,49 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
         primary_color: "#ef4444",
         visual_style: "modern"
       });
+      setCreationMode('ai');
     }
   }, [restaurant, open]);
+
+  const handleAiCreation = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsAiProcessing(true);
+    const toastId = toast.loading("IA analisando marca e criando identidade...");
+
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+      const base64Image = await base64Promise;
+
+      const { data, error } = await supabase.functions.invoke('ai-designer', {
+        body: { image: base64Image }
+      });
+
+      if (error) throw error;
+
+      if (data.design) {
+        setFormData(prev => ({
+          ...prev,
+          ...data.design,
+          name: "Restaurante Inteligente",
+          slug: "restaurante-ia-" + Math.random().toString(36).substring(7),
+          business_type: "restaurante",
+          status: "active"
+        }));
+        setCreationMode('manual');
+        toast.success("Identidade visual gerada com sucesso pela IA!", { id: toastId });
+      }
+    } catch (error: any) {
+      toast.error("Erro na criação assistida.", { id: toastId });
+    } finally {
+      setIsAiProcessing(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,171 +137,151 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-md border-white/20 shadow-2xl">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-md border-white/20 shadow-2xl rounded-[2.5rem]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-            {restaurant ? "Editar Restaurante" : "Novo Restaurante"}
+          <DialogTitle className="text-3xl font-black bg-gradient-to-r from-zinc-900 to-zinc-600 bg-clip-text text-transparent tracking-tighter">
+            {restaurant ? "Editar Configurações" : "Novo Projeto Master"}
           </DialogTitle>
-          <DialogDescription>
-            Configure as informações básicas e o estilo visual do seu cliente.
+          <DialogDescription className="font-medium text-zinc-500">
+            {restaurant ? "Ajuste os parâmetros básicos do restaurante." : "Inicie um novo cardápio digital de alta performance."}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome do Restaurante</Label>
-              <Input 
-                id="name" 
-                value={formData.name} 
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                required 
-                className="transition-all focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="slug">Link Personalizado (Slug)</Label>
-              <Input 
-                id="slug" 
-                value={formData.slug} 
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/ /g, "-") })} 
-                placeholder="ex: burger-do-bairro"
-                required 
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="business_type">Tipo de Negócio</Label>
-              <Select 
-                value={formData.business_type} 
-                onValueChange={(v) => setFormData({ ...formData, business_type: v })}
+        <div className="mt-6">
+          {!restaurant && (
+            <div className="flex p-1 bg-zinc-100 rounded-2xl mb-8">
+              <button 
+                type="button"
+                onClick={() => setCreationMode('ai')}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${creationMode === 'ai' ? 'bg-zinc-900 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-900'}`}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hamburgueria">Hamburgueria</SelectItem>
-                  <SelectItem value="pizzaria">Pizzaria</SelectItem>
-                  <SelectItem value="marmitaria">Marmitaria</SelectItem>
-                  <SelectItem value="cafeteria">Cafeteria</SelectItem>
-                  <SelectItem value="açaiteria">Açaíteria</SelectItem>
-                  <SelectItem value="restaurante">Restaurante Geral</SelectItem>
-                </SelectContent>
-              </Select>
+                <Sparkles className="w-3.5 h-3.5" /> IA Designer
+              </button>
+              <button 
+                type="button"
+                onClick={() => setCreationMode('manual')}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${creationMode === 'manual' ? 'bg-zinc-900 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-900'}`}
+              >
+                <Wand2 className="w-3.5 h-3.5" /> Manual
+              </button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="whatsapp">WhatsApp (com DDD)</Label>
-              <Input 
-                id="whatsapp" 
-                value={formData.whatsapp} 
-                onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, "") })} 
-                placeholder="ex: 5511999999999"
-                required 
-              />
-            </div>
-          </div>
+          )}
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Descrição Curta</Label>
-            <Textarea 
-              id="description" 
-              value={formData.description || ""} 
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
-              rows={2}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="address">Endereço</Label>
-              <Input id="address" value={formData.address || ""} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="city">Cidade</Label>
-              <Input id="city" value={formData.city || ""} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="delivery_fee">Taxa de Entrega (R$)</Label>
-              <Input 
-                id="delivery_fee" 
-                type="number" 
-                step="0.01" 
-                value={formData.delivery_fee} 
-                onChange={(e) => setFormData({ ...formData, delivery_fee: parseFloat(e.target.value) })} 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="min_order">Valor Mín. Entrega Grátis</Label>
-              <Input 
-                id="min_order" 
-                type="number" 
-                step="0.01" 
-                value={formData.min_order_for_free_delivery || 0} 
-                onChange={(e) => setFormData({ ...formData, min_order_for_free_delivery: parseFloat(e.target.value) })} 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="delivery_time">Tempo Médio</Label>
-              <Input id="delivery_time" value={formData.average_delivery_time || ""} onChange={(e) => setFormData({ ...formData, average_delivery_time: e.target.value })} />
-            </div>
-          </div>
-
-          <div className="border-t pt-6 mt-6">
-            <h3 className="font-semibold mb-4 text-slate-800">Preview & Identidade Visual</h3>
-            <p className="text-xs text-slate-500 mb-6">
-              As opções detalhadas de cores, tipografia e estilos agora estão no menu <b>Personalização</b> na barra lateral após criar o restaurante.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="primary_color">Cor Principal</Label>
-                <div className="flex gap-2">
-                  <Input 
-                    type="color" 
-                    id="primary_color" 
-                    value={formData.primary_color} 
-                    onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })} 
-                    className="w-12 h-10 p-1 cursor-pointer"
-                  />
-                  <Input 
-                    value={formData.primary_color} 
-                    onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })} 
-                    className="flex-1"
-                  />
+          <AnimatePresence mode="wait">
+            {creationMode === 'ai' && !restaurant ? (
+              <motion.div 
+                key="ai-mode"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="py-10 text-center"
+              >
+                <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-violet-500/20 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 border border-white shadow-2xl">
+                  <Sparkles className="w-10 h-10 text-primary animate-pulse" />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="visual_style">Tema Base</Label>
-                <Select 
-                  value={formData.visual_style} 
-                  onValueChange={(v) => setFormData({ ...formData, visual_style: v })}
+                <h3 className="text-2xl font-black text-zinc-900 mb-4 tracking-tight">Criação Instantânea por IA</h3>
+                <p className="text-zinc-500 text-sm max-w-xs mx-auto mb-10 leading-relaxed font-medium">
+                  Envie o logotipo ou uma foto do local. Nossa IA criará todo o Design System, cores e fontes em segundos.
+                </p>
+                
+                <Button 
+                  disabled={isAiProcessing}
+                  onClick={() => aiFileInputRef.current?.click()}
+                  className="w-full h-16 bg-zinc-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest hover:bg-primary transition-all shadow-xl shadow-zinc-900/10 group"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o estilo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="modern">Moderno (Glassmorphism)</SelectItem>
-                    <SelectItem value="minimalista">Minimalista</SelectItem>
-                    <SelectItem value="premium">Premium (Dark Mode)</SelectItem>
-                    <SelectItem value="artesanal">Artesanal</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
+                  {isAiProcessing ? "Analisando..." : "Selecionar Referência"}
+                  {!isAiProcessing && <Upload className="ml-3 w-5 h-5 group-hover:translate-y-[-2px] transition-transform" />}
+                </Button>
+                <input type="file" ref={aiFileInputRef} className="hidden" accept="image/*" onChange={handleAiCreation} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="manual-mode"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Nome do Restaurante</Label>
+                      <Input 
+                        id="name" 
+                        value={formData.name} 
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                        required 
+                        className="h-12 rounded-xl focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="slug" className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Slug (URL)</Label>
+                      <Input 
+                        id="slug" 
+                        value={formData.slug} 
+                        onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/ /g, "-") })} 
+                        placeholder="ex: burger-prime"
+                        required 
+                        className="h-12 rounded-xl font-medium"
+                      />
+                    </div>
+                  </div>
 
-          <DialogFooter className="sticky bottom-0 bg-white/80 backdrop-blur-sm pt-4 border-t">
-            <Button variant="ghost" type="button" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" disabled={loading} className="bg-gradient-to-r from-primary to-primary/80 hover:shadow-lg transition-all">
-              {loading ? "Salvando..." : (restaurant ? "Salvar Alterações" : "Criar Restaurante")}
-            </Button>
-          </DialogFooter>
-        </form>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="business_type" className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Segmento</Label>
+                      <Select 
+                        value={formData.business_type} 
+                        onValueChange={(v) => setFormData({ ...formData, business_type: v })}
+                      >
+                        <SelectTrigger className="h-12 rounded-xl font-medium">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="hamburgueria">Hamburgueria</SelectItem>
+                          <SelectItem value="pizzaria">Pizzaria</SelectItem>
+                          <SelectItem value="cafeteria">Cafeteria</SelectItem>
+                          <SelectItem value="restaurante">Restaurante Geral</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="whatsapp" className="text-[10px] font-black uppercase tracking-widest text-zinc-400">WhatsApp Comercial</Label>
+                      <Input 
+                        id="whatsapp" 
+                        value={formData.whatsapp} 
+                        onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, "") })} 
+                        placeholder="5511..."
+                        required 
+                        className="h-12 rounded-xl font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  {formData.primary_color && creationMode === 'manual' && !restaurant && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="p-6 bg-zinc-50 border border-zinc-200 rounded-[2rem] flex items-center gap-6"
+                    >
+                      <div className="w-14 h-14 rounded-2xl border-4 border-white shadow-lg shrink-0" style={{ backgroundColor: formData.primary_color }} />
+                      <div>
+                        <h4 className="font-black text-zinc-900 text-sm">Design System Ativo</h4>
+                        <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">IA definiu: {formData.visual_style} • {formData.font_family}</p>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  <DialogFooter className="pt-8 mt-6 border-t gap-3">
+                    <Button variant="ghost" type="button" onClick={() => onOpenChange(false)} className="rounded-xl font-black uppercase text-[10px] tracking-widest text-zinc-400 hover:text-zinc-900 transition-colors">Cancelar</Button>
+                    <Button type="submit" disabled={loading} className="bg-zinc-900 text-white hover:bg-primary transition-all rounded-xl h-12 px-8 font-black uppercase tracking-widest shadow-xl shadow-zinc-900/10">
+                      {loading ? "Salvando..." : (restaurant ? "Salvar Alterações" : "Finalizar Projeto")}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </DialogContent>
     </Dialog>
   );
