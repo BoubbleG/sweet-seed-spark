@@ -91,6 +91,7 @@ function RestaurantPublicMenu() {
       </nav>
 
       {/* Hero Header */}
+      {/* Hero Header */}
       <header className={`px-6 pb-6 ${restaurant.header_style === 'floating' ? 'pt-24' : 'pt-20'}`}>
         <div className="flex justify-between items-start mb-6">
           <div className="flex gap-4 items-center">
