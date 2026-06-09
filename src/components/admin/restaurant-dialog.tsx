@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,8 @@ import { Restaurant } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { Sparkles, Wand2, Upload, ChevronRight, Store, Palette, Globe } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface RestaurantDialogProps {
   restaurant?: Restaurant | null;
@@ -19,6 +21,9 @@ interface RestaurantDialogProps {
 export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantDialogProps) {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const [creationMode, setCreationMode] = useState<'manual' | 'ai'>(restaurant ? 'manual' : 'ai');
+  const [isAiProcessing, setIsAiProcessing] = useState(false);
+  const aiFileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<Partial<Restaurant>>({
     name: "",
     slug: "",
@@ -57,7 +62,48 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
         visual_style: "modern"
       });
     }
+    if (!restaurant) setCreationMode('ai');
   }, [restaurant, open]);
+
+  const handleAiCreation = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsAiProcessing(true);
+    const toastId = toast.loading("IA analisando marca e criando identidade...");
+
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+      const base64Image = await base64Promise;
+
+      const { data, error } = await supabase.functions.invoke('ai-designer', {
+        body: { image: base64Image }
+      });
+
+      if (error) throw error;
+
+      if (data.design) {
+        setFormData(prev => ({
+          ...prev,
+          ...data.design,
+          name: "Restaurante Inteligente", // Placeholder detectado
+          slug: "restaurante-ia-" + Math.random().toString(36).substring(7),
+          business_type: "restaurante",
+          status: "active"
+        }));
+        setCreationMode('manual');
+        toast.success("Identidade visual gerada com sucesso pela IA!", { id: toastId });
+      }
+    } catch (error: any) {
+      toast.error("Erro na criação assistida.", { id: toastId });
+    } finally {
+      setIsAiProcessing(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
