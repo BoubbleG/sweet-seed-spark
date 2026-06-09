@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut } from "lucide-react";
@@ -27,7 +28,8 @@ function AdminDashboard() {
   async function loadData() {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.from('restaurants').select('*');
+      const sb = createClient("https://mrjkizqyrmljtlvusgta.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yamtpenF5cm1sanRsdnVzZ3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NzAwMDIsIm5iZiI6MTc4MDk2NjQwMiwiaWF0IjoxNzgwOTY2NDAyfQ.djk6DEZIfLfIWVOh-ehoNUXoeWYsmrAhLfmD2Hz1L2CIm_Qhbr93EtjzK7CWdFFBYp0_Xu1PDy5xORTn1lxnWzHRsrV9YMUSu_45FyMi1BP6Iwbk8wh3UMh6_1IYQAqNPcX8wZsvbLWhGNq0SdjRkjxVQHDbVXyy224-8jUf9vEmbyukfgE9o6_r0cyVRHz1TqwqTfsCO36X8rStQEQ_KwjsKo6QRV6tzf_kBMCoKiPmJyaCUIo8xTxI-qbTtVD5P8pjKoAncUi6P4Uhc2_USA64iyDB0TRWSnBNHBiS_tNCgcaON7CWx6RDBhMOYa9A_qLvkgQc75nkcOT0upmzxqoJFPLpg7RTlPFmZsfKdWFJArvCyw37FUVNQ1nO_iKkr7_-teBWWpeZJ0Q-Tyj9Z5zJxXDckJlvkubVdhnxdHCOZUIVbFIYtyKDeAokZ_U5IUTLgaj3lQfpUYVG6J52UV8bJDrJlzNWhEzQ9vwD8Ix9rgz7rAewfXFtD3jyfyUdcBEhFxCLNKmaEe_3XhWz0vYxqEi4HNm7MGcyg6bBM124to3-8UvyXajg7ynWYEwyRPxVGIRy0CTFpUsZSjmK-vusCVHsz_JAJQPTYfxtjFjJ5cb52UrAyO2U3wMJAZ2x_cTvWK_qO0lMxu3k31e2A3BWOD3zUXtz5sVwEDxRxpw");
+      const { data, error } = await sb.from('restaurants').select('*');
       if (error) throw error;
       setRestaurants(data as Restaurant[]);
     } catch (error) {
