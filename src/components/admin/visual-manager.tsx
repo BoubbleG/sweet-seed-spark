@@ -75,7 +75,7 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left Side: Controls */}
         <div className="space-y-6">
-          <Card className="bg-[#1e293b]/40 backdrop-blur-xl border-white/5 shadow-2xl overflow-hidden rounded-[2rem]">
+          <Card className="bg-[#1e293b]/40 backdrop-blur-xl border-white/5 shadow-2xl overflow-hidden rounded-[2rem] transition-all duration-500 hover:shadow-primary/5">
             <CardHeader className="border-b border-white/5 bg-white/5">
               <CardTitle className="flex items-center gap-2 text-white">
                 <Palette className="w-5 h-5 text-primary" />
@@ -107,7 +107,7 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <Label className="text-slate-400">Banner de Fundo</Label>
+                  <Label className="text-slate-400">Banner Superior (Hero)</Label>
                   <div className="relative group aspect-square rounded-2xl border-2 border-dashed border-white/10 overflow-hidden bg-white/5 flex flex-col items-center justify-center transition-all hover:border-primary/50">
                     {formData.banner_url ? (
                       <>
@@ -148,68 +148,90 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
               </div>
 
               {/* Layout & Style */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
                   <Label className="text-slate-400 flex items-center gap-2">
-                    <Type className="w-4 h-4" /> Tipografia
+                    <Type className="w-4 h-4" /> Tipografia do Título
                   </Label>
-                  <Select value={formData.font_family || 'Inter'} onValueChange={(v) => setFormData({ ...formData, font_family: v })}>
-                    <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                  <Select value={formData.font_family || 'Outfit'} onValueChange={(v) => setFormData({ ...formData, font_family: v })}>
+                    <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl h-11">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Inter">Inter (Padrão)</SelectItem>
                       <SelectItem value="Outfit">Outfit (Moderna)</SelectItem>
-                      <SelectItem value="Roboto">Roboto</SelectItem>
-                      <SelectItem value="Poppins">Poppins</SelectItem>
+                      <SelectItem value="Space Grotesk">Space Grotesk (Quadrada)</SelectItem>
+                      <SelectItem value="Inter">Inter</SelectItem>
                       <SelectItem value="Montserrat">Montserrat</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label className="text-slate-400 flex items-center gap-2">
                     <Layout className="w-4 h-4" /> Estilo dos Cards
                   </Label>
                   <Select value={formData.card_style || 'glass'} onValueChange={(v) => setFormData({ ...formData, card_style: v })}>
-                    <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                    <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl h-11">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="glass">Glassmorphism</SelectItem>
+                      <SelectItem value="glass">Glassmorphism (Transparente)</SelectItem>
                       <SelectItem value="flat">Flat (Sólido)</SelectItem>
-                      <SelectItem value="bordered">Bordered</SelectItem>
-                      <SelectItem value="elevated">Elevated</SelectItem>
+                      <SelectItem value="bordered">Bordered (Com Borda)</SelectItem>
+                      <SelectItem value="elevated">Elevated (Sombra Profunda)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-slate-400">Arredondamento de Cantos</Label>
-                <div className="grid grid-cols-5 gap-2">
-                  {['0', '0.5rem', '1rem', '1.5rem', '2.5rem'].map((radius) => (
-                    <button
-                      key={radius}
-                      onClick={() => setFormData({ ...formData, border_radius: radius })}
-                      className={`h-10 rounded-lg border transition-all ${
-                        formData.border_radius === radius 
-                          ? 'bg-primary border-primary text-white' 
-                          : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
-                      }`}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label className="text-slate-400">Arredondamento de Cantos</Label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {['0', '0.5rem', '1rem', '1.5rem', '2.5rem'].map((radius) => (
+                      <button
+                        key={radius}
+                        onClick={() => setFormData({ ...formData, border_radius: radius })}
+                        className={`h-10 rounded-lg border transition-all ${
+                          formData.border_radius === radius 
+                            ? 'bg-primary border-primary text-white shadow-lg' 
+                            : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
+                        }`}
+                      >
+                        {radius === '0' ? 'None' : radius.replace('rem', '')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <Label className="text-slate-400">Modo de Exibição</Label>
+                  <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/5">
+                    <Button 
+                      variant="ghost" 
+                      className={`flex-1 rounded-lg h-9 text-xs ${formData.visual_style !== 'premium' ? 'bg-white/10 text-white' : 'text-slate-500'}`}
+                      onClick={() => setFormData({ ...formData, visual_style: 'modern' })}
                     >
-                      {radius === '0' ? 'Nenhum' : radius.replace('rem', '')}
-                    </button>
-                  ))}
+                      Claro/Auto
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className={`flex-1 rounded-lg h-9 text-xs ${formData.visual_style === 'premium' ? 'bg-white/10 text-white' : 'text-slate-500'}`}
+                      onClick={() => setFormData({ ...formData, visual_style: 'premium' })}
+                    >
+                      Dark Force
+                    </Button>
+                  </div>
                 </div>
               </div>
 
-              <Button 
-                onClick={handleUpdate} 
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-primary to-violet-600 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all h-12 rounded-xl font-bold"
-              >
-                {loading ? "Salvando..." : "Aplicar Design"}
-              </Button>
+              <div className="pt-4">
+                <Button 
+                  onClick={handleUpdate} 
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-primary to-violet-600 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all h-12 rounded-xl font-bold text-white"
+                >
+                  {loading ? "Salvando Configurações..." : "Salvar Design Master"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -233,7 +255,7 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
             </div>
 
             {/* Content Preview */}
-            <div className="px-4 -mt-12 relative z-10 pb-8" style={{ fontFamily: formData.font_family || 'Inter' }}>
+            <div className="px-4 -mt-12 relative z-10 pb-8" style={{ fontFamily: (formData.font_family || 'Outfit').replace(' (Quadrada)', '') }}>
               <div className={`p-4 border border-white/10 shadow-xl mb-6 text-center flex flex-col items-center gap-2 ${
                 formData.card_style === 'glass' ? 'bg-white/5 backdrop-blur-xl' :
                 formData.card_style === 'bordered' ? 'bg-transparent border-2 border-white/20' :
@@ -248,9 +270,9 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
                     </div>
                   )}
                 </div>
-                <h4 className="text-white font-bold text-lg mt-2">{restaurant.name}</h4>
-                <div className="w-20 h-1 bg-primary/30 rounded-full" style={{ backgroundColor: `${formData.primary_color}33` }} />
-                <p className="text-[10px] text-slate-400">Pizzaria & Delivery</p>
+                <h4 className="text-white font-bold text-lg mt-2 tracking-tight transition-all hover:scale-105 cursor-default">{restaurant.name}</h4>
+                <div className="w-20 h-1 bg-primary/30 rounded-full" style={{ backgroundColor: `${formData.primary_color}33`, borderRadius: '999px' }} />
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Premium Delivery</p>
               </div>
 
               {/* Sample Product */}
@@ -261,7 +283,7 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
                   <div className="h-px flex-1 bg-white/10" />
                 </div>
 
-                <div className={`p-3 flex gap-3 border border-white/10 ${
+                <div className={`p-3 flex gap-3 border border-white/10 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group cursor-pointer ${
                   formData.card_style === 'glass' ? 'bg-white/5 backdrop-blur-xl' :
                   formData.card_style === 'bordered' ? 'bg-transparent border-2 border-white/20' :
                   formData.card_style === 'elevated' ? 'bg-slate-900 shadow-2xl' : 'bg-white/10'
