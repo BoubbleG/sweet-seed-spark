@@ -47,9 +47,21 @@ function RestaurantPublicMenu() {
   if (!restaurant) return <div className="p-12 text-center text-white bg-[#020617] min-h-screen">Restaurante não encontrado.</div>;
 
   const primaryColor = restaurant.primary_color || "#ef4444";
+  const fontFamily = restaurant.font_family || "Outfit";
+  const borderRadius = restaurant.border_radius || "2.5rem";
+  const cardStyle = restaurant.card_style || "glass";
+
+  const getCardStyle = () => {
+    switch(cardStyle) {
+      case 'flat': return "bg-white/10";
+      case 'bordered': return "bg-transparent border-2 border-white/20";
+      case 'elevated': return "bg-slate-900 shadow-2xl";
+      default: return "bg-white/5 backdrop-blur-2xl";
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#020617] pb-32 font-['Outfit']">
+    <div className="min-h-screen bg-[#020617] pb-32" style={{ fontFamily }}>
       {/* Header Banner */}
       <div className="relative h-64 md:h-80 w-full overflow-hidden">
         <div 
@@ -60,7 +72,7 @@ function RestaurantPublicMenu() {
       </div>
       
       <div className="max-w-3xl mx-auto px-6 -mt-20 relative z-10">
-        <header className="bg-white/5 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-white/10 shadow-2xl mb-12">
+        <header className={`${getCardStyle()} p-8 border border-white/10 shadow-2xl mb-12`} style={{ borderRadius }}>
           <div className="flex flex-col items-center text-center gap-4">
             <div className="w-24 h-24 rounded-3xl border-4 border-[#020617] overflow-hidden bg-white shadow-xl -mt-20">
               {restaurant.logo_url ? (
@@ -127,7 +139,7 @@ function RestaurantPublicMenu() {
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Card className="bg-white/5 backdrop-blur-md border-white/10 overflow-hidden hover:border-primary/30 transition-all rounded-3xl group">
+                    <Card className={`${getCardStyle()} border-white/10 overflow-hidden hover:border-primary/30 transition-all group`} style={{ borderRadius: `calc(${borderRadius} * 0.8)` }}>
                       <CardContent className="p-0 flex flex-col sm:flex-row min-h-[140px]">
                         <div className="p-6 flex-1 flex flex-col justify-between">
                           <div>

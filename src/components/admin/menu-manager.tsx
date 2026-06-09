@@ -451,6 +451,7 @@ function ProductList({ restaurantId, categories }: { restaurantId: string, categ
 function ProductDialog({ restaurantId, categories, product, open, onOpenChange }: { restaurantId: string, categories: Category[], product: Product | null, open: boolean, onOpenChange: (open: boolean) => void }) {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<Partial<Product>>(product || {
     name: "",
     description: "",
@@ -458,8 +459,36 @@ function ProductDialog({ restaurantId, categories, product, open, onOpenChange }
     category_id: categories[0]?.id || "",
     is_available: true,
     is_featured: false,
-    restaurant_id: restaurantId
+    restaurant_id: restaurantId,
+    image_url: ""
   });
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${restaurantId}/product-${Math.random()}.${fileExt}`;
+      const { data, error } = await supabase.storage
+        .from('restaurant-assets')
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('restaurant-assets')
+        .getPublicUrl(fileName);
+
+      setFormData({ ...formData, image_url: publicUrl });
+      toast.success("Imagem enviada!");
+    } catch (error: any) {
+      toast.error("Erro no upload: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -516,8 +545,46 @@ function ProductDialog({ restaurantId, categories, product, open, onOpenChange }
             <Textarea id="prod-desc" value={formData.description || ""} onChange={(e) => setFormData({...formData, description: e.target.value})} />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="prod-image">URL da Imagem (opcional)</Label>
-            <Input id="prod-image" value={formData.image_url || ""} onChange={(e) => setFormData({...formData, image_url: e.target.value})} placeholder="https://..." />
+            <Label htmlFor="prod-image">Foto do Produto</Label>
+            <div className="flex items-center gap-4">
+              {formData.image_url ? (
+                <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/10 group">
+                  <img src={formData.image_url} className="w-full h-full object-cover" alt="Preview" />
+                  <button 
+                    type="button"
+                    onClick={() => setFormData({ ...formData, image_url: "" })}
+                    className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-20 h-20 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-primary hover:text-primary transition-all"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span className="text-[10px] font-medium mt-1">Subir</span>
+                </button>
+              )}
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleImageUpload} 
+              />
+              <div className="flex-1">
+                <Input 
+                  id="prod-image" 
+                  value={formData.image_url || ""} 
+                  onChange={(e) => setFormData({...formData, image_url: e.target.value})} 
+                  placeholder="Ou cole o link da imagem aqui..." 
+                  className="text-xs"
+                />
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
