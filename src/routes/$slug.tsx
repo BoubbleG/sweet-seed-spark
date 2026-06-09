@@ -11,6 +11,12 @@ import { CartDrawer } from "@/components/cart-drawer";
 
 
 export const Route = createFileRoute("/$slug")({
+  head: ({ params }) => ({
+    meta: [
+      { title: `Cardápio Online - ${params.slug}` },
+      { name: "description", content: "Faça seu pedido agora pelo WhatsApp!" },
+    ],
+  }),
   component: RestaurantPublicMenu,
 });
 
