@@ -20,17 +20,21 @@ export const Route = createFileRoute("/")({
 function LandingPage() {
   const navigate = useNavigate();
   
-  const { data: restaurants, isLoading } = useQuery({
+  const { data: restaurants, isLoading, isError, error } = useQuery({
     queryKey: ['restaurants'],
     queryFn: async () => {
+      console.log("Fetching restaurants...");
       const { data, error } = await supabase
         .from('restaurants')
         .select('*')
         .eq('status', 'active');
+      console.log("Fetch result:", { dataCount: data?.length, error });
       if (error) throw error;
       return data;
     }
   });
+
+  console.log("Landing Page State:", { isLoading, isError, error, dataCount: restaurants?.length });
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-100 flex flex-col font-['Outfit'] selection:bg-primary/30">
