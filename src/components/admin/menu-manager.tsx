@@ -299,28 +299,59 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
             </Button>
           </div>
 
-          <div className="grid gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {categories?.map((cat) => (
               <motion.div 
                 key={cat.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="group flex items-center justify-between p-4 bg-white/50 backdrop-blur-sm border border-slate-200 rounded-xl hover:bg-white hover:shadow-md transition-all"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ y: -4 }}
+                className="group relative p-5 bg-white border border-slate-200 rounded-3xl shadow-sm hover:shadow-xl hover:border-primary/20 transition-all overflow-hidden"
               >
-                <div className="flex items-center gap-3">
-                  <GripVertical className="w-4 h-4 text-slate-400 cursor-grab" />
-                  <span className="font-medium text-slate-800">{cat.name}</span>
-                </div>
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteCategory(cat.id)} className="h-8 w-8 text-slate-400 hover:text-red-500">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-violet-500 opacity-50 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+                        <GripVertical className="w-5 h-5 cursor-grab active:cursor-grabbing" />
+                      </div>
+                      <h4 className="font-bold text-slate-900 tracking-tight">{cat.name}</h4>
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100">
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => deleteCategory(cat.id)} className="h-9 w-9 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-2 pt-4 border-t border-slate-50">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${cat.is_active !== false ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                        {cat.is_active !== false ? 'Ativa' : 'Inativa'}
+                      </span>
+                    </div>
+                    <Button variant="link" size="sm" className="h-auto p-0 text-[10px] font-bold uppercase text-primary hover:no-underline" onClick={() => setActiveTab("products")}>
+                      Ver Produtos
+                    </Button>
+                  </div>
                 </div>
               </motion.div>
             ))}
+            
+            {/* Quick Add Card */}
+            <motion.button 
+              whileHover={{ scale: 0.98 }}
+              onClick={() => document.getElementById('new-cat')?.focus()}
+              className="flex flex-col items-center justify-center p-5 rounded-3xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-primary/30 hover:text-primary transition-all bg-slate-50/50 min-h-[140px]"
+            >
+              <Plus className="w-6 h-6 mb-2" />
+              <span className="text-xs font-bold uppercase tracking-widest">Nova Categoria</span>
+            </motion.button>
           </div>
         </TabsContent>
 
