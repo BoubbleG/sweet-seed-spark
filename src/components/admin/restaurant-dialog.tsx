@@ -9,8 +9,9 @@ import { Restaurant } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { Sparkles, Wand2, Upload, ChevronRight, Store, Palette, Globe } from "lucide-react";
+import { Sparkles, Wand2, Upload, ChevronRight, Store, Palette, Globe, Pipette } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { extractColorsFromImage } from "@/lib/color-extractor";
 
 interface RestaurantDialogProps {
   restaurant?: Restaurant | null;
@@ -23,6 +24,7 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
   const [loading, setLoading] = useState(false);
   const [creationMode, setCreationMode] = useState<'manual' | 'ai'>(restaurant ? 'manual' : 'ai');
   const [isAiProcessing, setIsAiProcessing] = useState(false);
+  const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const aiFileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<Partial<Restaurant>>({
     name: "",
@@ -63,6 +65,7 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
         visual_style: "modern"
       });
       setCreationMode('ai');
+      setExtractedColors([]);
     }
   }, [restaurant, open]);
 
@@ -71,9 +74,15 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
     if (!file) return;
 
     setIsAiProcessing(true);
-    const toastId = toast.loading("IA analisando marca e criando identidade...");
+    const toastId = toast.loading("Extraindo cores reais e gerando estilo...");
 
     try {
+      // 1. Extract REAL colors first (deterministic and accurate)
+      const imageUrl = URL.createObjectURL(file);
+      const colors = await extractColorsFromImage(imageUrl);
+      setExtractedColors(colors);
+
+      // 2. Call AI for style suggestion
       const reader = new FileReader();
       const base64Promise = new Promise((resolve) => {
         reader.onload = () => resolve(reader.result);
@@ -82,7 +91,10 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
       const base64Image = await base64Promise;
 
       const { data, error } = await supabase.functions.invoke('ai-designer', {
-        body: { image: base64Image }
+        body: { 
+          image: base64Image,
+          extractedColors: colors
+        }
       });
 
       if (error) throw error;
@@ -91,16 +103,17 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
         setFormData(prev => ({
           ...prev,
           ...data.design,
-          name: "Restaurante Inteligente",
+          name: "Novo Restaurante", 
           slug: "restaurante-ia-" + Math.random().toString(36).substring(7),
-          business_type: "restaurante",
+          primary_color: colors[0] || data.design.primary_color,
           status: "active"
         }));
         setCreationMode('manual');
-        toast.success("Identidade visual gerada com sucesso pela IA!", { id: toastId });
+        toast.success("Identidade visual aplicada com cores reais da imagem!", { id: toastId });
       }
     } catch (error: any) {
-      toast.error("Erro na criação assistida.", { id: toastId });
+      console.error("Creation error:", error);
+      toast.error("Erro ao processar imagem.", { id: toastId });
     } finally {
       setIsAiProcessing(false);
     }
@@ -181,7 +194,7 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
                 </div>
                 <h3 className="text-2xl font-black text-zinc-900 mb-4 tracking-tight">Criação Instantânea por IA</h3>
                 <p className="text-zinc-500 text-sm max-w-xs mx-auto mb-10 leading-relaxed font-medium">
-                  Envie o logotipo ou uma foto do local. Nossa IA criará todo o Design System, cores e fontes em segundos.
+                  Envie o logotipo ou uma foto do local. Extrairemos as cores reais e a IA criará todo o Design System em segundos.
                 </p>
                 
                 <Button 
@@ -261,13 +274,32 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
                     <motion.div 
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
-                      className="p-6 bg-zinc-50 border border-zinc-200 rounded-[2rem] flex items-center gap-6"
+                      className="p-6 bg-zinc-50 border border-zinc-200 rounded-[2rem]"
                     >
-                      <div className="w-14 h-14 rounded-2xl border-4 border-white shadow-lg shrink-0" style={{ backgroundColor: formData.primary_color }} />
-                      <div>
-                        <h4 className="font-black text-zinc-900 text-sm">Design System Ativo</h4>
-                        <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">IA definiu: {formData.visual_style} • {formData.font_family}</p>
+                      <div className="flex items-center gap-6 mb-6">
+                        <div className="w-14 h-14 rounded-2xl border-4 border-white shadow-lg shrink-0" style={{ backgroundColor: formData.primary_color }} />
+                        <div>
+                          <h4 className="font-black text-zinc-900 text-sm">Design System Ativo</h4>
+                          <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">IA definiu: {formData.visual_style} • {formData.font_family}</p>
+                        </div>
                       </div>
+                      
+                      {extractedColors.length > 0 && (
+                        <div className="space-y-3">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Cores Extraídas da Imagem</p>
+                          <div className="flex flex-wrap gap-2">
+                             {extractedColors.map(color => (
+                               <button
+                                 key={color}
+                                 type="button"
+                                 onClick={() => setFormData({...formData, primary_color: color})}
+                                 className={`w-8 h-8 rounded-full border-2 transition-all ${formData.primary_color === color ? 'border-zinc-900 scale-110 shadow-lg' : 'border-white hover:scale-110'}`}
+                                 style={{ backgroundColor: color }}
+                               />
+                             ))}
+                          </div>
+                        </div>
+                      )}
                     </motion.div>
                   )}
 

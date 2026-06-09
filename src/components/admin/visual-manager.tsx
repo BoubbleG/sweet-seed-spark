@@ -10,8 +10,9 @@ import { Restaurant } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { Palette, Layout, Type, Upload, Trash2, Zap, Settings, Paintbrush, Monitor, Code, ChevronRight, Sparkles, Wand2 } from "lucide-react";
+import { Palette, Layout, Type, Upload, Trash2, Zap, Settings, Paintbrush, Monitor, Code, ChevronRight, Sparkles, Wand2, Pipette } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { extractColorsFromImage } from "@/lib/color-extractor";
 
 interface VisualManagerProps {
   restaurant: Restaurant;
@@ -21,6 +22,7 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
+  const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<Partial<Restaurant>>(restaurant);
 
@@ -79,10 +81,17 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
     if (!file) return;
 
     setIsAiProcessing(true);
-    const toastId = toast.loading("IA analisando sua imagem...");
+    const toastId = toast.loading("Processando imagem e extraindo cores reais...");
 
     try {
-      // 1. Convert image to base64 for the AI to "see" it
+      // 1. Convert to URL for extraction
+      const imageUrl = URL.createObjectURL(file);
+      
+      // 2. Extract REAL colors from image pixels
+      const colors = await extractColorsFromImage(imageUrl);
+      setExtractedColors(colors);
+
+      // 3. Call AI for style suggestion (passing extracted colors)
       const reader = new FileReader();
       const base64Promise = new Promise((resolve) => {
         reader.onload = () => resolve(reader.result);
@@ -90,10 +99,10 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
       });
       const base64Image = await base64Promise;
 
-      // 2. Call our Edge Function
       const { data, error } = await supabase.functions.invoke('ai-designer', {
         body: { 
           image: base64Image,
+          extractedColors: colors,
           currentStyle: formData.visual_style
         }
       });
@@ -103,13 +112,15 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
       if (data.design) {
         setFormData(prev => ({
           ...prev,
-          ...data.design
+          ...data.design,
+          // Force primary color to be the most prominent extracted color
+          primary_color: colors[0] || data.design.primary_color
         }));
-        toast.success("IA definiu um novo estilo baseado na sua imagem!", { id: toastId });
+        toast.success("Design gerado com cores extraídas da sua imagem!", { id: toastId });
       }
     } catch (error: any) {
       console.error("AI Designer Error:", error);
-      toast.error("A IA teve um problema ao analisar a imagem.", { id: toastId });
+      toast.error("Erro ao analisar imagem.", { id: toastId });
     } finally {
       setIsAiProcessing(false);
     }
@@ -185,14 +196,53 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
                   
                   <div className="absolute bottom-0 right-0 p-8 hidden md:block">
                     <div className="flex -space-x-4">
-                      {[1,2,3].map(i => (
-                        <div key={i} className={`w-12 h-12 rounded-full border-4 border-zinc-900 bg-zinc-800 flex items-center justify-center`}>
-                          <Palette className="w-5 h-5 text-zinc-600" />
-                        </div>
-                      ))}
+                      {extractedColors.length > 0 ? (
+                        extractedColors.map(color => (
+                          <div 
+                            key={color} 
+                            onClick={() => setFormData({...formData, primary_color: color})}
+                            className="w-12 h-12 rounded-full border-4 border-zinc-900 shadow-xl cursor-pointer hover:scale-110 transition-transform" 
+                            style={{ backgroundColor: color }} 
+                          />
+                        ))
+                      ) : (
+                        [1,2,3].map(i => (
+                          <div key={i} className={`w-12 h-12 rounded-full border-4 border-zinc-900 bg-zinc-800 flex items-center justify-center`}>
+                            <Palette className="w-5 h-5 text-zinc-600" />
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
+
+                {extractedColors.length > 0 && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-8 bg-white border border-zinc-200 rounded-[2.5rem] shadow-sm"
+                  >
+                    <div className="flex items-center gap-3 mb-6">
+                      <Pipette className="w-5 h-5 text-primary" />
+                      <h5 className="font-black text-zinc-900 tracking-tight">Cores Extraídas da Imagem</h5>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                      {extractedColors.map(color => (
+                        <button
+                          key={color}
+                          onClick={() => {
+                            setFormData({...formData, primary_color: color});
+                            toast.success(`Cor ${color} aplicada como primária!`);
+                          }}
+                          className="group relative flex flex-col items-center gap-3 p-4 rounded-3xl hover:bg-zinc-50 transition-colors border border-transparent hover:border-zinc-200"
+                        >
+                          <div className="w-16 h-16 rounded-2xl shadow-inner border border-zinc-100 group-hover:rotate-6 transition-transform" style={{ backgroundColor: color }} />
+                          <span className="text-[10px] font-black font-mono text-zinc-400 uppercase tracking-tighter">{color}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    <div className="p-6 rounded-3xl bg-zinc-50 border border-zinc-100">
