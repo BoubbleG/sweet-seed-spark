@@ -8,8 +8,6 @@ function createSupabaseClient() {
   const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
 
-  console.log("[Supabase] URL:", SUPABASE_URL ? "Exists" : "Missing");
-  console.log("[Supabase] Key:", SUPABASE_PUBLISHABLE_KEY ? "Exists" : "Missing");
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
