@@ -5,10 +5,10 @@ import { useCart } from "@/hooks/use-cart";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShoppingCart, Clock, MapPin } from "lucide-react";
-import { useState } from "react";
+import { ShoppingCart, Clock, MapPin, Heart, Plus, Search, ChevronRight, Menu as MenuIcon, User, Package, Star } from "lucide-react";
+import { useState, useMemo } from "react";
 import { CartDrawer } from "@/components/cart-drawer";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 
 
