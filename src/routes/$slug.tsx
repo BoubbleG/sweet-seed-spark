@@ -29,6 +29,18 @@ function RestaurantPublicMenu() {
   const { data: menu, isLoading: menuLoading, error: menuError } = useMenu(restaurant?.id || '');
   const { items, addItem, getTotal } = useCart();
   const [showOrder, setShowOrder] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<'inicio' | 'cardapio' | 'pedido' | 'mais'>('inicio');
+
+  const filteredProducts = useMemo(() => {
+    if (!menu?.products) return [];
+    if (!searchQuery) return menu.products;
+    return menu.products.filter(p => 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      p.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [menu?.products, searchQuery]);
 
   if (restError || menuError) {
     console.error("Menu fetch error:", restError || menuError);
