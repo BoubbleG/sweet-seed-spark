@@ -21,6 +21,7 @@ export type Database = {
           display_order: number | null
           icon: string | null
           id: string
+          is_active: boolean | null
           name: string
           restaurant_id: string
           status: string | null
@@ -32,6 +33,7 @@ export type Database = {
           display_order?: number | null
           icon?: string | null
           id?: string
+          is_active?: boolean | null
           name: string
           restaurant_id: string
           status?: string | null
@@ -43,6 +45,7 @@ export type Database = {
           display_order?: number | null
           icon?: string | null
           id?: string
+          is_active?: boolean | null
           name?: string
           restaurant_id?: string
           status?: string | null
@@ -63,6 +66,7 @@ export type Database = {
           category_id: string
           created_at: string | null
           description: string | null
+          estimated_time: string | null
           id: string
           image_url: string | null
           internal_notes: string | null
@@ -70,15 +74,18 @@ export type Database = {
           is_best_seller: boolean | null
           is_featured: boolean | null
           name: string
+          nutritional_info: string | null
           options: Json | null
           price: number
           restaurant_id: string
           updated_at: string | null
+          variants: Json | null
         }
         Insert: {
           category_id: string
           created_at?: string | null
           description?: string | null
+          estimated_time?: string | null
           id?: string
           image_url?: string | null
           internal_notes?: string | null
@@ -86,15 +93,18 @@ export type Database = {
           is_best_seller?: boolean | null
           is_featured?: boolean | null
           name: string
+          nutritional_info?: string | null
           options?: Json | null
           price: number
           restaurant_id: string
           updated_at?: string | null
+          variants?: Json | null
         }
         Update: {
           category_id?: string
           created_at?: string | null
           description?: string | null
+          estimated_time?: string | null
           id?: string
           image_url?: string | null
           internal_notes?: string | null
@@ -102,10 +112,12 @@ export type Database = {
           is_best_seller?: boolean | null
           is_featured?: boolean | null
           name?: string
+          nutritional_info?: string | null
           options?: Json | null
           price?: number
           restaurant_id?: string
           updated_at?: string | null
+          variants?: Json | null
         }
         Relationships: [
           {
