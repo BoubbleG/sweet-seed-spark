@@ -257,11 +257,12 @@ function RestaurantPublicMenu() {
   );
 }
 
-function TabButton({ icon, label, active, onClick }: { icon: React.ReactNode, label: string, active?: boolean, onClick: () => void }) {
+function TabButton({ icon, label, active, onClick, textColor }: { icon: React.ReactNode, label: string, active?: boolean, onClick: () => void, textColor?: string }) {
   return (
     <button 
       onClick={onClick}
-      className={`flex flex-col items-center gap-1 transition-all ${active ? 'text-[#3B2C24]' : 'text-zinc-300 hover:text-zinc-400'}`}
+      className={`flex flex-col items-center gap-1 transition-all ${active ? 'opacity-100 scale-110' : 'opacity-40 hover:opacity-60'}`}
+      style={{ color: textColor || '#3B2C24' }}
     >
       {icon}
       <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
