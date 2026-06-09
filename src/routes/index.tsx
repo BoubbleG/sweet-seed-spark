@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { UtensilsCrossed, Plus } from "lucide-react";
-import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Restaurant } from "@/types";
 
@@ -22,13 +21,10 @@ function LandingPage() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
 
   useEffect(() => {
-    console.log("LandingPage useEffect running...");
-    supabase.from('restaurants').select('*').eq('status', 'active').then((res) => {
-      console.log("Supabase response:", res);
-      if (res.data) setRestaurants(res.data as Restaurant[]);
+    supabase.from('restaurants').select('*').eq('status', 'active').then(({ data }) => {
+      if (data) setRestaurants(data as Restaurant[]);
     });
   }, []);
-
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-100 flex flex-col font-['Outfit'] selection:bg-primary/30">
@@ -57,8 +53,8 @@ function LandingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {restaurants.map((rest, index) => (
-            <motion.div key={rest.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: index * 0.1 }}>
+          {restaurants.map((rest) => (
+            <div key={rest.id}>
               <Card className="group relative bg-[#1e293b]/40 backdrop-blur-xl border-white/5 hover:border-white/20 rounded-[2.5rem] overflow-hidden">
                 <div className="h-48 bg-slate-800 relative">
                   {rest.banner_url && <img src={rest.banner_url} alt={rest.name} className="w-full h-full object-cover" />}
@@ -76,7 +72,7 @@ function LandingPage() {
                   <Button className="w-full bg-white text-slate-950 hover:bg-primary hover:text-white rounded-2xl h-12 font-bold transition-all duration-300" onClick={() => navigate({ to: `/${rest.slug}` })}>Acessar Cardápio</Button>
                 </CardFooter>
               </Card>
-            </motion.div>
+            </div>
           ))}
 
           <Card className="h-full border-2 border-dashed border-white/10 bg-transparent flex flex-col items-center justify-center p-12 text-center cursor-pointer hover:bg-white/5 group rounded-[2.5rem]" onClick={() => navigate({ to: '/admin' })}>
