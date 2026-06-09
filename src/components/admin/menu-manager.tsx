@@ -200,18 +200,50 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-2xl border border-white/5">
-        <div className="flex items-center gap-3">
-          <Wand2 className="w-5 h-5 text-primary" />
-          <div>
-            <h4 className="font-bold text-white text-sm">Gerador de Cardápio IA</h4>
-            <p className="text-[10px] text-slate-400">Importe textos, imagens ou use sugestões inteligentes.</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-2xl border border-white/5 group hover:border-primary/30 transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h4 className="font-bold text-white text-sm">Importador de Texto</h4>
+              <p className="text-[10px] text-slate-400">Cole seu cardápio em texto.</p>
+            </div>
           </div>
+          <Button size="sm" variant="secondary" onClick={() => setShowImport(true)} className="bg-primary text-white hover:bg-primary/90 border-none rounded-full h-8 px-4">
+            <Plus className="w-3.5 h-3.5 mr-2" /> Colar Texto
+          </Button>
         </div>
-        <Button size="sm" variant="secondary" onClick={() => setShowImport(true)} className="bg-primary/10 text-primary hover:bg-primary/20 border-none rounded-full h-8 px-4">
-          <Sparkles className="w-3.5 h-3.5 mr-2" /> Importar Texto
-        </Button>
+
+        <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-2xl border border-white/5 group hover:border-violet-500/30 transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-violet-500/10 flex items-center justify-center">
+              <FileSearch className="w-5 h-5 text-violet-400" />
+            </div>
+            <div>
+              <h4 className="font-bold text-white text-sm">IA Vision Scanner</h4>
+              <p className="text-[10px] text-slate-400">Envie PDF ou Foto do menu.</p>
+            </div>
+          </div>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept="image/*,.pdf" 
+            onChange={handleFileUpload} 
+          />
+          <Button 
+            size="sm" 
+            variant="secondary" 
+            onClick={() => fileInputRef.current?.click()} 
+            className="bg-violet-600 text-white hover:bg-violet-700 border-none rounded-full h-8 px-4"
+          >
+            <Upload className="w-3.5 h-3.5 mr-2" /> Subir Arquivo
+          </Button>
+        </div>
       </div>
+
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
 
