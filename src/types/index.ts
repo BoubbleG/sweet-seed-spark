@@ -34,6 +34,7 @@ export interface Category {
   banner_url?: string;
   display_order: number;
   status: 'active' | 'inactive';
+  is_active?: boolean;
 }
 
 export interface Product {
@@ -49,6 +50,9 @@ export interface Product {
   is_available: boolean;
   options: any[];
   internal_notes?: string;
+  estimated_time?: string;
+  nutritional_info?: string;
+  variants?: any[];
 }
 
 export interface CartItem extends Product {

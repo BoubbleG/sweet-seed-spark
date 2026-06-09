@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Edit2, GripVertical, FileText, Sparkles, Wand2, Upload, Loader2, FileSearch } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Plus, Trash2, Edit2, GripVertical, FileText, Sparkles, Wand2, Upload, Loader2, FileSearch, Clock, Info, Layers, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -298,28 +299,59 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
             </Button>
           </div>
 
-          <div className="grid gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {categories?.map((cat) => (
               <motion.div 
                 key={cat.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="group flex items-center justify-between p-4 bg-white/50 backdrop-blur-sm border border-slate-200 rounded-xl hover:bg-white hover:shadow-md transition-all"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ y: -4 }}
+                className="group relative p-5 bg-white border border-slate-200 rounded-3xl shadow-sm hover:shadow-xl hover:border-primary/20 transition-all overflow-hidden"
               >
-                <div className="flex items-center gap-3">
-                  <GripVertical className="w-4 h-4 text-slate-400 cursor-grab" />
-                  <span className="font-medium text-slate-800">{cat.name}</span>
-                </div>
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteCategory(cat.id)} className="h-8 w-8 text-slate-400 hover:text-red-500">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-violet-500 opacity-50 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+                        <GripVertical className="w-5 h-5 cursor-grab active:cursor-grabbing" />
+                      </div>
+                      <h4 className="font-bold text-slate-900 tracking-tight">{cat.name}</h4>
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100">
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => deleteCategory(cat.id)} className="h-9 w-9 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-2 pt-4 border-t border-slate-50">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${cat.is_active !== false ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                        {cat.is_active !== false ? 'Ativa' : 'Inativa'}
+                      </span>
+                    </div>
+                    <Button variant="link" size="sm" className="h-auto p-0 text-[10px] font-bold uppercase text-primary hover:no-underline" onClick={() => setActiveTab("products")}>
+                      Ver Produtos
+                    </Button>
+                  </div>
                 </div>
               </motion.div>
             ))}
+            
+            {/* Quick Add Card */}
+            <motion.button 
+              whileHover={{ scale: 0.98 }}
+              onClick={() => document.getElementById('new-cat')?.focus()}
+              className="flex flex-col items-center justify-center p-5 rounded-3xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-primary/30 hover:text-primary transition-all bg-slate-50/50 min-h-[140px]"
+            >
+              <Plus className="w-6 h-6 mb-2" />
+              <span className="text-xs font-bold uppercase tracking-widest">Nova Categoria</span>
+            </motion.button>
           </div>
         </TabsContent>
 
@@ -395,34 +427,56 @@ function ProductList({ restaurantId, categories }: { restaurantId: string, categ
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold text-slate-800">Produtos Cadastrados</h3>
-        <Button onClick={() => setShowAddForm(true)} size="sm" className="rounded-full px-6">
-          <Plus className="w-4 h-4 mr-2" /> Novo Produto
+        <div className="flex flex-col">
+          <h3 className="text-xl font-bold text-slate-900 tracking-tight">Produtos Cadastrados</h3>
+          <p className="text-xs text-slate-500">Gerencie preços, fotos e descrições dos seus itens.</p>
+        </div>
+        <Button onClick={() => setShowAddForm(true)} size="sm" className="bg-primary hover:bg-primary/90 text-white rounded-2xl px-6 h-11 font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all transform hover:-translate-y-0.5">
+          <Plus className="w-5 h-5 mr-2" /> Novo Produto
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {products?.map(prod => (
-          <Card key={prod.id} className="overflow-hidden hover:shadow-lg transition-all border-slate-200">
+          <Card key={prod.id} className="group overflow-hidden hover:shadow-2xl transition-all border-slate-200 rounded-3xl bg-white/50 backdrop-blur-sm hover:bg-white">
             <CardContent className="p-0 flex flex-col sm:flex-row h-full">
-              {prod.image_url ? (
-                <img src={prod.image_url} className="w-full sm:w-32 h-32 object-cover" alt={prod.name} />
-              ) : (
-                <div className="w-full sm:w-32 h-32 bg-slate-100 flex items-center justify-center text-slate-400">
-                  Sem Foto
-                </div>
-              )}
-              <div className="p-4 flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex justify-between items-start">
-                    <h4 className="font-bold text-slate-900">{prod.name}</h4>
-                    <span className="text-primary font-bold">R$ {prod.price.toFixed(2)}</span>
+              <div className="relative w-full sm:w-32 h-40 sm:h-auto overflow-hidden">
+                {prod.image_url ? (
+                  <img src={prod.image_url} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt={prod.name} />
+                ) : (
+                  <div className="w-full h-full bg-slate-100 flex flex-col items-center justify-center text-slate-400">
+                    <ImageIcon className="w-6 h-6 mb-1 opacity-20" />
+                    <span className="text-[10px] font-bold uppercase tracking-tighter opacity-40">Sem Foto</span>
                   </div>
-                  <p className="text-sm text-slate-500 line-clamp-2 mt-1">{prod.description}</p>
+                )}
+                {prod.is_featured && (
+                  <div className="absolute top-2 left-2 bg-amber-400 text-amber-950 text-[9px] font-black uppercase px-2 py-1 rounded-lg shadow-sm">
+                    Destaque
+                  </div>
+                )}
+              </div>
+              <div className="p-5 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-start mb-1">
+                    <h4 className="font-bold text-slate-900 text-lg tracking-tight group-hover:text-primary transition-colors">{prod.name}</h4>
+                    <div className="flex flex-col items-end">
+                      <span className="text-primary font-black text-lg">R$ {prod.price.toFixed(2)}</span>
+                      {prod.estimated_time && (
+                        <span className="text-[10px] text-slate-400 flex items-center gap-1 font-medium mt-0.5">
+                          <Clock className="w-3 h-3" /> {prod.estimated_time}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">{prod.description || "Sem descrição disponível."}</p>
                 </div>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button variant="outline" size="sm" className="h-8" onClick={() => setEditingProduct(prod)}>Editar</Button>
-                  <Button variant="outline" size="sm" className="h-8 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => deleteProduct(prod.id)}>Excluir</Button>
+                <div className="flex justify-end gap-2 mt-5">
+                  <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl border-slate-200 font-bold text-xs uppercase tracking-wider hover:bg-slate-50" onClick={() => setEditingProduct(prod)}>
+                    <Edit2 className="w-3.5 h-3.5 mr-2" /> Editar
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl border-slate-200 font-bold text-xs uppercase tracking-wider text-red-500 hover:text-red-600 hover:bg-red-50 hover:border-red-100" onClick={() => deleteProduct(prod.id)}>
+                    <Trash2 className="w-3.5 h-3.5 mr-2" /> Excluir
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -460,7 +514,10 @@ function ProductDialog({ restaurantId, categories, product, open, onOpenChange }
     is_available: true,
     is_featured: false,
     restaurant_id: restaurantId,
-    image_url: ""
+    image_url: "",
+    estimated_time: "",
+    nutritional_info: "",
+    variants: []
   });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -518,72 +575,113 @@ function ProductDialog({ restaurantId, categories, product, open, onOpenChange }
         <DialogHeader>
           <DialogTitle>{product ? "Editar Produto" : "Novo Produto"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="prod-name">Nome</Label>
-            <Input id="prod-name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required />
+        <form onSubmit={handleSubmit} className="space-y-6 py-4 max-h-[70vh] overflow-y-auto px-1">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2 col-span-2">
+              <Label htmlFor="prod-name" className="text-xs font-bold uppercase tracking-wider text-slate-500">Nome do Item</Label>
+              <Input id="prod-name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required className="rounded-xl border-slate-200 focus:ring-primary/20" />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="prod-price" className="text-xs font-bold uppercase tracking-wider text-slate-500">Preço Base (R$)</Label>
+              <Input id="prod-price" type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} required className="rounded-xl border-slate-200" />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="prod-cat" className="text-xs font-bold uppercase tracking-wider text-slate-500">Categoria</Label>
+              <Select value={formData.category_id} onValueChange={(v) => setFormData({...formData, category_id: v})}>
+                <SelectTrigger className="rounded-xl border-slate-200">
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c: any) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="prod-price">Preço (R$)</Label>
-            <Input id="prod-price" type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} required />
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="prod-time" className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                <Clock className="w-3 h-3" /> Tempo Est.
+              </Label>
+              <Input id="prod-time" placeholder="ex: 15-20 min" value={formData.estimated_time || ""} onChange={(e) => setFormData({...formData, estimated_time: e.target.value})} className="rounded-xl border-slate-200" />
+            </div>
+            <div className="grid gap-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" /> Destaque
+              </Label>
+              <div className="flex items-center space-x-2 h-10 px-3 bg-slate-50 rounded-xl border border-slate-100">
+                <Switch 
+                  checked={formData.is_featured} 
+                  onCheckedChange={(checked) => setFormData({...formData, is_featured: checked})} 
+                />
+                <span className="text-xs text-slate-600 font-medium">Promover</span>
+              </div>
+            </div>
           </div>
+
           <div className="grid gap-2">
-            <Label htmlFor="prod-cat">Categoria</Label>
-            <Select value={formData.category_id} onValueChange={(v) => setFormData({...formData, category_id: v})}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((c: any) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="prod-desc" className="text-xs font-bold uppercase tracking-wider text-slate-500">Descrição Detalhada</Label>
+            <Textarea id="prod-desc" value={formData.description || ""} onChange={(e) => setFormData({...formData, description: e.target.value})} className="rounded-xl border-slate-200 min-h-[80px]" />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="prod-desc">Descrição</Label>
-            <Textarea id="prod-desc" value={formData.description || ""} onChange={(e) => setFormData({...formData, description: e.target.value})} />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="prod-image">Foto do Produto</Label>
+
+          <div className="grid gap-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-2">
+              <ImageIcon className="w-4 h-4 text-primary" /> Mídia do Produto
+            </Label>
             <div className="flex items-center gap-4">
               {formData.image_url ? (
-                <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/10 group">
+                <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-white shadow-sm group">
                   <img src={formData.image_url} className="w-full h-full object-cover" alt="Preview" />
                   <button 
                     type="button"
                     onClick={() => setFormData({ ...formData, image_url: "" })}
-                    className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <Trash2 className="w-4 h-4 text-white" />
+                    <Trash2 className="w-5 h-5 text-white" />
                   </button>
                 </div>
               ) : (
                 <button 
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-20 h-20 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-primary hover:text-primary transition-all"
+                  className="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-primary hover:text-primary hover:bg-white transition-all bg-slate-100/50"
                 >
-                  <Plus className="w-5 h-5" />
-                  <span className="text-[10px] font-medium mt-1">Subir</span>
+                  <Plus className="w-6 h-6" />
+                  <span className="text-[10px] font-bold mt-1 uppercase">Subir Foto</span>
                 </button>
               )}
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                accept="image/*" 
-                onChange={handleImageUpload} 
-              />
-              <div className="flex-1">
+              <div className="flex-1 space-y-2">
                 <Input 
-                  id="prod-image" 
                   value={formData.image_url || ""} 
                   onChange={(e) => setFormData({...formData, image_url: e.target.value})} 
-                  placeholder="Ou cole o link da imagem aqui..." 
-                  className="text-xs"
+                  placeholder="Ou cole a URL da imagem..." 
+                  className="text-xs rounded-lg h-8"
                 />
+                <p className="text-[10px] text-slate-400 italic">Fotos de alta qualidade aumentam conversão em até 30%.</p>
               </div>
+            </div>
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+              <Layers className="w-3 h-3" /> Tamanhos / Variantes
+            </Label>
+            <div className="p-4 bg-violet-50/50 rounded-2xl border border-violet-100 flex items-center justify-between group hover:border-violet-300 transition-all cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center">
+                  <Plus className="w-4 h-4 text-violet-600" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-violet-900">Gerenciar Variações</p>
+                  <p className="text-[10px] text-violet-600">Pequeno, Médio, Grande, etc.</p>
+                </div>
+              </div>
+              <Button type="button" variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold tracking-tight text-violet-700 bg-violet-100">Em Breve</Button>
             </div>
           </div>
           <DialogFooter>
