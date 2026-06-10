@@ -30,10 +30,12 @@ export const Route = createFileRoute("/admin")({
 function AdminDashboard() {
   const navigate = useNavigate();
   const search = useSearch({ from: '/admin' });
-  const [unlocked, setUnlocked] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return sessionStorage.getItem("admin_unlocked") === "1";
-  });
+  const [unlocked, setUnlocked] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined" && sessionStorage.getItem("admin_unlocked") === "1") {
+      setUnlocked(true);
+    }
+  }, []);
   const [pwd, setPwd] = useState("");
   const [pwdError, setPwdError] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
