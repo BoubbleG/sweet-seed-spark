@@ -340,7 +340,7 @@ function AdminDashboard() {
                         <p className="text-xs text-zinc-500 font-medium tracking-tight truncate">{rest.address || 'Sem endereço configurado'}</p>
                       </CardHeader>
                       <CardContent className="px-8 pb-8">
-                        <div className="mb-3 flex items-center gap-2 p-2 pl-3 rounded-2xl bg-zinc-50 border border-zinc-100">
+                        <div className="mb-2 flex items-center gap-2 p-2 pl-3 rounded-2xl bg-zinc-50 border border-zinc-100">
                           <Link2 className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
                           <span className="text-[11px] font-medium text-zinc-500 truncate flex-1 min-w-0">/{rest.slug}</span>
                           <Button
@@ -349,7 +349,28 @@ function AdminDashboard() {
                             className={`h-7 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest shrink-0 ${copiedId === rest.id ? 'bg-emerald-500 text-white hover:bg-emerald-500' : 'bg-white text-zinc-900 hover:bg-zinc-900 hover:text-white border border-zinc-200'}`}
                             onClick={() => copyShareLink(rest.slug, rest.id)}
                           >
-                            {copiedId === rest.id ? <><Check className="w-3 h-3 mr-1" />Copiado</> : <>Copiar Link</>}
+                            {copiedId === rest.id ? <><Check className="w-3 h-3 mr-1" />Copiado</> : <>Link público</>}
+                          </Button>
+                        </div>
+                        <div className="mb-3 flex items-center gap-2 p-2 pl-3 rounded-2xl bg-amber-50 border border-amber-100">
+                          <Pencil className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span className="text-[11px] font-medium text-amber-700 truncate flex-1 min-w-0">Link do dono (secreto)</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className={`h-7 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest shrink-0 ${copiedEditId === rest.id ? 'bg-emerald-500 text-white hover:bg-emerald-500' : 'bg-white text-amber-700 hover:bg-amber-600 hover:text-white border border-amber-200'}`}
+                            onClick={() => copyEditLink(rest.edit_token, rest.id)}
+                          >
+                            {copiedEditId === rest.id ? <><Check className="w-3 h-3 mr-1" />Copiado</> : <>Copiar</>}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title="Gerar novo link (invalida o anterior)"
+                            className="h-7 w-7 p-0 rounded-xl shrink-0 text-amber-600 hover:bg-amber-100"
+                            onClick={() => regenerateToken(rest)}
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
                           </Button>
                         </div>
                         <div className="flex gap-2">
