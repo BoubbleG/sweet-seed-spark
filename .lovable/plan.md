@@ -1,51 +1,91 @@
-## Problema
+# Sistema de Links de Edição por Restaurante
 
-O botão "Ver Demonstração" abre o `DemoCheckoutFlow` dentro do `DialogContent` do shadcn. O `DialogContent` padrão aplica:
+## Como vai funcionar
 
-- `fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]`
-- `max-w-lg`, `p-6`, `gap-4`, `border`
-- animação `zoom-in-95`
+```
+Você (Admin Master)
+   │  acessa /admin com senha
+   │  cria restaurante "Point do Gordinho"
+   │  copia link único de edição: /editar/abc123xyz...
+   │
+   ▼
+Envia link pro dono do restaurante
+   │
+   ▼
+Dono abre /editar/abc123xyz
+   │  edita cardápio, promoções, visual, dados
+   │  vê botão "Copiar link público"
+   │
+   ▼
+Link público do cliente: /point-do-gordinho
+   (cardápio que os clientes acessam pra pedir)
+```
 
-No mobile (375px), essas regras conflitam com o override `w-screen h-[100dvh]`, deixando o conteúdo desalinhado, com padding/borda extras, scroll horizontal e — quando o teclado abre — empurrando os inputs para fora da tela. Resultado: layout "bugado" e impossível de preencher.
+Cada restaurante tem **dois links**:
+- **Link de edição** (secreto, só o dono tem) — `/editar/{token}`
+- **Link público** (compartilhável com clientes) — `/{slug}`
 
-## Solução
+## O que vou construir
 
-Trocar o `Dialog` do shadcn por um overlay fullscreen próprio (mesmo padrão usado no `cart-drawer.tsx`), totalmente mobile-first.
+### 1. Banco de dados
+- Adicionar coluna `edit_token` (texto único, gerado automaticamente) na tabela `restaurants`
+- Adicionar coluna `admin_password_hash` numa nova tabela `app_settings` (senha do admin master)
+- Ajustar políticas de acesso: leitura pública continua liberada pros cardápios; escrita passa a exigir o token de edição correto (validado via função do servidor)
 
-### Mudanças em `src/components/demo-checkout.tsx`
+### 2. Página de edição `/editar/$token`
+Quando o dono abre o link, ele vê uma versão do painel atual `/admin` mas **filtrada só pro restaurante dele**, com 4 abas:
+- **Cardápio** — produtos, preços, categorias (CRUD completo)
+- **Promoções** — marcar item como "oferta do dia" com preço promocional riscado
+- **Visual** — logo, capa, cores, fonte
+- **Informações** — nome, WhatsApp, endereço, horário, taxa de entrega
+- Botão no topo: "Ver cardápio público" + "Copiar link público"
 
-1. **Remover dependência do `Dialog`/`DialogContent`** (que traz centralização + paddings nativos). Substituir por:
-   ```tsx
-   <AnimatePresence>
-     {open && (
-       <>
-         <motion.div className="fixed inset-0 bg-black/60 z-[100]" ... />
-         <motion.div
-           role="dialog" aria-modal="true"
-           className="fixed inset-0 z-[100] bg-zinc-50 flex flex-col
-                      sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2
-                      sm:w-[440px] sm:h-[90vh] sm:rounded-3xl overflow-hidden shadow-2xl"
-           initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-           transition={{ type: 'spring', damping: 32, stiffness: 280 }}
-         >
-   ```
-2. **Bloquear scroll do body** enquanto `open` (useEffect com `document.body.style.overflow`).
-3. **Header / footer `shrink-0`**, body `flex-1 overflow-y-auto overscroll-contain` — garante que o footer com o botão "Continuar" fica sempre visível mesmo com teclado aberto.
-4. **Safe-area** no footer: `paddingBottom: 'max(1rem, env(safe-area-inset-bottom))'`.
-5. **Inputs**: trocar `text-base` (16px) já está, mas adicionar `autoComplete`, `enterKeyHint`, e remover `text-base` em favor de `text-[16px]` explícito (evita zoom no iOS independente do breakpoint). Adicionar `w-full` consistente e `min-w-0` no wrapper grid de Rua/Número para que não estoure.
-6. **Grid Rua/Número**: trocar `grid-cols-3` por `grid-cols-[1fr_88px]` para evitar quebra estranha em telas estreitas (320–375px).
-7. **Animação de step**: trocar `x: 20`/`x: -20` por `y: 10`/`y: -10` — translações horizontais dentro de container `overflow-x-hidden` continuam causando barra horizontal momentânea no mobile. Adicionar `overflow-x-hidden` no container de steps.
-8. **Body root**: adicionar `touch-pan-y` no scroll para evitar bounce horizontal no iOS.
-9. **Esc / botão X / clique no overlay**: manter fechamento via `onOpenChange(false)`.
+### 3. Promoções (recurso novo)
+- Novos campos em `products`: `promo_price` (preço promocional), `is_on_promo` (ativo/inativo), `promo_label` (ex: "Oferta do dia")
+- No cardápio público: item em promoção mostra preço original riscado + preço novo em destaque + badge
 
-### Garantias visuais
+### 4. Admin master `/admin`
+- Tela de **login com senha** (a senha fica protegida; primeira vez você define)
+- Após login: lista todos os restaurantes em cards com:
+  - Nome, slug, status
+  - Botão **"Copiar link de edição"** (gera/copia `/editar/{token}`)
+  - Botão **"Copiar link público"** (`/{slug}`)
+  - Botão **"Regenerar token"** (caso o link vaze)
+  - Botão **"Excluir restaurante"**
+- Botão **"+ Novo restaurante"** que cria com slug, token e abre direto a página de edição
 
-- Largura nunca passa de `100vw`; nenhum `min-w` fixo em filhos.
-- Botão "Continuar"/"Enviar no WhatsApp" sempre fixo no rodapé, dentro do safe-area.
-- Inputs com altura ≥48px, font-size 16px, foco com ring verde (já existente).
+### 5. Segurança
+- Token de edição: 32 caracteres aleatórios (impossível de adivinhar)
+- Toda escrita no banco passa por uma função do servidor que valida `token === restaurant.edit_token` antes de salvar
+- Senha do admin: armazenada com hash (bcrypt), validada via função do servidor
+- Sessão do admin: cookie httpOnly de 7 dias
 
-## Arquivos
+## Detalhes técnicos
 
-- `src/components/demo-checkout.tsx` — refatorar wrapper e steps conforme acima.
+**Rotas novas:**
+- `src/routes/editar.$token.tsx` — painel do dono (reusa componentes de `MenuManager`, `VisualManager`, `RestaurantDialog` filtrando por `restaurant_id` resolvido pelo token)
+- `src/routes/admin.tsx` — refatorado: adiciona tela de login + lista master de restaurantes
+- `src/lib/restaurant-edit.functions.ts` — server functions: `validateEditToken`, `updateRestaurantByToken`, `upsertProductByToken`, etc.
+- `src/lib/admin-auth.functions.ts` — server functions: `adminLogin`, `adminLogout`, `createRestaurantWithToken`, `regenerateEditToken`
 
-Nada mais precisa mudar (o gatilho em `src/routes/index.tsx` segue igual).
+**Migração SQL:**
+- `restaurants.edit_token text unique not null default encode(gen_random_bytes(24), 'hex')`
+- `products.promo_price numeric`, `products.is_on_promo boolean default false`, `products.promo_label text`
+- Tabela `app_settings(id, admin_password_hash text, updated_at)` — single-row
+- RLS revisada: SELECT continua público; INSERT/UPDATE/DELETE só via service role (server functions)
+
+**Cardápio público (`/$slug`):**
+- Renderizar badge de promoção + preço riscado quando `is_on_promo = true`
+
+## Fluxo do primeiro uso
+
+1. Você abre `/admin` → tela "Defina a senha do admin" (primeira vez)
+2. Faz login
+3. Clica em "+ Novo restaurante" → preenche nome e slug
+4. Sistema cria o restaurante e mostra: "Link de edição: `/editar/abc...` 📋 Copiar"
+5. Você envia esse link por WhatsApp pro dono
+6. Dono abre, edita tudo, e copia o link público `/point-do-gordinho` pra divulgar pros clientes
+
+## O que NÃO vai mudar
+- Visual atual do cardápio público continua igual (só ganha o badge de promoção)
+- Componentes de edição existentes (`MenuManager`, `VisualManager`) são reaproveitados
