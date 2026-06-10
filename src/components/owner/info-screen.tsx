@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SectionShell, SectionCard, StickySaveBar } from "./shared";
-import { Phone, MapPin, Clock, Truck, Instagram, Store } from "lucide-react";
+import { Phone, MapPin, Clock, Truck, AtSign, Store } from "lucide-react";
 
 export function OwnerInfoScreen({
   restaurant,
@@ -93,7 +93,7 @@ export function OwnerInfoScreen({
         </Field>
         <Field label="Instagram (opcional)">
           <div className="relative">
-            <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <input
               value={form.instagram || ""}
               onChange={(e) => setForm({ ...form, instagram: e.target.value })}
