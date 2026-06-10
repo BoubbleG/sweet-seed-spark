@@ -121,13 +121,7 @@ export function DemoCheckoutFlow({ open, onOpenChange, onCreateCta }: { open: bo
   const canContinue = () => {
     if (step === 1) return totalQty > 0;
     if (step === 3) return mode === "pickup" || addressSchema.safeParse(address).success;
-    if (step === 4) {
-      if (!payment) return false;
-      if (payment === "credit" || payment === "debit") {
-        return cardData.number.replace(/\s/g, "").length >= 13 && cardData.exp.length === 5 && cardData.cvv.length >= 3 && cardData.name.trim().length >= 3;
-      }
-      return true;
-    }
+    if (step === 4) return !!payment;
     return true;
   };
 
@@ -472,41 +466,22 @@ function StepPayment({ payment, setPayment, card, setCard, changeFor, setChangeF
       </div>
 
       {payment === "pix" && (
-        <div className="bg-white border border-zinc-100 rounded-2xl p-5 text-center">
-          <div className="mx-auto w-40 h-40 rounded-2xl bg-zinc-900 p-3 mb-3">
-            <div className="w-full h-full grid grid-cols-8 gap-0.5">
-              {Array.from({ length: 64 }).map((_, i) => <div key={i} className={`rounded-sm ${Math.random() > 0.5 ? "bg-white" : "bg-zinc-900"}`} />)}
-            </div>
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex gap-3 items-start">
+          <QrCode className="w-6 h-6 text-emerald-600 shrink-0 mt-0.5" />
+          <div>
+            <div className="font-black text-zinc-900 text-sm">Pagamento via PIX</div>
+            <p className="text-xs text-zinc-600 font-medium mt-1">A chave PIX será enviada pelo WhatsApp junto com a confirmação do pedido. Você ganha <span className="font-black text-emerald-700">5% de desconto</span>.</p>
           </div>
-          <p className="text-xs font-bold text-zinc-600">Escaneie o QR Code para pagar</p>
-          <p className="text-[10px] text-zinc-400 font-medium mt-1">Confirmação em segundos</p>
         </div>
       )}
 
       {(payment === "credit" || payment === "debit") && (
-        <div className="bg-white border border-zinc-100 rounded-2xl p-4 space-y-3">
-          <Field label="Número do cartão">
-            <input id="card-number" inputMode="numeric" placeholder="0000 0000 0000 0000" value={card.number}
-              onChange={e => setCard((p: any) => ({ ...p, number: formatCardNumber(e.target.value) }))}
-              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium tracking-wider focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={19} />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Validade">
-              <input id="card-exp" inputMode="numeric" placeholder="MM/AA" value={card.exp}
-                onChange={e => setCard((p: any) => ({ ...p, exp: formatExp(e.target.value) }))}
-                className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={5} />
-            </Field>
-            <Field label="CVV">
-              <input id="card-cvv" inputMode="numeric" placeholder="123" value={card.cvv}
-                onChange={e => setCard((p: any) => ({ ...p, cvv: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
-                className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={4} />
-            </Field>
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex gap-3 items-start">
+          <CreditCard className="w-6 h-6 text-blue-600 shrink-0 mt-0.5" />
+          <div>
+            <div className="font-black text-zinc-900 text-sm">Pagamento na entrega</div>
+            <p className="text-xs text-zinc-600 font-medium mt-1">Você passará o cartão na maquininha quando o pedido chegar. Sem dados sensíveis aqui — mais segurança para você.</p>
           </div>
-          <Field label="Nome no cartão">
-            <input id="card-name" placeholder="Como impresso" value={card.name}
-              onChange={e => setCard((p: any) => ({ ...p, name: e.target.value.slice(0, 60) }))}
-              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium uppercase focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={60} />
-          </Field>
         </div>
       )}
 
@@ -536,7 +511,7 @@ function Row({ k, v, accent }: { k: string; v: string; accent?: boolean }) {
 function StepReview({ cart, bumps, mode, address, payment, cardData, changeFor, subtotal, deliveryFee, pixDiscount, total }: any) {
   const entries = Object.values(cart) as Array<{ item: Item; qty: number }>;
   const bumpItems = Array.from(bumps as Set<string>).map(id => BUMPS.find(b => b.id === id)!).filter(Boolean);
-  const payLabel = { pix: "PIX (5% OFF)", credit: `Crédito •••• ${cardData.number.slice(-4)}`, debit: `Débito •••• ${cardData.number.slice(-4)}`, cash: `Dinheiro${changeFor ? ` (troco p/ R$ ${changeFor})` : ""}` }[payment as PaymentMethod];
+  const payLabel = { pix: "PIX (5% OFF) — chave enviada no WhatsApp", credit: "Cartão de Crédito (na entrega)", debit: "Cartão de Débito (na entrega)", cash: `Dinheiro${changeFor ? ` (troco p/ R$ ${changeFor})` : ""}` }[payment as PaymentMethod];
 
   return (
     <div className="space-y-4">
