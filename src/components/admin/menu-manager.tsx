@@ -23,6 +23,7 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
   const [showImport, setShowImport] = useState(false);
   const [showAIUpload, setShowAIUpload] = useState(false);
   const [importText, setImportText] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: categories } = useQuery({
@@ -57,6 +58,117 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
     else {
       queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
       toast.success("Categoria removida!");
+    }
+  };
+
+  const parsePrice = (raw: string): number => {
+    if (!raw) return 0;
+    const cleaned = raw
+      .replace(/r\$/gi, "")
+      .replace(/[^\d,.\-]/g, "")
+      .trim();
+    if (!cleaned) return 0;
+    // handle "12,90" and "1.234,56" and "12.90"
+    const lastComma = cleaned.lastIndexOf(",");
+    const lastDot = cleaned.lastIndexOf(".");
+    let normalized = cleaned;
+    if (lastComma > lastDot) {
+      normalized = cleaned.replace(/\./g, "").replace(",", ".");
+    } else {
+      normalized = cleaned.replace(/,/g, "");
+    }
+    const n = parseFloat(normalized);
+    return isNaN(n) ? 0 : n;
+  };
+
+  const handleImportText = async () => {
+    const text = importText.trim();
+    if (!text) {
+      toast.error("Cole o texto do cardápio antes de importar.");
+      return;
+    }
+    setIsImporting(true);
+    const toastId = toast.loading("Importando cardápio...");
+    try {
+      const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+      const existingCats = [...(categories || [])];
+      const catCache: Record<string, string> = {};
+      existingCats.forEach((c) => (catCache[c.name.toLowerCase()] = c.id));
+
+      let currentCatId: string | null = existingCats[0]?.id || null;
+      let currentOrder = existingCats.length;
+      const productsToInsert: any[] = [];
+      let createdCats = 0;
+
+      const ensureCategory = async (name: string) => {
+        const key = name.toLowerCase();
+        if (catCache[key]) return catCache[key];
+        const { data, error } = await supabase
+          .from("categories")
+          .insert([{ restaurant_id: restaurantId, name, display_order: ++currentOrder }])
+          .select("id")
+          .single();
+        if (error) throw error;
+        catCache[key] = data.id;
+        createdCats++;
+        return data.id;
+      };
+
+      for (const line of lines) {
+        // Category header: "# Nome", "## Nome" or "[Nome]"
+        const headerMatch =
+          line.match(/^#+\s*(.+)$/) || line.match(/^\[(.+)\]$/);
+        if (headerMatch) {
+          currentCatId = await ensureCategory(headerMatch[1].trim());
+          continue;
+        }
+
+        // Product line: split by " - " or " — " or tab
+        const parts = line.split(/\s*[-—|]\s*|\t+/).map((p) => p.trim()).filter(Boolean);
+        if (parts.length < 2) continue;
+
+        const name = parts[0];
+        // Find first part that looks like a price
+        let priceIdx = parts.findIndex((p, i) => i > 0 && /\d/.test(p) && /r\$|[\d][,.]?\d/.test(p));
+        if (priceIdx === -1) priceIdx = 1;
+        const price = parsePrice(parts[priceIdx]);
+        const description = parts.filter((_, i) => i !== 0 && i !== priceIdx).join(" - ") || null;
+
+        if (!currentCatId) {
+          currentCatId = await ensureCategory("Geral");
+        }
+
+        productsToInsert.push({
+          restaurant_id: restaurantId,
+          category_id: currentCatId,
+          name,
+          price,
+          description,
+          is_available: true,
+        });
+      }
+
+      if (productsToInsert.length === 0) {
+        toast.error("Nenhum item válido encontrado no texto.", { id: toastId });
+        setIsImporting(false);
+        return;
+      }
+
+      const { error } = await supabase.from("products").insert(productsToInsert);
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      toast.success(
+        `${productsToInsert.length} itens importados${createdCats ? ` em ${createdCats} nova(s) categoria(s)` : ""}!`,
+        { id: toastId }
+      );
+      setImportText("");
+      setShowImport(false);
+    } catch (err: any) {
+      toast.error("Erro ao importar: " + (err.message || "desconhecido"), { id: toastId });
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -159,14 +271,16 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
             </DialogTitle>
           </DialogHeader>
           <Textarea 
-            placeholder="Cole seu texto no formato: Nome - Preço - Descrição"
+            placeholder={`Formato:\n# Hambúrgueres\nClássico - 29,90 - Pão, carne, queijo\nBacon - R$ 34,90 - Com bacon crocante\n\n# Bebidas\nCoca-Cola - 7,00`}
             className="min-h-[300px] rounded-2xl bg-zinc-50 border-zinc-200 p-4 focus:ring-primary/20"
             value={importText}
             onChange={(e) => setImportText(e.target.value)}
           />
           <DialogFooter className="flex gap-3">
-            <Button variant="outline" onClick={() => setShowImport(false)} className="rounded-2xl flex-1">Cancelar</Button>
-            <Button className="rounded-2xl flex-1 bg-primary text-white">Importar Agora</Button>
+            <Button variant="outline" onClick={() => setShowImport(false)} disabled={isImporting} className="rounded-2xl flex-1">Cancelar</Button>
+            <Button onClick={handleImportText} disabled={isImporting} className="rounded-2xl flex-1 bg-primary text-white">
+              {isImporting ? "Importando..." : "Importar Agora"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
