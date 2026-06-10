@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut, Eye, LayoutDashboard, Share2, TrendingUp, Trash2 } from "lucide-react";
+import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut, Eye, LayoutDashboard, Share2, TrendingUp, Trash2, Link2, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Restaurant } from "@/types";
 import { RestaurantDialog } from "@/components/admin/restaurant-dialog";
@@ -42,6 +42,20 @@ function AdminDashboard() {
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(search.restaurantId || null);
   const [activeView, setActiveTab] = useState<'list' | 'menu' | 'visual' | 'preview'>(search.view || 'list');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  async function copyShareLink(slug: string, id: string) {
+    const url = `${window.location.origin}/${slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = url; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  }
 
   async function loadData() {
     setIsLoading(true);
@@ -230,6 +244,18 @@ function AdminDashboard() {
                         <p className="text-xs text-zinc-500 font-medium tracking-tight truncate">{rest.address || 'Sem endereço configurado'}</p>
                       </CardHeader>
                       <CardContent className="px-8 pb-8">
+                        <div className="mb-3 flex items-center gap-2 p-2 pl-3 rounded-2xl bg-zinc-50 border border-zinc-100">
+                          <Link2 className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <span className="text-[11px] font-medium text-zinc-500 truncate flex-1 min-w-0">/{rest.slug}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className={`h-7 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest shrink-0 ${copiedId === rest.id ? 'bg-emerald-500 text-white hover:bg-emerald-500' : 'bg-white text-zinc-900 hover:bg-zinc-900 hover:text-white border border-zinc-200'}`}
+                            onClick={() => copyShareLink(rest.slug, rest.id)}
+                          >
+                            {copiedId === rest.id ? <><Check className="w-3 h-3 mr-1" />Copiado</> : <>Copiar Link</>}
+                          </Button>
+                        </div>
                         <div className="flex gap-2">
                           <Button 
                             variant="secondary" 
