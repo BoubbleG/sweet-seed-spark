@@ -7,6 +7,7 @@ import { OwnerMenuScreen } from "@/components/owner/menu-screen";
 import { OwnerPromoScreen } from "@/components/owner/promo-screen";
 import { OwnerVisualScreen } from "@/components/owner/visual-screen";
 import { OwnerInfoScreen } from "@/components/owner/info-screen";
+import { OwnerOrdersScreen } from "@/components/owner/orders-screen";
 import {
   Utensils,
   Palette,
@@ -19,6 +20,7 @@ import {
   Store,
   Pencil,
   Check,
+  ReceiptText,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -27,7 +29,7 @@ export const Route = createFileRoute("/editar/$token")({
   component: OwnerEditor,
 });
 
-type Screen = "home" | "menu" | "promo" | "visual" | "info";
+type Screen = "home" | "orders" | "menu" | "promo" | "visual" | "info";
 
 function OwnerEditor() {
   const { token } = useParams({ from: "/editar/$token" });
@@ -78,6 +80,13 @@ function OwnerEditor() {
 function OwnerShell({ restaurant }: { restaurant: Restaurant }) {
   const [screen, setScreen] = useState<Screen>("home");
 
+  if (screen === "orders")
+    return (
+      <OwnerOrdersScreen
+        restaurant={restaurant}
+        onBack={() => setScreen("home")}
+      />
+    );
   if (screen === "menu")
     return (
       <OwnerMenuScreen
@@ -151,6 +160,14 @@ function OwnerHome({
     bg: string;
     fg: string;
   }[] = [
+    {
+      key: "orders",
+      title: "Pedidos chegando",
+      desc: "Receber, imprimir e acompanhar pedidos em tempo real",
+      icon: <ReceiptText className="w-6 h-6" />,
+      bg: "bg-rose-100",
+      fg: "text-rose-600",
+    },
     {
       key: "menu",
       title: "Meu cardápio",
