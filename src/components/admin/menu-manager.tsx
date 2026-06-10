@@ -39,6 +39,28 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
     }
   });
 
+  const { data: products } = useQuery({
+    queryKey: ['admin-products', restaurantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as any[];
+    }
+  });
+
+  const deleteProduct = async (id: string) => {
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    if (error) toast.error('Erro ao excluir: ' + error.message);
+    else {
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      toast.success('Produto removido!');
+    }
+  };
+
   const addCategory = useMutation({
     mutationFn: async (name: string) => {
       const { error } = await supabase
@@ -260,6 +282,53 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
               </motion.div>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="products" className="space-y-6 pt-6">
+          {(!products || products.length === 0) ? (
+            <div className="text-center py-16 text-zinc-500">
+              Nenhum produto cadastrado. Use o importador acima para adicionar seu cardápio.
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {categories?.map((cat) => {
+                const items = products.filter((p) => p.category_id === cat.id);
+                if (items.length === 0) return null;
+                return (
+                  <div key={cat.id}>
+                    <h3 className="text-sm font-black uppercase tracking-wider text-zinc-500 mb-3">{cat.name} <span className="text-zinc-300">· {items.length}</span></h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {items.map((p) => (
+                        <motion.div
+                          key={p.id}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="group relative p-5 bg-white border border-zinc-200 rounded-3xl shadow-sm hover:shadow-xl hover:border-primary/30 transition-all"
+                        >
+                          <div className="flex items-start justify-between gap-3 mb-2">
+                            <h4 className="font-bold text-zinc-900 leading-tight">{p.name}</h4>
+                            <Button variant="ghost" size="icon" onClick={() => deleteProduct(p.id)} className="h-8 w-8 rounded-full text-zinc-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          {p.description && (
+                            <p className="text-xs text-zinc-500 line-clamp-2 mb-3">{p.description}</p>
+                          )}
+                          <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
+                            <span className="text-lg font-black text-primary">R$ {Number(p.price).toFixed(2).replace('.', ',')}</span>
+                            <div className="flex items-center gap-2">
+                              <Switch checked={p.is_available !== false} className="scale-75" />
+                              <span className="text-[10px] uppercase font-black text-zinc-400">Ativo</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
