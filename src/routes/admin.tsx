@@ -30,6 +30,12 @@ export const Route = createFileRoute("/admin")({
 function AdminDashboard() {
   const navigate = useNavigate();
   const search = useSearch({ from: '/admin' });
+  const [unlocked, setUnlocked] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return sessionStorage.getItem("admin_unlocked") === "1";
+  });
+  const [pwd, setPwd] = useState("");
+  const [pwdError, setPwdError] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRestDialogOpen, setIsRestDialogOpen] = useState(false);
@@ -51,8 +57,51 @@ function AdminDashboard() {
   }
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (unlocked) loadData();
+  }, [unlocked]);
+
+  if (!unlocked) {
+    return (
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4 font-['Outfit']">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (pwd === "123456") {
+              sessionStorage.setItem("admin_unlocked", "1");
+              setUnlocked(true);
+              setPwdError(false);
+            } else {
+              setPwdError(true);
+            }
+          }}
+          className="w-full max-w-sm bg-white border border-zinc-200 rounded-3xl p-6 shadow-xl space-y-4"
+        >
+          <div className="text-center">
+            <div className="mx-auto w-12 h-12 rounded-2xl bg-zinc-900 text-white flex items-center justify-center mb-3">
+              <Settings className="w-6 h-6" />
+            </div>
+            <h1 className="text-2xl font-black tracking-tight text-zinc-900">Painel Admin</h1>
+            <p className="text-sm text-zinc-500 font-medium mt-1">Acesso restrito</p>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-zinc-600 uppercase tracking-wider mb-1.5">Senha</label>
+            <input
+              type="password"
+              autoFocus
+              value={pwd}
+              onChange={(e) => { setPwd(e.target.value); setPwdError(false); }}
+              placeholder="••••••"
+              className={`h-14 w-full rounded-xl border px-4 text-base font-medium focus:outline-none focus:ring-2 ${pwdError ? "border-red-400 ring-red-100" : "border-zinc-200 focus:border-zinc-900 focus:ring-zinc-100"}`}
+            />
+            {pwdError && <p className="text-xs font-bold text-red-500 mt-1.5">Senha incorreta</p>}
+          </div>
+          <Button type="submit" className="w-full h-12 rounded-xl font-black uppercase tracking-widest text-xs">
+            Entrar
+          </Button>
+        </form>
+      </div>
+    );
+  }
 
   const selectedRestaurant = restaurants?.find(r => r.id === selectedRestaurantId);
 
