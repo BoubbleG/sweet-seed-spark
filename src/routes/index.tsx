@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { UtensilsCrossed, Plus, Eye, ArrowRight, Star, ShieldCheck, Zap, Smartphone, Globe, Users } from "lucide-react";
+import { UtensilsCrossed, Plus, ArrowRight, Star, ShieldCheck, Zap, Smartphone, Clock as ClockIcon, MessageCircle, ShoppingBag, Flame, Leaf, Search, MapPin, Phone, Instagram, ChevronRight, BadgeCheck, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Restaurant } from "@/types";
 import { motion } from "framer-motion";
@@ -20,6 +20,7 @@ export const Route = createFileRoute("/")({
 function LandingPage() {
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [activeCategory, setActiveCategory] = useState("burgers");
 
   useEffect(() => {
     async function load() {
