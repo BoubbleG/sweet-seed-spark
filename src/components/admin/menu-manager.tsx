@@ -9,9 +9,10 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Edit2, GripVertical, FileText, Sparkles, Wand2, Upload, FileSearch, Eye } from "lucide-react";
+import { Plus, Trash2, Edit2, GripVertical, FileText, Sparkles, Wand2, Upload, FileSearch, Eye, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { ProductDialog } from "./product-dialog";
 
 interface MenuManagerProps {
   restaurantId: string;
@@ -25,6 +26,8 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
   const [importText, setImportText] = useState("");
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [productDialogOpen, setProductDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
 
   const { data: categories } = useQuery({
     queryKey: ['admin-categories', restaurantId],
@@ -297,6 +300,15 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
         </TabsContent>
 
         <TabsContent value="products" className="space-y-6 pt-6">
+          <div className="flex justify-end">
+            <Button
+              onClick={() => { setEditingProduct(null); setProductDialogOpen(true); }}
+              disabled={!categories || categories.length === 0}
+              className="rounded-2xl bg-zinc-900 text-white shadow-lg shadow-zinc-900/10 hover:bg-primary"
+            >
+              <Plus className="w-4 h-4 mr-2" /> Novo produto
+            </Button>
+          </div>
           {(!products || products.length === 0) ? (
             <div className="text-center py-16 text-zinc-500">
               Nenhum produto cadastrado. Use o importador acima para adicionar seu cardápio.
@@ -318,16 +330,38 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
                           className="group relative p-5 bg-white border border-zinc-200 rounded-3xl shadow-sm hover:shadow-xl hover:border-primary/30 transition-all"
                         >
                           <div className="flex items-start justify-between gap-3 mb-2">
-                            <h4 className="font-bold text-zinc-900 leading-tight">{p.name}</h4>
-                            <Button variant="ghost" size="icon" onClick={() => deleteProduct(p.id)} className="h-8 w-8 rounded-full text-zinc-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            <div className="min-w-0">
+                              <h4 className="font-bold text-zinc-900 leading-tight truncate">{p.name}</h4>
+                              {p.is_on_promo && (
+                                <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-black uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                                  <Tag className="w-3 h-3" />
+                                  {p.promo_label || "Promo"}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                              <Button variant="ghost" size="icon" onClick={() => { setEditingProduct(p); setProductDialogOpen(true); }} className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100">
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => deleteProduct(p.id)} className="h-8 w-8 rounded-full text-zinc-400 hover:text-red-500 hover:bg-red-50">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                           {p.description && (
                             <p className="text-xs text-zinc-500 line-clamp-2 mb-3">{p.description}</p>
                           )}
                           <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
-                            <span className="text-lg font-black text-primary">R$ {Number(p.price).toFixed(2).replace('.', ',')}</span>
+                            <div className="flex items-baseline gap-2">
+                              {p.is_on_promo && p.promo_price != null ? (
+                                <>
+                                  <span className="text-lg font-black text-amber-600">R$ {Number(p.promo_price).toFixed(2).replace('.', ',')}</span>
+                                  <span className="text-xs text-zinc-400 line-through">R$ {Number(p.price).toFixed(2).replace('.', ',')}</span>
+                                </>
+                              ) : (
+                                <span className="text-lg font-black text-primary">R$ {Number(p.price).toFixed(2).replace('.', ',')}</span>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2">
                               <Switch checked={p.is_available !== false} className="scale-75" />
                               <span className="text-[10px] uppercase font-black text-zinc-400">Ativo</span>
@@ -365,6 +399,14 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ProductDialog
+        open={productDialogOpen}
+        onOpenChange={setProductDialogOpen}
+        product={editingProduct}
+        categories={categories || []}
+        restaurantId={restaurantId}
+      />
     </div>
   );
 }

@@ -2,13 +2,15 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut, Eye, LayoutDashboard, Share2, TrendingUp, Trash2, Link2, Check } from "lucide-react";
+import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut, Eye, LayoutDashboard, Share2, TrendingUp, Trash2, Link2, Check, KeyRound, RefreshCw, Pencil } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Restaurant } from "@/types";
 import { RestaurantDialog } from "@/components/admin/restaurant-dialog";
 import { MenuManager } from "@/components/admin/menu-manager";
 import { VisualManager } from "@/components/admin/visual-manager";
 import { motion, AnimatePresence } from "framer-motion";
+import { sha256Hex } from "@/lib/hash";
+import { toast } from "sonner";
 
 const SUPABASE_URL = "https://mrjkizqyrmljtlvusgta.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yamtpenF5cm1sanRsdnVzZ3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NTY3NDAsImV4cCI6MjA5NjUzMjc0MH0.JTDSgPn20PipEOx6GIFtnXc-M2T2o3S4oM7t0saIwVY";
@@ -37,7 +39,23 @@ function AdminDashboard() {
     }
   }, []);
   const [pwd, setPwd] = useState("");
+  const [pwdConfirm, setPwdConfirm] = useState("");
   const [pwdError, setPwdError] = useState(false);
+  const [pwdErrorMsg, setPwdErrorMsg] = useState("");
+  const [storedHash, setStoredHash] = useState<string | null>(null);
+  const [isFirstTime, setIsFirstTime] = useState(false);
+  const [authChecking, setAuthChecking] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await sb.from("app_settings").select("admin_password_hash").eq("id", 1).maybeSingle();
+      const hash = data?.admin_password_hash || null;
+      setStoredHash(hash);
+      setIsFirstTime(!hash);
+      setAuthChecking(false);
+    })();
+  }, []);
+
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRestDialogOpen, setIsRestDialogOpen] = useState(false);
@@ -45,6 +63,7 @@ function AdminDashboard() {
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(search.restaurantId || null);
   const [activeView, setActiveTab] = useState<'list' | 'menu' | 'visual' | 'preview'>(search.view || 'list');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedEditId, setCopiedEditId] = useState<string | null>(null);
 
   async function copyShareLink(slug: string, id: string) {
     const url = `${window.location.origin}/${slug}`;
@@ -57,6 +76,38 @@ function AdminDashboard() {
     }
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  }
+
+  async function copyEditLink(token: string | undefined, id: string) {
+    if (!token) {
+      toast.error("Este restaurante ainda não tem token. Recarregue a página.");
+      return;
+    }
+    const url = `${window.location.origin}/editar/${token}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = url; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    setCopiedEditId(id);
+    toast.success("Link de edição copiado! Envie ao dono do restaurante.");
+    setTimeout(() => setCopiedEditId(null), 2000);
+  }
+
+  async function regenerateToken(rest: Restaurant) {
+    if (!confirm(`Regenerar link de edição de "${rest.name}"? O link antigo deixará de funcionar imediatamente.`)) return;
+    const newToken = Array.from(crypto.getRandomValues(new Uint8Array(24)))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    const { error } = await sb.from("restaurants").update({ edit_token: newToken }).eq("id", rest.id);
+    if (error) {
+      toast.error("Erro ao regenerar: " + error.message);
+    } else {
+      toast.success("Novo link gerado!");
+      loadData();
+    }
   }
 
   async function loadData() {
@@ -76,43 +127,86 @@ function AdminDashboard() {
     if (unlocked) loadData();
   }, [unlocked]);
 
+  async function handleAuthSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setPwdError(false);
+    setPwdErrorMsg("");
+    if (isFirstTime) {
+      if (pwd.length < 6) {
+        setPwdError(true); setPwdErrorMsg("Mínimo de 6 caracteres."); return;
+      }
+      if (pwd !== pwdConfirm) {
+        setPwdError(true); setPwdErrorMsg("As senhas não coincidem."); return;
+      }
+      const hash = await sha256Hex(pwd);
+      const { error } = await sb.from("app_settings").upsert({ id: 1, admin_password_hash: hash });
+      if (error) {
+        setPwdError(true); setPwdErrorMsg("Erro ao definir senha: " + error.message); return;
+      }
+      setStoredHash(hash);
+      setIsFirstTime(false);
+      sessionStorage.setItem("admin_unlocked", "1");
+      setUnlocked(true);
+      return;
+    }
+    const hash = await sha256Hex(pwd);
+    if (hash === storedHash) {
+      sessionStorage.setItem("admin_unlocked", "1");
+      setUnlocked(true);
+    } else {
+      setPwdError(true);
+      setPwdErrorMsg("Senha incorreta.");
+    }
+  }
+
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
+        <div className="text-sm font-medium text-zinc-400 animate-pulse">Carregando…</div>
+      </div>
+    );
+  }
+
   if (!unlocked) {
     return (
       <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4 font-['Outfit']">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (pwd === "123456") {
-              sessionStorage.setItem("admin_unlocked", "1");
-              setUnlocked(true);
-              setPwdError(false);
-            } else {
-              setPwdError(true);
-            }
-          }}
-          className="w-full max-w-sm bg-white border border-zinc-200 rounded-3xl p-6 shadow-xl space-y-4"
-        >
+        <form onSubmit={handleAuthSubmit} className="w-full max-w-sm bg-white border border-zinc-200 rounded-3xl p-6 shadow-xl space-y-4">
           <div className="text-center">
             <div className="mx-auto w-12 h-12 rounded-2xl bg-zinc-900 text-white flex items-center justify-center mb-3">
-              <Settings className="w-6 h-6" />
+              {isFirstTime ? <KeyRound className="w-6 h-6" /> : <Settings className="w-6 h-6" />}
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-zinc-900">Painel Admin</h1>
-            <p className="text-sm text-zinc-500 font-medium mt-1">Acesso restrito</p>
+            <h1 className="text-2xl font-black tracking-tight text-zinc-900">
+              {isFirstTime ? "Defina a senha do admin" : "Painel Admin"}
+            </h1>
+            <p className="text-sm text-zinc-500 font-medium mt-1">
+              {isFirstTime ? "Primeiro acesso — escolha uma senha forte." : "Acesso restrito"}
+            </p>
           </div>
           <div>
-            <label className="block text-xs font-bold text-zinc-600 uppercase tracking-wider mb-1.5">Senha</label>
+            <label className="block text-xs font-bold text-zinc-600 uppercase tracking-wider mb-1.5">
+              {isFirstTime ? "Nova senha" : "Senha"}
+            </label>
             <input
               type="password"
               autoFocus
               value={pwd}
-              onChange={(e) => { setPwd(e.target.value); setPwdError(false); }}
+              onChange={(e) => { setPwd(e.target.value); setPwdError(false); setPwdErrorMsg(""); }}
               placeholder="••••••"
               className={`h-14 w-full rounded-xl border px-4 text-base font-medium focus:outline-none focus:ring-2 ${pwdError ? "border-red-400 ring-red-100" : "border-zinc-200 focus:border-zinc-900 focus:ring-zinc-100"}`}
             />
-            {pwdError && <p className="text-xs font-bold text-red-500 mt-1.5">Senha incorreta</p>}
+            {isFirstTime && (
+              <input
+                type="password"
+                value={pwdConfirm}
+                onChange={(e) => { setPwdConfirm(e.target.value); setPwdError(false); setPwdErrorMsg(""); }}
+                placeholder="Confirme a senha"
+                className={`mt-2 h-14 w-full rounded-xl border px-4 text-base font-medium focus:outline-none focus:ring-2 ${pwdError ? "border-red-400 ring-red-100" : "border-zinc-200 focus:border-zinc-900 focus:ring-zinc-100"}`}
+              />
+            )}
+            {pwdError && <p className="text-xs font-bold text-red-500 mt-1.5">{pwdErrorMsg || "Senha incorreta"}</p>}
           </div>
           <Button type="submit" className="w-full h-12 rounded-xl font-black uppercase tracking-widest text-xs">
-            Entrar
+            {isFirstTime ? "Criar senha & entrar" : "Entrar"}
           </Button>
         </form>
       </div>
@@ -246,7 +340,7 @@ function AdminDashboard() {
                         <p className="text-xs text-zinc-500 font-medium tracking-tight truncate">{rest.address || 'Sem endereço configurado'}</p>
                       </CardHeader>
                       <CardContent className="px-8 pb-8">
-                        <div className="mb-3 flex items-center gap-2 p-2 pl-3 rounded-2xl bg-zinc-50 border border-zinc-100">
+                        <div className="mb-2 flex items-center gap-2 p-2 pl-3 rounded-2xl bg-zinc-50 border border-zinc-100">
                           <Link2 className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
                           <span className="text-[11px] font-medium text-zinc-500 truncate flex-1 min-w-0">/{rest.slug}</span>
                           <Button
@@ -255,7 +349,28 @@ function AdminDashboard() {
                             className={`h-7 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest shrink-0 ${copiedId === rest.id ? 'bg-emerald-500 text-white hover:bg-emerald-500' : 'bg-white text-zinc-900 hover:bg-zinc-900 hover:text-white border border-zinc-200'}`}
                             onClick={() => copyShareLink(rest.slug, rest.id)}
                           >
-                            {copiedId === rest.id ? <><Check className="w-3 h-3 mr-1" />Copiado</> : <>Copiar Link</>}
+                            {copiedId === rest.id ? <><Check className="w-3 h-3 mr-1" />Copiado</> : <>Link público</>}
+                          </Button>
+                        </div>
+                        <div className="mb-3 flex items-center gap-2 p-2 pl-3 rounded-2xl bg-amber-50 border border-amber-100">
+                          <Pencil className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span className="text-[11px] font-medium text-amber-700 truncate flex-1 min-w-0">Link do dono (secreto)</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className={`h-7 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest shrink-0 ${copiedEditId === rest.id ? 'bg-emerald-500 text-white hover:bg-emerald-500' : 'bg-white text-amber-700 hover:bg-amber-600 hover:text-white border border-amber-200'}`}
+                            onClick={() => copyEditLink(rest.edit_token, rest.id)}
+                          >
+                            {copiedEditId === rest.id ? <><Check className="w-3 h-3 mr-1" />Copiado</> : <>Copiar</>}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title="Gerar novo link (invalida o anterior)"
+                            className="h-7 w-7 p-0 rounded-xl shrink-0 text-amber-600 hover:bg-amber-100"
+                            onClick={() => regenerateToken(rest)}
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
                           </Button>
                         </div>
                         <div className="flex gap-2">

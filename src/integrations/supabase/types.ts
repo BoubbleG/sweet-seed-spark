@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          admin_password_hash: string | null
+          created_at: string
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          admin_password_hash?: string | null
+          created_at?: string
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          admin_password_hash?: string | null
+          created_at?: string
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           banner_url: string | null
@@ -73,10 +94,13 @@ export type Database = {
           is_available: boolean | null
           is_best_seller: boolean | null
           is_featured: boolean | null
+          is_on_promo: boolean
           name: string
           nutritional_info: string | null
           options: Json | null
           price: number
+          promo_label: string | null
+          promo_price: number | null
           restaurant_id: string
           updated_at: string | null
           variants: Json | null
@@ -92,10 +116,13 @@ export type Database = {
           is_available?: boolean | null
           is_best_seller?: boolean | null
           is_featured?: boolean | null
+          is_on_promo?: boolean
           name: string
           nutritional_info?: string | null
           options?: Json | null
           price: number
+          promo_label?: string | null
+          promo_price?: number | null
           restaurant_id: string
           updated_at?: string | null
           variants?: Json | null
@@ -111,10 +138,13 @@ export type Database = {
           is_available?: boolean | null
           is_best_seller?: boolean | null
           is_featured?: boolean | null
+          is_on_promo?: boolean
           name?: string
           nutritional_info?: string | null
           options?: Json | null
           price?: number
+          promo_label?: string | null
+          promo_price?: number | null
           restaurant_id?: string
           updated_at?: string | null
           variants?: Json | null
@@ -152,6 +182,7 @@ export type Database = {
           custom_css: string | null
           delivery_fee: number | null
           description: string | null
+          edit_token: string
           font_family: string | null
           header_style: string | null
           id: string
@@ -188,6 +219,7 @@ export type Database = {
           custom_css?: string | null
           delivery_fee?: number | null
           description?: string | null
+          edit_token?: string
           font_family?: string | null
           header_style?: string | null
           id?: string
@@ -224,6 +256,7 @@ export type Database = {
           custom_css?: string | null
           delivery_fee?: number | null
           description?: string | null
+          edit_token?: string
           font_family?: string | null
           header_style?: string | null
           id?: string

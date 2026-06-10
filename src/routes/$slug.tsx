@@ -291,11 +291,27 @@ function RestaurantPublicMenu() {
                       </div>
 
                       <div className="flex items-center justify-between gap-2 mt-3">
-                        <span className="text-base font-black truncate" style={{ color: t.text }}>
-                          {formatCurrency(prod.price)}
-                        </span>
+                        <div className="flex items-baseline gap-2 min-w-0">
+                          {prod.is_on_promo && prod.promo_price != null ? (
+                            <>
+                              <span className="text-base font-black truncate" style={{ color: t.primary }}>
+                                {formatCurrency(Number(prod.promo_price))}
+                              </span>
+                              <span className="text-xs line-through" style={{ color: t.textFaint }}>
+                                {formatCurrency(prod.price)}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-base font-black truncate" style={{ color: t.text }}>
+                              {formatCurrency(prod.price)}
+                            </span>
+                          )}
+                        </div>
                         <button
-                          onClick={() => addItem(prod)}
+                          onClick={() => addItem({
+                            ...prod,
+                            price: prod.is_on_promo && prod.promo_price != null ? Number(prod.promo_price) : prod.price,
+                          })}
                           type="button"
                           aria-label={`Adicionar ${prod.name}`}
                           className="w-11 h-11 shrink-0 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform"
