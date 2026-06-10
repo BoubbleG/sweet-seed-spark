@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   ArrowLeft, ArrowRight, ShoppingBag, Plus, Minus, Check, MapPin, CreditCard, Banknote,
   QrCode, Truck, Store, MessageCircle, Sparkles, Flame, Leaf, UtensilsCrossed, X, Loader2,
@@ -87,6 +86,19 @@ export function DemoCheckoutFlow({ open, onOpenChange, onCreateCta }: { open: bo
     }
   }, [open]);
 
+  // lock body scroll while open + close on Esc
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onOpenChange(false); };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [open, onOpenChange]);
+
   const cartEntries = Object.values(cart);
   const totalQty = cartEntries.reduce((s, e) => s + e.qty, 0);
   const subtotalItems = cartEntries.reduce((s, e) => s + e.item.price * e.qty, 0);
@@ -139,15 +151,26 @@ export function DemoCheckoutFlow({ open, onOpenChange, onCreateCta }: { open: bo
   const STEPS = ["Cardápio", "Sugestões", "Entrega", "Pagamento", "Revisão"];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="p-0 gap-0 max-w-full w-screen h-[100dvh] sm:h-[90vh] sm:max-w-md sm:rounded-3xl overflow-hidden border-0 sm:border bg-zinc-50 flex flex-col [&>button]:hidden"
-      >
-        <DialogTitle className="sr-only">Simulação de pedido — Bistro Master</DialogTitle>
-        <DialogDescription className="sr-only">Demonstração interativa de um pedido completo, do cardápio ao checkout.</DialogDescription>
-
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => onOpenChange(false)}
+            className="fixed inset-0 bg-black/60 z-[100]"
+            aria-hidden="true"
+          />
+          <motion.div
+            role="dialog" aria-modal="true" aria-label="Simulação de pedido"
+            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 32, stiffness: 280 }}
+            className="fixed inset-0 z-[100] bg-zinc-50 flex flex-col overflow-hidden
+                       sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2
+                       sm:w-[440px] sm:h-[90vh] sm:max-h-[820px] sm:rounded-3xl sm:shadow-2xl"
+            style={{ height: '100dvh', maxWidth: '100vw' }}
+          >
         {/* HEADER */}
-        <header className="bg-white border-b border-zinc-100 px-4 pt-4 pb-3 shrink-0">
+        <header className="bg-white border-b border-zinc-100 px-4 pt-4 pb-3 shrink-0" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
           <div className="flex items-center justify-between mb-3">
             <button
               onClick={() => (step > 1 && !sent ? back() : onOpenChange(false))}
@@ -178,16 +201,16 @@ export function DemoCheckoutFlow({ open, onOpenChange, onCreateCta }: { open: bo
         </header>
 
         {/* CONTENT */}
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain touch-pan-y">
           <AnimatePresence mode="wait">
             {sent ? (
               <SuccessScreen key="success" total={total} onCreateCta={() => { onOpenChange(false); onCreateCta(); }} onClose={() => onOpenChange(false)} />
             ) : (
               <motion.div
                 key={step}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.25 }}
                 className="p-4 pb-8"
               >
@@ -243,8 +266,10 @@ export function DemoCheckoutFlow({ open, onOpenChange, onCreateCta }: { open: bo
             )}
           </footer>
         )}
-      </DialogContent>
-    </Dialog>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -366,35 +391,35 @@ function StepAddress({ mode, setMode, address, setAddress, errors, formatCEP }: 
         <div className="space-y-3 bg-white p-4 rounded-2xl border border-zinc-100">
           <Field label="CEP" error={errors.cep}>
             <input
-              id="addr-cep" inputMode="numeric" placeholder="00000-000"
+              id="addr-cep" inputMode="numeric" autoComplete="postal-code" enterKeyHint="next" placeholder="00000-000"
               value={address.cep} onChange={e => upd("cep", formatCEP(e.target.value))}
-              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-[16px] font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
               maxLength={9}
             />
           </Field>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-2">
+          <div className="grid grid-cols-[minmax(0,1fr)_96px] gap-3">
+            <div className="min-w-0">
               <Field label="Rua" error={errors.street}>
-                <input id="addr-street" value={address.street} onChange={e => upd("street", e.target.value)} placeholder="Av. Brasil"
-                  className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={120} />
+                <input id="addr-street" autoComplete="address-line1" enterKeyHint="next" value={address.street} onChange={e => upd("street", e.target.value)} placeholder="Av. Brasil"
+                  className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-[16px] font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={120} />
               </Field>
             </div>
             <Field label="Número" error={errors.number}>
-              <input id="addr-number" inputMode="numeric" value={address.number} onChange={e => upd("number", e.target.value)} placeholder="123"
-                className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={10} />
+              <input id="addr-number" inputMode="numeric" enterKeyHint="next" value={address.number} onChange={e => upd("number", e.target.value)} placeholder="123"
+                className="h-14 w-full rounded-xl border border-zinc-200 px-3 text-[16px] font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={10} />
             </Field>
           </div>
           <Field label="Bairro" error={errors.district}>
-            <input id="addr-district" value={address.district} onChange={e => upd("district", e.target.value)} placeholder="Vila Madalena"
-              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={60} />
+            <input id="addr-district" autoComplete="address-level2" enterKeyHint="next" value={address.district} onChange={e => upd("district", e.target.value)} placeholder="Vila Madalena"
+              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-[16px] font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={60} />
           </Field>
           <Field label="Complemento (opcional)">
-            <input id="addr-complement" value={address.complement} onChange={e => upd("complement", e.target.value)} placeholder="Apto 42, Bloco B"
-              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={60} />
+            <input id="addr-complement" autoComplete="address-line2" enterKeyHint="next" value={address.complement} onChange={e => upd("complement", e.target.value)} placeholder="Apto 42, Bloco B"
+              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-[16px] font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={60} />
           </Field>
           <Field label="Ponto de referência (opcional)">
-            <input id="addr-reference" value={address.reference} onChange={e => upd("reference", e.target.value)} placeholder="Próximo ao mercado"
-              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={120} />
+            <input id="addr-reference" enterKeyHint="done" value={address.reference} onChange={e => upd("reference", e.target.value)} placeholder="Próximo ao mercado"
+              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-[16px] font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={120} />
           </Field>
         </div>
       )}
@@ -490,7 +515,7 @@ function StepPayment({ payment, setPayment, card, setCard, changeFor, setChangeF
           <Field label="Precisa de troco para quanto? (opcional)">
             <input id="cash-change" inputMode="decimal" placeholder="Ex: 100,00" value={changeFor}
               onChange={e => setChangeFor(e.target.value.replace(/[^\d,]/g, "").slice(0, 10))}
-              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" />
+              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-[16px] font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" />
           </Field>
         </div>
       )}
