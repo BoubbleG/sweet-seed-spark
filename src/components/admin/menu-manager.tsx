@@ -145,16 +145,28 @@ export function MenuManager({ restaurantId }: MenuManagerProps) {
           continue;
         }
 
-        // Product line: split by " - " or " — " or tab
-        const parts = line.split(/\s*[-—|]\s*|\t+/).map((p) => p.trim()).filter(Boolean);
-        if (parts.length < 2) continue;
+        // Find a price anywhere in the line: R$ 15,90 / 15,90 / 15.90 / 15
+        const priceRegex = /R?\$?\s*\d{1,4}(?:[.,]\d{2})?(?!\d)/i;
+        const priceMatch = line.match(priceRegex);
+        if (!priceMatch) continue;
 
-        const name = parts[0];
-        // Find first part that looks like a price
-        let priceIdx = parts.findIndex((p, i) => i > 0 && /\d/.test(p) && /r\$|[\d][,.]?\d/.test(p));
-        if (priceIdx === -1) priceIdx = 1;
-        const price = parsePrice(parts[priceIdx]);
-        const description = parts.filter((_, i) => i !== 0 && i !== priceIdx).join(" - ") || null;
+        const price = parsePrice(priceMatch[0]);
+        if (price <= 0) continue;
+
+        // Everything before the price = name (+ optional description after a dash)
+        const before = line.slice(0, priceMatch.index!).replace(/[\s\-—|.:·•]+$/g, "").trim();
+        const after = line.slice(priceMatch.index! + priceMatch[0].length).replace(/^[\s\-—|.:·•]+/g, "").trim();
+        if (!before) continue;
+
+        // If "before" has " - " split, name=first, desc=rest
+        let name = before;
+        let description: string | null = after || null;
+        const dashSplit = before.split(/\s+[-—]\s+/);
+        if (dashSplit.length > 1) {
+          name = dashSplit[0].trim();
+          const fromName = dashSplit.slice(1).join(" - ").trim();
+          description = [fromName, after].filter(Boolean).join(" - ") || null;
+        }
 
         if (!currentCatId) {
           currentCatId = await ensureCategory("Geral");
