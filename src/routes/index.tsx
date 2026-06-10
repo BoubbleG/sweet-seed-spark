@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { UtensilsCrossed, Plus, ArrowRight, Star, ShieldCheck, Zap, Smartphone, Clock as ClockIcon, MessageCircle, ShoppingBag, Flame, Leaf, Search, MapPin, Phone, ChevronRight, BadgeCheck, Sparkles } from "lucide-react";
+import { UtensilsCrossed, Plus, ArrowRight, Star, ShieldCheck, Zap, Smartphone, Clock as ClockIcon, MessageCircle, ShoppingBag, Flame, Leaf, Search, MapPin, ChevronRight, BadgeCheck, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Restaurant } from "@/types";
 import { motion } from "framer-motion";
