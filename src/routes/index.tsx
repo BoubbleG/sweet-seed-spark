@@ -95,6 +95,9 @@ function LandingPage() {
           </div>
         </section>
 
+        {/* Live Demo */}
+        <LiveDemoSection activeCategory={activeCategory} setActiveCategory={setActiveCategory} onCta={() => navigate({ to: '/admin' })} />
+
         {/* Portfolio / Active Projects */}
         <section className="py-32 px-8 max-w-7xl mx-auto">
           <div className="flex justify-between items-end mb-16">
