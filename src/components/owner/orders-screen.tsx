@@ -1,0 +1,189 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { SectionShell } from "./shared";
+import { OrderCard } from "./order-card";
+import { OrderReceipt } from "./order-receipt";
+import { PrinterHelp } from "./printer-help";
+import {
+  fetchOrders,
+  markPrinted,
+  playNewOrderSound,
+} from "@/lib/orders";
+import { supabase } from "@/integrations/supabase/client";
+import type { Order, Restaurant } from "@/types";
+import { ReceiptText } from "lucide-react";
+
+const FILTERS = [
+  { key: "ativos", label: "Ativos" },
+  { key: "novo", label: "Novos" },
+  { key: "preparando", label: "Preparando" },
+  { key: "pronto", label: "Prontos" },
+  { key: "todos", label: "Todos" },
+] as const;
+
+type FilterKey = (typeof FILTERS)[number]["key"];
+
+const AUTOPRINT_KEY = "owner_autoprint_v1";
+
+export function OwnerOrdersScreen({
+  restaurant,
+  onBack,
+}: {
+  restaurant: Restaurant;
+  onBack: () => void;
+}) {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [filter, setFilter] = useState<FilterKey>("ativos");
+  const [autoPrint, setAutoPrint] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(AUTOPRINT_KEY) === "1";
+  });
+  const [printing, setPrinting] = useState<Order | null>(null);
+  const seenIds = useRef<Set<string>>(new Set());
+  const newlyArrived = useRef<Set<string>>(new Set());
+  const initialLoaded = useRef(false);
+
+  useEffect(() => {
+    localStorage.setItem(AUTOPRINT_KEY, autoPrint ? "1" : "0");
+  }, [autoPrint]);
+
+  const load = async () => {
+    const data = await fetchOrders(restaurant.id);
+    data.forEach((o) => seenIds.current.add(o.id));
+    initialLoaded.current = true;
+    setOrders(data);
+  };
+
+  useEffect(() => {
+    load();
+    const channel = supabase
+      .channel(`orders-${restaurant.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "orders",
+          filter: `restaurant_id=eq.${restaurant.id}`,
+        },
+        async (payload) => {
+          if (payload.eventType === "INSERT") {
+            const o = payload.new as Order;
+            if (!seenIds.current.has(o.id)) {
+              seenIds.current.add(o.id);
+              newlyArrived.current.add(o.id);
+              playNewOrderSound();
+              const full = (await fetchOrders(restaurant.id)).find(
+                (x) => x.id === o.id,
+              );
+              if (full && autoPrint && !full.printed_at) {
+                triggerPrint(full);
+              }
+            }
+          }
+          load();
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurant.id, autoPrint]);
+
+  const triggerPrint = async (order: Order) => {
+    setPrinting(order);
+    // Allow React to render the receipt before window.print()
+    await new Promise((r) => setTimeout(r, 100));
+    window.print();
+    await markPrinted(order.id);
+    setTimeout(() => setPrinting(null), 400);
+  };
+
+  const filtered = useMemo(() => {
+    if (filter === "ativos")
+      return orders.filter((o) => o.status === "novo" || o.status === "preparando" || o.status === "pronto");
+    if (filter === "todos") return orders;
+    return orders.filter((o) => o.status === filter);
+  }, [orders, filter]);
+
+  const newCount = orders.filter((o) => o.status === "novo").length;
+
+  return (
+    <SectionShell
+      title="Pedidos chegando"
+      subtitle={newCount > 0 ? `${newCount} novo(s) aguardando` : "Tudo em dia"}
+      onBack={onBack}
+    >
+      <div className="bg-white border border-zinc-200 rounded-2xl p-4 mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-black text-zinc-900">Imprimir automático</p>
+          <p className="text-xs text-zinc-500 leading-tight">
+            Cada pedido novo imprime sozinho. Mantenha esta aba aberta.
+          </p>
+        </div>
+        <button
+          role="switch"
+          aria-checked={autoPrint}
+          onClick={() => setAutoPrint((v) => !v)}
+          className={`relative w-14 h-8 rounded-full transition shrink-0 ${
+            autoPrint ? "bg-emerald-500" : "bg-zinc-300"
+          }`}
+        >
+          <span
+            className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow transition-transform ${
+              autoPrint ? "translate-x-6" : ""
+            }`}
+          />
+        </button>
+      </div>
+
+      <PrinterHelp />
+
+      <div className="flex gap-2 overflow-x-auto pb-2 mb-3 -mx-1 px-1">
+        {FILTERS.map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setFilter(f.key)}
+            className={`shrink-0 h-10 px-4 rounded-full text-xs font-bold transition ${
+              filter === f.key
+                ? "bg-zinc-900 text-white"
+                : "bg-white border border-zinc-200 text-zinc-700"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="bg-white border border-dashed border-zinc-300 rounded-2xl p-10 text-center">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-zinc-100 text-zinc-400 flex items-center justify-center mb-3">
+            <ReceiptText className="w-6 h-6" />
+          </div>
+          <p className="text-sm font-bold text-zinc-700">Nenhum pedido por aqui</p>
+          <p className="text-xs text-zinc-500 mt-1">
+            Quando um cliente fizer um pedido pelo cardápio, ele aparece aqui na hora.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((o) => (
+            <OrderCard
+              key={o.id}
+              order={o}
+              isNew={newlyArrived.current.has(o.id) && o.status === "novo"}
+              onPrint={() => triggerPrint(o)}
+              onChanged={load}
+            />
+          ))}
+        </div>
+      )}
+
+      {printing && (
+        <div className="hidden-on-screen">
+          <OrderReceipt restaurant={restaurant} order={printing} />
+        </div>
+      )}
+    </SectionShell>
+  );
+}
