@@ -5,6 +5,7 @@ import { useCart } from "@/hooks/use-cart";
 import { formatCurrency } from "@/lib/utils";
 import { buildMenuTheme } from "@/lib/theme";
 import { ShoppingCart, Plus, Search, Menu as MenuIcon, Package, Home as HomeIcon } from "lucide-react";
+import { Sparkles, Tag, Flame } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { CartDrawer } from "@/components/cart-drawer";
 import { motion } from "framer-motion";
@@ -43,6 +44,14 @@ function RestaurantPublicMenu() {
       p.description?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [menu?.products, searchQuery]);
+
+  const promoProducts = useMemo(
+    () =>
+      (filteredProducts || []).filter(
+        (p) => p.is_on_promo && p.promo_price != null
+      ),
+    [filteredProducts]
+  );
 
   // Track active category while scrolling
   useEffect(() => {
@@ -226,6 +235,109 @@ function RestaurantPublicMenu() {
 
       {/* Menu */}
       <main ref={menuRef} className="px-5 sm:px-6 mt-8 space-y-10">
+        {!searchQuery && promoProducts.length > 0 && (
+          <section aria-label="Promoções" className="-mx-5 sm:-mx-6">
+            <div
+              className="relative overflow-hidden mx-5 sm:mx-6 rounded-3xl p-5 sm:p-6 shadow-xl"
+              style={{
+                background:
+                  "linear-gradient(135deg, #f59e0b 0%, #ef4444 55%, #db2777 100%)",
+                color: "#fff",
+              }}
+            >
+              {/* glow blobs */}
+              <div className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/20 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-12 -left-8 w-44 h-44 rounded-full bg-white/10 blur-3xl" />
+
+              <div className="relative flex items-center gap-2 mb-4">
+                <span className="inline-flex items-center justify-center w-9 h-9 rounded-2xl bg-white/20 backdrop-blur">
+                  <Flame className="w-5 h-5" />
+                </span>
+                <div className="min-w-0">
+                  <h2 className="text-lg sm:text-xl font-black tracking-tight leading-none flex items-center gap-1.5">
+                    Ofertas de hoje
+                    <Sparkles className="w-4 h-4" />
+                  </h2>
+                  <p className="text-[11px] sm:text-xs font-medium opacity-90 mt-1">
+                    Só por tempo limitado · {promoProducts.length}{" "}
+                    {promoProducts.length === 1 ? "item" : "itens"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory -mx-1 px-1 pb-1">
+                {promoProducts.map((prod) => {
+                  const off = Math.max(
+                    0,
+                    Math.round(
+                      ((prod.price - Number(prod.promo_price)) / prod.price) * 100
+                    )
+                  );
+                  return (
+                    <motion.article
+                      key={prod.id}
+                      layout
+                      className="snap-start shrink-0 w-[230px] sm:w-[250px] rounded-2xl bg-white text-zinc-900 shadow-lg overflow-hidden flex flex-col"
+                    >
+                      <div className="relative h-32 bg-zinc-100">
+                        {prod.image_url ? (
+                          <img
+                            src={prod.image_url}
+                            alt={prod.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-zinc-300">
+                            <Package className="w-8 h-8" />
+                          </div>
+                        )}
+                        {off > 0 && (
+                          <span className="absolute top-2 left-2 text-[10px] font-black uppercase tracking-wider bg-zinc-900 text-white px-2 py-1 rounded-full shadow">
+                            -{off}%
+                          </span>
+                        )}
+                        <span className="absolute top-2 right-2 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-amber-400 text-zinc-900 px-2 py-1 rounded-full shadow">
+                          <Tag className="w-3 h-3" />
+                          {prod.promo_label || "Promo"}
+                        </span>
+                      </div>
+
+                      <div className="p-3 flex-1 flex flex-col">
+                        <h3 className="text-sm font-black leading-snug line-clamp-2">
+                          {prod.name}
+                        </h3>
+                        <div className="mt-auto pt-2 flex items-end justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="text-[11px] line-through text-zinc-400 leading-none">
+                              {formatCurrency(prod.price)}
+                            </div>
+                            <div className="text-base font-black text-rose-600 leading-tight">
+                              {formatCurrency(Number(prod.promo_price))}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() =>
+                              addItem({
+                                ...prod,
+                                price: Number(prod.promo_price),
+                              })
+                            }
+                            type="button"
+                            aria-label={`Adicionar ${prod.name}`}
+                            className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform bg-zinc-900 text-white"
+                          >
+                            <Plus className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.article>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
         {menu?.categories.map(cat => {
           const prods = filteredProducts.filter(p => p.category_id === cat.id);
           if (prods.length === 0) return null;
