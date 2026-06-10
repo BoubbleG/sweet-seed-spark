@@ -105,13 +105,15 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
           ...data.design,
           name: "Novo Restaurante Master", 
           slug: "restaurante-ia-" + Math.random().toString(36).substring(7),
-          primary_color: designDetails.primary,
-          background_color: designDetails.background,
-          text_color: designDetails.text,
+          primary_color: data.design.primary_color || designDetails.primary,
+          secondary_color: data.design.secondary_color || designDetails.secondary,
+          button_color: data.design.button_color || data.design.primary_color || designDetails.accent,
+          background_color: data.design.background_color || designDetails.background,
+          text_color: data.design.text_color || designDetails.text,
           status: "active"
         }));
         setCreationMode('manual');
-        toast.success("Design completo identificado com sucesso!", { id: toastId });
+        toast.success("Design completo identificado: cores, fundo, texto e estilo!", { id: toastId });
       }
     } catch (error: any) {
       toast.error("Erro ao processar imagem.", { id: toastId });

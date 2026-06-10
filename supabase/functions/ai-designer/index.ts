@@ -11,46 +11,55 @@ serve(async (req) => {
   }
 
   try {
-    const { image, extractedDesign, currentStyle } = await req.json()
+    const { image, extractedDesign } = await req.json()
     const apiKey = Deno.env.get('LOVABLE_API_KEY')
 
-    // Initial suggestion based on deterministic pixel analysis
-    let designSuggestion = {
+    let designSuggestion: any = {
       visual_style: 'modern',
       primary_color: extractedDesign?.primary || '#7c3aed',
       secondary_color: extractedDesign?.secondary || '#10b981',
+      button_color: extractedDesign?.accent || extractedDesign?.primary || '#7c3aed',
       background_color: extractedDesign?.background || '#ffffff',
       text_color: extractedDesign?.text || '#1f2937',
       font_family: 'Outfit',
       header_style: 'standard',
-      border_radius: '1.5rem'
+      border_radius: '1.5rem',
+      card_style: 'elevated'
     }
 
-    if (apiKey) {
+    if (apiKey && image) {
       try {
-        const response = await fetch('https://api.lovable.app/v1/chat/completions', {
+        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-4o',
+            model: 'google/gemini-2.5-pro',
             messages: [
               {
                 role: 'system',
-                content: `You are a high-end UI/UX Designer. Analyze the image and the extracted color data to suggest a COMPLETE professional Design System for a restaurant digital menu.
-                Extracted Data: ${JSON.stringify(extractedDesign)}
-                Rules: 
-                - If the image is premium/dark, suggest 'premium' style.
-                - If it's craft/warm, suggest 'artesanal'.
-                - If it's clean/tech, suggest 'modern' or 'minimalista'.
-                Return ONLY JSON with these keys: visual_style, primary_color, background_color, text_color, font_family, header_style, border_radius.`
+                content: `You are an expert brand designer. Analyze the uploaded image (logo, photo, or menu reference) with extreme attention to detail. Identify:
+- The DOMINANT brand color (primary_color) — the most recognizable color
+- A complementary SECONDARY color present in the image
+- An ACCENT color for buttons/CTAs (highest contrast against background)
+- The exact BACKGROUND color visible in the image (or white/dark surface that fits the brand)
+- The exact TEXT color that appears on text in the image (or the best readable color over background)
+- Font family vibe: pick from "Outfit", "Inter", "Playfair Display", "Bebas Neue", "Space Grotesk", "DM Serif Display"
+- visual_style: one of "modern", "premium", "artesanal", "minimalista", "vibrant"
+- header_style: "standard", "hero", "minimal"
+- border_radius: "0.5rem", "1rem", "1.5rem", "2rem"
+- card_style: "elevated", "flat", "outlined"
+
+Pixel data already extracted: ${JSON.stringify(extractedDesign)}.
+Use the pixel data as ground truth for colors when uncertain, but refine with semantic understanding (e.g. logo color vs background noise).
+Return ONLY valid JSON with keys: primary_color, secondary_color, button_color, background_color, text_color, font_family, visual_style, header_style, border_radius, card_style. All colors MUST be valid hex (#RRGGBB).`
               },
               {
                 role: 'user',
                 content: [
-                  { type: 'text', text: 'Suggest the best design system for this brand.' },
+                  { type: 'text', text: 'Analyze this brand image and return the full design system JSON.' },
                   { type: 'image_url', image_url: { url: image } }
                 ]
               }
@@ -58,11 +67,16 @@ serve(async (req) => {
             response_format: { type: 'json_object' }
           })
         })
-        
-        const aiData = await response.json()
-        if (aiData.choices?.[0]?.message?.content) {
-          const aiDesign = JSON.parse(aiData.choices[0].message.content)
-          designSuggestion = { ...designSuggestion, ...aiDesign }
+
+        if (response.ok) {
+          const aiData = await response.json()
+          const content = aiData.choices?.[0]?.message?.content
+          if (content) {
+            const aiDesign = JSON.parse(content)
+            designSuggestion = { ...designSuggestion, ...aiDesign }
+          }
+        } else {
+          console.error("AI Gateway status:", response.status, await response.text())
         }
       } catch (aiError) {
         console.error("AI Gateway Error:", aiError)
@@ -70,15 +84,12 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        design: designSuggestion
-      }),
+      JSON.stringify({ success: true, design: designSuggestion }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
