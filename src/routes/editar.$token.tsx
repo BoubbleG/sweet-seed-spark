@@ -16,8 +16,6 @@ import {
   Utensils,
   Palette,
   Settings,
-  Tag,
-  ExternalLink,
   Check,
   Link2,
   Store,
