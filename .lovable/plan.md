@@ -1,91 +1,70 @@
-# Sistema de Links de Edição por Restaurante
+# Editor mobile-first para donos de restaurante
 
-## Como vai funcionar
+O link `/editar/{token}` que o dono recebe vai ser usado **quase sempre no celular** por pessoas que **não têm familiaridade com painéis**. Vou refazer toda a navegação e os formulários do editor com foco em: textos curtos em português simples, botões grandes que cabem o polegar, uma ação principal visível por tela, e zero "jargão de admin".
 
-```
-Você (Admin Master)
-   │  acessa /admin com senha
-   │  cria restaurante "Point do Gordinho"
-   │  copia link único de edição: /editar/abc123xyz...
-   │
-   ▼
-Envia link pro dono do restaurante
-   │
-   ▼
-Dono abre /editar/abc123xyz
-   │  edita cardápio, promoções, visual, dados
-   │  vê botão "Copiar link público"
-   │
-   ▼
-Link público do cliente: /point-do-gordinho
-   (cardápio que os clientes acessam pra pedir)
-```
+## O que muda
 
-Cada restaurante tem **dois links**:
-- **Link de edição** (secreto, só o dono tem) — `/editar/{token}`
-- **Link público** (compartilhável com clientes) — `/{slug}`
+### 1. Nova navegação mobile (substitui as abas atuais)
 
-## O que vou construir
+Atualmente a página usa abas no topo (`Cardápio / Visual / Informações`) que ficam apertadas no celular. Vou trocar por:
 
-### 1. Banco de dados
-- Adicionar coluna `edit_token` (texto único, gerado automaticamente) na tabela `restaurants`
-- Adicionar coluna `admin_password_hash` numa nova tabela `app_settings` (senha do admin master)
-- Ajustar políticas de acesso: leitura pública continua liberada pros cardápios; escrita passa a exigir o token de edição correto (validado via função do servidor)
+- **Tela inicial do editor** com 4 cartões grandes empilhados (estilo "menu de app"):
+  - 🍔 **Meu cardápio** — "Adicionar, editar ou remover pratos"
+  - 🏷️ **Promoções** — "Marcar oferta do dia e preço promocional"
+  - 🎨 **Aparência** — "Logo, capa e cores"
+  - 📞 **Meu restaurante** — "WhatsApp, endereço, horário, taxa"
+- Cada cartão abre uma **tela cheia** com um botão "← Voltar" gigante no topo e a ação principal fixa no rodapé (`Salvar` ou `+ Adicionar`).
+- **Barra fixa inferior** (bottom bar) com 3 atalhos sempre visíveis: `Editar`, `Ver meu cardápio`, `Compartilhar link`.
 
-### 2. Página de edição `/editar/$token`
-Quando o dono abre o link, ele vê uma versão do painel atual `/admin` mas **filtrada só pro restaurante dele**, com 4 abas:
-- **Cardápio** — produtos, preços, categorias (CRUD completo)
-- **Promoções** — marcar item como "oferta do dia" com preço promocional riscado
-- **Visual** — logo, capa, cores, fonte
-- **Informações** — nome, WhatsApp, endereço, horário, taxa de entrega
-- Botão no topo: "Ver cardápio público" + "Copiar link público"
+### 2. Cardápio — fluxo simplificado
 
-### 3. Promoções (recurso novo)
-- Novos campos em `products`: `promo_price` (preço promocional), `is_on_promo` (ativo/inativo), `promo_label` (ex: "Oferta do dia")
-- No cardápio público: item em promoção mostra preço original riscado + preço novo em destaque + badge
+- Lista de categorias em **cards grandes expansíveis** (acordeão), não em colunas.
+- Cada produto vira um cartão com: foto, nome, preço, e um único botão "Editar". Sem ícones de lápis/lixeira soltos — tudo dentro do diálogo de edição.
+- Botão flutuante `+` no canto inferior direito para "Adicionar prato".
+- Reordenar via setas ↑ ↓ (drag-and-drop não funciona bem no toque).
+- Toggle grande "Disponível hoje" em cada prato (em vez de checkbox pequeno).
 
-### 4. Admin master `/admin`
-- Tela de **login com senha** (a senha fica protegida; primeira vez você define)
-- Após login: lista todos os restaurantes em cards com:
-  - Nome, slug, status
-  - Botão **"Copiar link de edição"** (gera/copia `/editar/{token}`)
-  - Botão **"Copiar link público"** (`/{slug}`)
-  - Botão **"Regenerar token"** (caso o link vaze)
-  - Botão **"Excluir restaurante"**
-- Botão **"+ Novo restaurante"** que cria com slug, token e abre direto a página de edição
+### 3. Promoções — tela dedicada e visual
 
-### 5. Segurança
-- Token de edição: 32 caracteres aleatórios (impossível de adivinhar)
-- Toda escrita no banco passa por uma função do servidor que valida `token === restaurant.edit_token` antes de salvar
-- Senha do admin: armazenada com hash (bcrypt), validada via função do servidor
-- Sessão do admin: cookie httpOnly de 7 dias
+Hoje a promoção fica escondida dentro do diálogo do produto. Vou criar uma **aba própria "Promoções"** que mostra:
+- Lista de todos os pratos com um **switch grande** "Em promoção".
+- Quando ligado, aparecem dois campos lado a lado: `Preço normal` (cinza, riscado) e `Preço promocional` (destaque) + um campo `Etiqueta` ("Oferta do dia", "-20%", etc).
+- Pré-visualização imediata em cima mostrando como o cliente vai ver.
 
-## Detalhes técnicos
+### 4. Aparência — só o essencial, sem técnico
 
-**Rotas novas:**
-- `src/routes/editar.$token.tsx` — painel do dono (reusa componentes de `MenuManager`, `VisualManager`, `RestaurantDialog` filtrando por `restaurant_id` resolvido pelo token)
-- `src/routes/admin.tsx` — refatorado: adiciona tela de login + lista master de restaurantes
-- `src/lib/restaurant-edit.functions.ts` — server functions: `validateEditToken`, `updateRestaurantByToken`, `upsertProductByToken`, etc.
-- `src/lib/admin-auth.functions.ts` — server functions: `adminLogin`, `adminLogout`, `createRestaurantWithToken`, `regenerateEditToken`
+- 3 blocos grandes: **Logo**, **Capa**, **Cor principal**.
+- Upload com botão "Tirar foto / Escolher do celular" (input `capture` quando útil).
+- Cor principal via paleta de **8 cores predefinidas** (não color-picker hex).
+- Pré-visualização ao vivo embaixo mostrando "Assim seu cliente vai ver".
 
-**Migração SQL:**
-- `restaurants.edit_token text unique not null default encode(gen_random_bytes(24), 'hex')`
-- `products.promo_price numeric`, `products.is_on_promo boolean default false`, `products.promo_label text`
-- Tabela `app_settings(id, admin_password_hash text, updated_at)` — single-row
-- RLS revisada: SELECT continua público; INSERT/UPDATE/DELETE só via service role (server functions)
+### 5. Informações — formulário em passos
 
-**Cardápio público (`/$slug`):**
-- Renderizar badge de promoção + preço riscado quando `is_on_promo = true`
+Em vez de um formulão único:
+- Tela rolável com **cards de seção**: `Contato` (WhatsApp), `Endereço`, `Horário`, `Entrega`.
+- Cada campo com label grande, exemplo embaixo (ex.: "Ex.: 11 99999-9999"), `inputMode` correto para abrir teclado numérico/telefone, `autocomplete`.
+- Botão `Salvar` fixo no rodapé (sticky) com feedback "✓ Salvo!" inline.
 
-## Fluxo do primeiro uso
+### 6. Microajustes de UX mobile
 
-1. Você abre `/admin` → tela "Defina a senha do admin" (primeira vez)
-2. Faz login
-3. Clica em "+ Novo restaurante" → preenche nome e slug
-4. Sistema cria o restaurante e mostra: "Link de edição: `/editar/abc...` 📋 Copiar"
-5. Você envia esse link por WhatsApp pro dono
-6. Dono abre, edita tudo, e copia o link público `/point-do-gordinho` pra divulgar pros clientes
+- Todos os botões com altura mínima de **52px** (`min-h-13`) e texto legível (≥14px).
+- Inputs com altura **48px** mínimo, `text-base` (16px) para evitar zoom do iOS.
+- Toasts grandes, posicionados no topo no mobile (para não cobrir o teclado).
+- Diálogos viram **bottom sheets** que cobrem 100% no celular e rolam internamente.
+- "Salvar" automático com debounce em campos simples (toggle de promoção, disponibilidade), com indicador "Salvando… ✓ Salvo".
+- Linguagem 100% em português coloquial: "Apagar" em vez de "Excluir", "Mostrar para clientes" em vez de "Ativar", etc.
 
-## O que NÃO vai mudar
-- Visual atual do cardápio público continua igual (só ganha o badge de promoção)
-- Componentes de edição existentes (`MenuManager`, `VisualManager`) são reaproveitados
+## Arquivos envolvidos
+
+- `src/routes/editar.$token.tsx` — refeito com home + sub-telas e bottom bar.
+- `src/components/admin/menu-manager.tsx` — versão mobile (cards expansíveis, FAB, toggles grandes).
+- `src/components/admin/product-dialog.tsx` — vira bottom sheet, separa edição de promoção.
+- `src/components/admin/visual-manager.tsx` — paleta predefinida, uploads simplificados, preview.
+- Novo `src/components/admin/promo-manager.tsx` — tela dedicada de promoções.
+- Novo `src/components/admin/owner-info-form.tsx` — substitui o `InfoForm` inline em cards seccionados.
+
+## Fora do escopo
+
+- O `/admin` (master) **não muda** — continua igual; foco é só no link que o dono recebe.
+- O cardápio público `/{slug}` **não muda**.
+- Sem mexer em banco de dados ou lógica de backend.
