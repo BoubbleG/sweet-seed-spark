@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { Restaurant } from "@/types";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { DemoCheckoutFlow } from "@/components/demo-checkout";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,6 +23,7 @@ function LandingPage() {
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [activeCategory, setActiveCategory] = useState("burgers");
+  const [demoOpen, setDemoOpen] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -74,7 +76,8 @@ function LandingPage() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                id="ver-demo-btn"
+                onClick={() => setDemoOpen(true)}
                 className="h-16 px-12 rounded-full border-2 border-zinc-200 font-black uppercase tracking-widest text-[11px] hover:bg-zinc-50 transition-all"
               >
                 Ver Demonstração
