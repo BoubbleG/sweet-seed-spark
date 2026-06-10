@@ -185,7 +185,7 @@ function RestaurantPublicMenu() {
                 <motion.div
                   key={prod.id}
                   layout
-                  className={`bg-white rounded-[2rem] p-5 flex shadow-sm border border-zinc-50 relative group ${restaurant.product_card_layout === 'grid' ? 'flex-col' : 'flex-row gap-4'}`}
+                  className={`bg-white rounded-[2rem] p-5 flex shadow-sm border border-zinc-100 relative group overflow-hidden ${restaurant.product_card_layout === 'grid' ? 'flex-col' : 'flex-row gap-4'}`}
                 >
                   <div className={`rounded-2xl bg-zinc-100 overflow-hidden flex-shrink-0 ${restaurant.product_card_layout === 'grid' ? 'w-full aspect-square mb-3' : 'w-24 h-24'}`}>
                     {prod.image_url ? (
@@ -197,26 +197,26 @@ function RestaurantPublicMenu() {
                     )}
                   </div>
                   
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div>
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div className="min-w-0">
                       {prod.is_best_seller && (
                         <div className="bg-[#E29B5D] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full w-fit mb-1.5">
                           MAIS PEDIDO
                         </div>
                       )}
-                      <h3 className="text-sm font-black mb-1 break-words line-clamp-2" style={{ color: restaurant.text_color || '#3B2C24' }}>{prod.name}</h3>
-                      <p className="text-[10px] opacity-60 line-clamp-2 leading-relaxed" style={{ color: restaurant.text_color || '#3B2C24' }}>
+                      <h3 className="text-sm font-black mb-1 break-words line-clamp-2 text-zinc-900">{prod.name}</h3>
+                      <p className="text-[10px] line-clamp-3 leading-relaxed break-words text-zinc-500">
                         {prod.description}
                       </p>
                     </div>
                     
-                    <div className="flex items-center justify-between mt-3">
-                      <span className="text-sm font-black" style={{ color: restaurant.text_color || '#3B2C24' }}>
+                    <div className="flex items-center justify-between mt-3 gap-2">
+                      <span className="text-sm font-black truncate text-zinc-900">
                         R$ {prod.price.toFixed(2).replace('.', ',')}
                       </span>
                       <button 
                         onClick={() => addItem(prod)}
-                        className="w-8 h-8 rounded-full text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-90"
+                        className="w-8 h-8 shrink-0 rounded-full text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-90"
                         style={{ backgroundColor: restaurant.button_color || restaurant.primary_color || '#3B2C24' }}
                       >
                         <Plus className="w-5 h-5" />
