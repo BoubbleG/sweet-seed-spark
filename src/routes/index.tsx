@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { UtensilsCrossed, Plus, Eye, ArrowRight, Star, ShieldCheck, Zap, Smartphone, Globe, Users } from "lucide-react";
+import { UtensilsCrossed, Plus, ArrowRight, Star, ShieldCheck, Zap, Smartphone, Clock as ClockIcon, MessageCircle, ShoppingBag, Flame, Leaf, Search, MapPin, ChevronRight, BadgeCheck, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Restaurant } from "@/types";
 import { motion } from "framer-motion";
@@ -20,6 +20,7 @@ export const Route = createFileRoute("/")({
 function LandingPage() {
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [activeCategory, setActiveCategory] = useState("burgers");
 
   useEffect(() => {
     async function load() {
@@ -93,6 +94,9 @@ function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* Live Demo */}
+        <LiveDemoSection activeCategory={activeCategory} setActiveCategory={setActiveCategory} onCta={() => navigate({ to: '/admin' })} />
 
         {/* Portfolio / Active Projects */}
         <section className="py-32 px-8 max-w-7xl mx-auto">
@@ -258,4 +262,201 @@ function FooterLink({ label }: { label: string }) {
 
 function Clock() {
   return <Zap className="w-6 h-6" />;
+}
+
+/* ============ LIVE DEMO ============ */
+
+const DEMO_CATEGORIES = [
+  { id: "burgers", label: "Hambúrgueres", icon: Flame },
+  { id: "pizzas", label: "Pizzas", icon: UtensilsCrossed },
+  { id: "salads", label: "Saladas", icon: Leaf },
+  { id: "drinks", label: "Bebidas", icon: ShoppingBag },
+];
+
+const DEMO_ITEMS: Record<string, Array<{ name: string; desc: string; price: string; img: string; tag?: string }>> = {
+  burgers: [
+    { name: "Smash Truffle", desc: "Dois smash burgers, cheddar inglês, maionese de trufa e cebola caramelizada.", price: "R$ 39,90", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80", tag: "Mais Pedido" },
+    { name: "Bacon Royale", desc: "Blend bovino 180g, bacon crocante artesanal, cheddar e geléia de bacon.", price: "R$ 42,00", img: "https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=800&q=80" },
+    { name: "Veggie Beet", desc: "Hambúrguer de beterraba e grão-de-bico, brie e rúcula no pão australiano.", price: "R$ 36,50", img: "https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?w=800&q=80", tag: "Veggie" },
+    { name: "Classic Master", desc: "Carne 160g, queijo prato, alface americana, tomate e molho da casa.", price: "R$ 32,00", img: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=800&q=80" },
+  ],
+  pizzas: [
+    { name: "Margherita D.O.P.", desc: "Molho San Marzano, muçarela de búfala, manjericão fresco e azeite EVO.", price: "R$ 58,00", img: "https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?w=800&q=80", tag: "Clássica" },
+    { name: "Pepperoni Fire", desc: "Pepperoni italiano, mel apimentado e mozzarella fior di latte.", price: "R$ 64,00", img: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=800&q=80", tag: "Picante" },
+    { name: "Quattro Formaggi", desc: "Gorgonzola, parmesão, provolone e mozzarella sobre massa de fermentação natural.", price: "R$ 69,00", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80" },
+    { name: "Prosciutto Rúcula", desc: "Presunto de Parma, rúcula selvagem, parmesão laminado e tomate cereja.", price: "R$ 72,00", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80" },
+  ],
+  salads: [
+    { name: "Caesar Premium", desc: "Mix de folhas, frango grelhado, croutons, parmesão e molho caesar tradicional.", price: "R$ 34,00", img: "https://images.unsplash.com/photo-1546793665-c74683f339c1?w=800&q=80" },
+    { name: "Buddha Bowl", desc: "Quinoa, grão-de-bico assado, abacate, beterraba e molho tahine cítrico.", price: "R$ 38,90", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80", tag: "Fit" },
+    { name: "Salmão & Manga", desc: "Salmão grelhado, manga, rúcula, gergelim e vinagrete de maracujá.", price: "R$ 49,00", img: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800&q=80" },
+    { name: "Caprese Burrata", desc: "Burrata cremosa, tomates heirloom, pesto fresco e pão tostado.", price: "R$ 41,00", img: "https://images.unsplash.com/photo-1608897013039-887f21d8c804?w=800&q=80" },
+  ],
+  drinks: [
+    { name: "Limonada Suíça", desc: "Limão siciliano, leite condensado e gelo cristal.", price: "R$ 12,00", img: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=800&q=80" },
+    { name: "Chá Gelado da Casa", desc: "Chá preto infusionado com pêssego e hortelã.", price: "R$ 10,00", img: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=800&q=80" },
+    { name: "Coca-Cola 350ml", desc: "Lata gelada servida com limão e gelo.", price: "R$ 7,00", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=800&q=80" },
+    { name: "Suco Verde Detox", desc: "Couve, maçã verde, gengibre, limão e hortelã.", price: "R$ 14,00", img: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=800&q=80", tag: "Detox" },
+  ],
+};
+
+function LiveDemoSection({ activeCategory, setActiveCategory, onCta }: { activeCategory: string; setActiveCategory: (id: string) => void; onCta: () => void }) {
+  const items = DEMO_ITEMS[activeCategory] ?? [];
+  return (
+    <section className="py-32 px-8 bg-gradient-to-b from-white via-zinc-50 to-white relative overflow-hidden">
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="text-center mb-16 max-w-3xl mx-auto">
+          <span className="inline-flex items-center gap-2 px-5 py-2 bg-primary/10 rounded-full mb-6">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Demonstração ao Vivo</span>
+          </span>
+          <h2 className="text-5xl md:text-6xl font-black text-zinc-900 tracking-tighter mb-6">
+            Veja como seu cardápio <br/>vai aparecer para o cliente
+          </h2>
+          <p className="text-lg text-zinc-500 font-medium">
+            Layout responsivo, fotos em alta resolução, categorias dinâmicas e checkout direto no WhatsApp.
+          </p>
+        </div>
+
+        <div className="bg-white rounded-[3rem] border border-zinc-200 shadow-2xl shadow-zinc-900/10 overflow-hidden">
+          {/* Demo top bar */}
+          <div className="flex items-center gap-2 px-6 py-4 border-b border-zinc-100 bg-zinc-50">
+            <div className="flex gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-400" />
+              <div className="w-3 h-3 rounded-full bg-amber-400" />
+              <div className="w-3 h-3 rounded-full bg-emerald-400" />
+            </div>
+            <div className="flex-1 flex justify-center">
+              <div className="px-4 py-1.5 bg-white border border-zinc-200 rounded-full text-xs font-medium text-zinc-500 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                menumaster.app/<span className="text-zinc-900 font-bold">bistromaster</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Restaurant Banner */}
+          <div className="relative h-64 md:h-80 bg-zinc-900 overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1600&q=80" alt="Bistro Master ambiente" className="w-full h-full object-cover opacity-90" />
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 flex items-end gap-6">
+              <div className="w-24 h-24 md:w-28 md:h-28 rounded-3xl border-4 border-white shadow-2xl overflow-hidden shrink-0 bg-white">
+                <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=80" alt="Logo Bistro Master" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1 min-w-0 text-white">
+                <div className="flex items-center gap-2 mb-2">
+                  <BadgeCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Aberto Agora</span>
+                </div>
+                <h3 className="text-3xl md:text-5xl font-black tracking-tighter mb-2 truncate">Bistro Master</h3>
+                <div className="flex flex-wrap items-center gap-4 text-xs md:text-sm font-medium text-white/80">
+                  <span className="flex items-center gap-1.5"><Star className="w-4 h-4 fill-amber-400 text-amber-400" /> 4.9 (1.2k avaliações)</span>
+                  <span className="flex items-center gap-1.5"><ClockIcon className="w-4 h-4" /> 30-45 min</span>
+                  <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" /> Vila Madalena, SP</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search bar */}
+          <div className="px-6 md:px-10 pt-8 pb-2">
+            <div className="flex items-center gap-3 bg-zinc-100 rounded-2xl px-5 py-4 border border-zinc-200">
+              <Search className="w-5 h-5 text-zinc-400 shrink-0" />
+              <span className="text-sm font-medium text-zinc-400 flex-1 truncate">Buscar pratos, bebidas ou ingredientes...</span>
+              <kbd className="hidden md:inline-flex items-center px-2 py-1 bg-white border border-zinc-200 rounded-md text-[10px] font-bold text-zinc-500">⌘ K</kbd>
+            </div>
+          </div>
+
+          {/* Category tabs */}
+          <div className="px-6 md:px-10 py-6 flex gap-3 overflow-x-auto scrollbar-none">
+            {DEMO_CATEGORIES.map((cat) => {
+              const Icon = cat.icon;
+              const active = cat.id === activeCategory;
+              return (
+                <button
+                  key={cat.id}
+                  id={`demo-cat-${cat.id}`}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`shrink-0 inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold transition-all ${
+                    active
+                      ? "bg-zinc-900 text-white shadow-lg shadow-zinc-900/20 scale-105"
+                      : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Menu grid */}
+          <div className="px-6 md:px-10 pb-10 grid grid-cols-1 md:grid-cols-2 gap-5">
+            {items.map((item, idx) => (
+              <motion.article
+                key={`${activeCategory}-${idx}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: idx * 0.05 }}
+                className="group flex gap-4 p-4 rounded-3xl border border-zinc-100 hover:border-zinc-300 hover:shadow-xl hover:shadow-zinc-900/5 transition-all bg-white cursor-pointer"
+              >
+                <div className="relative w-28 h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden bg-zinc-100 shrink-0">
+                  <img src={item.img} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  {item.tag && (
+                    <span className="absolute top-2 left-2 px-2 py-1 bg-white/95 backdrop-blur text-[9px] font-black uppercase tracking-wider text-zinc-900 rounded-md shadow">
+                      {item.tag}
+                    </span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col">
+                  <h4 className="text-lg font-black text-zinc-900 tracking-tight mb-1 truncate">{item.name}</h4>
+                  <p className="text-xs text-zinc-500 font-medium leading-relaxed line-clamp-2 mb-3">{item.desc}</p>
+                  <div className="mt-auto flex items-center justify-between gap-3">
+                    <span className="text-base font-black text-zinc-900">{item.price}</span>
+                    <button className="w-9 h-9 rounded-full bg-zinc-900 text-white flex items-center justify-center hover:bg-primary transition-colors shadow-md">
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+
+          {/* Sticky cart */}
+          <div className="border-t border-zinc-100 bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 md:px-10 py-5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
+                <ShoppingBag className="w-5 h-5 text-white" />
+              </div>
+              <div className="text-white min-w-0">
+                <div className="text-[10px] font-black uppercase tracking-widest opacity-80">3 itens · R$ 121,80</div>
+                <div className="font-black tracking-tight truncate">Seu pedido está pronto</div>
+              </div>
+            </div>
+            <button className="shrink-0 bg-white text-emerald-600 font-black uppercase tracking-widest text-[11px] px-6 py-3 rounded-2xl hover:scale-105 transition-transform shadow-lg inline-flex items-center gap-2">
+              <MessageCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">Pedir no WhatsApp</span>
+              <span className="sm:hidden">Pedir</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Below-demo CTA */}
+        <div className="mt-12 flex flex-col md:flex-row items-center justify-between gap-6 p-8 rounded-[2.5rem] bg-zinc-900 text-white">
+          <div className="flex items-center gap-5">
+            <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center">
+              <Sparkles className="w-7 h-7 text-primary" />
+            </div>
+            <div>
+              <h4 className="font-black text-xl tracking-tight mb-1">Gostou do que viu?</h4>
+              <p className="text-sm text-zinc-400 font-medium">Crie um cardápio idêntico para o seu restaurante em menos de 10 minutos.</p>
+            </div>
+          </div>
+          <Button onClick={onCta} className="bg-white text-zinc-900 hover:bg-primary hover:text-white h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl">
+            Criar Meu Cardápio <ArrowRight className="ml-2 w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
 }
