@@ -179,6 +179,7 @@ function LandingPage() {
           </div>
         </div>
       </footer>
+      <DemoCheckoutFlow open={demoOpen} onOpenChange={setDemoOpen} onCreateCta={() => navigate({ to: '/admin' })} />
     </div>
   );
 }
