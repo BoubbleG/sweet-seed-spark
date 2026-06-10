@@ -20,7 +20,7 @@ export async function extractDetailedDesignFromImage(imageUrl: string): Promise<
       const ctx = canvas.getContext("2d");
       if (!ctx) return reject(new Error("Could not get canvas context"));
 
-      const size = 150; // Increased resolution for better detail
+      const size = 200; // Higher resolution captures small accents (logos, prices)
       canvas.width = size;
       canvas.height = size;
       ctx.drawImage(img, 0, 0, size, size);
@@ -36,11 +36,11 @@ export async function extractDetailedDesignFromImage(imageUrl: string): Promise<
 
         if (a < 128) continue;
 
-        // Group colors by quantization
-        const qr = Math.round(r / 8) * 8;
-        const qg = Math.round(g / 8) * 8;
-        const qb = Math.round(b / 8) * 8;
-        
+        // Coarser quantization so similar shades merge into one bucket
+        const qr = Math.round(r / 24) * 24;
+        const qg = Math.round(g / 24) * 24;
+        const qb = Math.round(b / 24) * 24;
+
         const hex = `#${((1 << 24) + (qr << 16) + (qg << 8) + qb).toString(16).slice(1)}`;
         colorCounts[hex] = (colorCounts[hex] || 0) + 1;
       }
@@ -49,37 +49,71 @@ export async function extractDetailedDesignFromImage(imageUrl: string): Promise<
         .sort((a, b) => b[1] - a[1])
         .map(([color]) => color);
 
-      // Utility to check if a color is "boring" (too close to white/black/gray)
-      const isDynamic = (hex: string) => {
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);
-        const b = parseInt(hex.slice(5, 7), 16);
+      const hexToRgb = (hex: string) => ({
+        r: parseInt(hex.slice(1, 3), 16),
+        g: parseInt(hex.slice(3, 5), 16),
+        b: parseInt(hex.slice(5, 7), 16),
+      });
+
+      const saturationOf = (hex: string) => {
+        const { r, g, b } = hexToRgb(hex);
         const max = Math.max(r, g, b);
         const min = Math.min(r, g, b);
-        const saturation = (max - min) / (max || 1);
-        const brightness = max / 255;
-        return saturation > 0.15 && brightness > 0.1 && brightness < 0.9;
+        return max === 0 ? 0 : (max - min) / max;
       };
 
-      const dynamicColors = sortedColors.filter(isDynamic);
-      
-      const primary = dynamicColors[0] || sortedColors[0] || "#7c3aed";
-      const secondary = dynamicColors[1] || sortedColors[1] || primary;
-      const accent = dynamicColors[2] || sortedColors[2] || secondary;
+      const brightnessOf = (hex: string) => {
+        const { r, g, b } = hexToRgb(hex);
+        return Math.max(r, g, b) / 255;
+      };
+
+      // Vibrant = clearly saturated, not pure white/black. Generous bounds
+      // so bright accent colors (orange, red, yellow) qualify.
+      const isVibrant = (hex: string) => {
+        const s = saturationOf(hex);
+        const b = brightnessOf(hex);
+        return s > 0.35 && b > 0.18 && b < 0.98;
+      };
+
+      // Deduplicate visually similar colors (Euclidean distance in RGB)
+      const dedupe = (colors: string[], minDist = 60) => {
+        const out: string[] = [];
+        for (const c of colors) {
+          const cr = hexToRgb(c);
+          const tooClose = out.some(o => {
+            const or = hexToRgb(o);
+            const d = Math.hypot(cr.r - or.r, cr.g - or.g, cr.b - or.b);
+            return d < minDist;
+          });
+          if (!tooClose) out.push(c);
+        }
+        return out;
+      };
+
+      // Rank vibrant colors by frequency × saturation so small but punchy
+      // accents (orange logo on black bg) beat huge blocks of near-black.
+      const vibrantRanked = Object.entries(colorCounts)
+        .filter(([hex]) => isVibrant(hex))
+        .map(([hex, count]) => ({ hex, score: count * (0.5 + saturationOf(hex)) }))
+        .sort((a, b) => b.score - a.score)
+        .map(c => c.hex);
+
+      const vibrant = dedupe(vibrantRanked, 50);
+      const allDeduped = dedupe([...vibrant, ...sortedColors], 40).slice(0, 10);
+
+      const primary = vibrant[0] || sortedColors.find(c => saturationOf(c) > 0.15) || sortedColors[0] || "#7c3aed";
+      const secondary = vibrant[1] || vibrant[0] || sortedColors[1] || primary;
+      const accent = vibrant[2] || vibrant[1] || sortedColors[2] || secondary;
       
       // Determine background (usually the most frequent color if it's very light/dark)
       const background = sortedColors.find(hex => {
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);
-        const b = parseInt(hex.slice(5, 7), 16);
+        const { r, g, b } = hexToRgb(hex);
         const brightness = (r * 299 + g * 587 + b * 114) / 1000;
         return brightness > 230 || brightness < 25;
       }) || "#ffffff";
 
       // Text should contrast with background
-      const bgR = parseInt(background.slice(1, 3), 16);
-      const bgG = parseInt(background.slice(3, 5), 16);
-      const bgB = parseInt(background.slice(5, 7), 16);
+      const { r: bgR, g: bgG, b: bgB } = hexToRgb(background);
       const bgBrightness = (bgR * 299 + bgG * 587 + bgB * 114) / 1000;
       const text = bgBrightness > 128 ? "#1f2937" : "#f9fafb";
 
@@ -89,7 +123,7 @@ export async function extractDetailedDesignFromImage(imageUrl: string): Promise<
         accent,
         background,
         text,
-        allColors: sortedColors.slice(0, 10)
+        allColors: allDeduped,
       });
     };
 
