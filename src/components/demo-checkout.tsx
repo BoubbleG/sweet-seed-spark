@@ -391,35 +391,35 @@ function StepAddress({ mode, setMode, address, setAddress, errors, formatCEP }: 
         <div className="space-y-3 bg-white p-4 rounded-2xl border border-zinc-100">
           <Field label="CEP" error={errors.cep}>
             <input
-              id="addr-cep" inputMode="numeric" placeholder="00000-000"
+              id="addr-cep" inputMode="numeric" autoComplete="postal-code" enterKeyHint="next" placeholder="00000-000"
               value={address.cep} onChange={e => upd("cep", formatCEP(e.target.value))}
-              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-[16px] font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
               maxLength={9}
             />
           </Field>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-2">
+          <div className="grid grid-cols-[minmax(0,1fr)_96px] gap-3">
+            <div className="min-w-0">
               <Field label="Rua" error={errors.street}>
-                <input id="addr-street" value={address.street} onChange={e => upd("street", e.target.value)} placeholder="Av. Brasil"
-                  className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={120} />
+                <input id="addr-street" autoComplete="address-line1" enterKeyHint="next" value={address.street} onChange={e => upd("street", e.target.value)} placeholder="Av. Brasil"
+                  className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-[16px] font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={120} />
               </Field>
             </div>
             <Field label="Número" error={errors.number}>
-              <input id="addr-number" inputMode="numeric" value={address.number} onChange={e => upd("number", e.target.value)} placeholder="123"
-                className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={10} />
+              <input id="addr-number" inputMode="numeric" enterKeyHint="next" value={address.number} onChange={e => upd("number", e.target.value)} placeholder="123"
+                className="h-14 w-full rounded-xl border border-zinc-200 px-3 text-[16px] font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={10} />
             </Field>
           </div>
           <Field label="Bairro" error={errors.district}>
-            <input id="addr-district" value={address.district} onChange={e => upd("district", e.target.value)} placeholder="Vila Madalena"
-              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={60} />
+            <input id="addr-district" autoComplete="address-level2" enterKeyHint="next" value={address.district} onChange={e => upd("district", e.target.value)} placeholder="Vila Madalena"
+              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-[16px] font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={60} />
           </Field>
           <Field label="Complemento (opcional)">
-            <input id="addr-complement" value={address.complement} onChange={e => upd("complement", e.target.value)} placeholder="Apto 42, Bloco B"
-              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={60} />
+            <input id="addr-complement" autoComplete="address-line2" enterKeyHint="next" value={address.complement} onChange={e => upd("complement", e.target.value)} placeholder="Apto 42, Bloco B"
+              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-[16px] font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={60} />
           </Field>
           <Field label="Ponto de referência (opcional)">
-            <input id="addr-reference" value={address.reference} onChange={e => upd("reference", e.target.value)} placeholder="Próximo ao mercado"
-              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={120} />
+            <input id="addr-reference" enterKeyHint="done" value={address.reference} onChange={e => upd("reference", e.target.value)} placeholder="Próximo ao mercado"
+              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-[16px] font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" maxLength={120} />
           </Field>
         </div>
       )}
@@ -515,7 +515,7 @@ function StepPayment({ payment, setPayment, card, setCard, changeFor, setChangeF
           <Field label="Precisa de troco para quanto? (opcional)">
             <input id="cash-change" inputMode="decimal" placeholder="Ex: 100,00" value={changeFor}
               onChange={e => setChangeFor(e.target.value.replace(/[^\d,]/g, "").slice(0, 10))}
-              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-base font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" />
+              className="h-14 w-full rounded-xl border border-zinc-200 px-4 text-[16px] font-medium focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" />
           </Field>
         </div>
       )}
