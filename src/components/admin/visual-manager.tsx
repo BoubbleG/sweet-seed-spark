@@ -63,11 +63,12 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
 
       if (error) throw error;
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data: signed, error: signErr } = await supabase.storage
         .from('restaurant-assets')
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 60 * 60 * 24 * 365 * 10);
+      if (signErr) throw signErr;
 
-      setFormData(prev => ({ ...prev, [field]: publicUrl }));
+      setFormData(prev => ({ ...prev, [field]: signed.signedUrl }));
       toast.success("Imagem enviada!");
     } catch (error: any) {
       toast.error("Erro no upload: " + error.message);
