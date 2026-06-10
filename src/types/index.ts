@@ -32,6 +32,7 @@ export interface Restaurant {
   show_categories?: boolean;
   custom_css?: string;
   created_at?: string;
+  edit_token?: string;
 }
 
 export interface Category {
@@ -61,6 +62,9 @@ export interface Product {
   estimated_time?: string;
   nutritional_info?: string;
   variants?: any[];
+  promo_price?: number | null;
+  is_on_promo?: boolean;
+  promo_label?: string | null;
 }
 
 export interface CartItem extends Product {
