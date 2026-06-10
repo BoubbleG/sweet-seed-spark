@@ -64,7 +64,9 @@ export function CartDrawer({ isOpen, onClose, restaurant }: CartDrawerProps) {
       return;
     }
 
-    const orderTag = `*Pedido #${String(order.order_number).padStart(4, "0")}*\n`;
+    const orderTag = encodeURIComponent(
+      `*Pedido #${String(order.order_number).padStart(4, "0")}*\n\n`,
+    );
     const message = orderTag + generateWhatsAppMessage(
       restaurant.name,
       items,
