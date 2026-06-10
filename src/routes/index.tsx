@@ -305,21 +305,75 @@ const DEMO_ITEMS: Record<string, Array<{ name: string; desc: string; price: stri
   ],
 };
 
+type DemoItem = { name: string; desc: string; price: string; img: string; tag?: string };
+type CartEntry = { item: DemoItem; qty: number };
+
+const parseBRL = (s: string) => Number(s.replace(/[^\d,]/g, "").replace(",", "."));
+const formatBRL = (n: number) => `R$ ${n.toFixed(2).replace(".", ",")}`;
+
 function LiveDemoSection({ activeCategory, setActiveCategory, onCta }: { activeCategory: string; setActiveCategory: (id: string) => void; onCta: () => void }) {
   const items = DEMO_ITEMS[activeCategory] ?? [];
+  const [cart, setCart] = useState<Record<string, CartEntry>>({});
+  const [cartOpen, setCartOpen] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const addItem = (item: DemoItem) => {
+    setCart((prev) => {
+      const entry = prev[item.name];
+      return { ...prev, [item.name]: { item, qty: (entry?.qty ?? 0) + 1 } };
+    });
+  };
+  const removeItem = (name: string) => {
+    setCart((prev) => {
+      const entry = prev[name];
+      if (!entry) return prev;
+      if (entry.qty <= 1) {
+        const { [name]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [name]: { ...entry, qty: entry.qty - 1 } };
+    });
+  };
+  const deleteItem = (name: string) =>
+    setCart((prev) => {
+      const { [name]: _, ...rest } = prev;
+      return rest;
+    });
+
+  const entries = Object.values(cart);
+  const totalQty = entries.reduce((s, e) => s + e.qty, 0);
+  const subtotal = entries.reduce((s, e) => s + parseBRL(e.item.price) * e.qty, 0);
+  const deliveryFee = subtotal > 0 ? 7.9 : 0;
+  const total = subtotal + deliveryFee;
+
+  const whatsappMsg = entries.length
+    ? `Olá! Gostaria de fazer um pedido no *Bistro Master*:%0A%0A${entries
+        .map((e) => `• ${e.qty}x ${e.item.name} — ${formatBRL(parseBRL(e.item.price) * e.qty)}`)
+        .join("%0A")}%0A%0ASubtotal: ${formatBRL(subtotal)}%0AEntrega: ${formatBRL(deliveryFee)}%0A*Total: ${formatBRL(total)}*`
+    : "";
+
+  const sendOrder = () => {
+    setSent(true);
+    setTimeout(() => {
+      setSent(false);
+      setCart({});
+      setCartOpen(false);
+    }, 2200);
+  };
+
   return (
     <section id="demo" className="scroll-mt-24 py-32 px-8 bg-gradient-to-b from-white via-zinc-50 to-white relative overflow-hidden">
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-16 max-w-3xl mx-auto">
           <span className="inline-flex items-center gap-2 px-5 py-2 bg-primary/10 rounded-full mb-6">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Demonstração ao Vivo</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Demonstração Interativa</span>
           </span>
           <h2 className="text-5xl md:text-6xl font-black text-zinc-900 tracking-tighter mb-6">
-            Veja como seu cardápio <br/>vai aparecer para o cliente
+            Experimente seu cardápio <br/>como um cliente real
           </h2>
           <p className="text-lg text-zinc-500 font-medium">
-            Layout responsivo, fotos em alta resolução, categorias dinâmicas e checkout direto no WhatsApp.
+            Adicione itens ao carrinho, ajuste quantidades e simule o envio do pedido no WhatsApp. Tudo funcional, ao vivo.
           </p>
         </div>
 
@@ -397,12 +451,17 @@ function LiveDemoSection({ activeCategory, setActiveCategory, onCta }: { activeC
           {/* Menu grid */}
           <div className="px-6 md:px-10 pb-10 grid grid-cols-1 md:grid-cols-2 gap-5">
             {items.map((item, idx) => (
+              (() => {
+              const inCart = cart[item.name];
+              return (
               <motion.article
                 key={`${activeCategory}-${idx}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: idx * 0.05 }}
-                className="group flex gap-4 p-4 rounded-3xl border border-zinc-100 hover:border-zinc-300 hover:shadow-xl hover:shadow-zinc-900/5 transition-all bg-white cursor-pointer"
+                className={`group flex gap-4 p-4 rounded-3xl border transition-all bg-white ${
+                  inCart ? "border-emerald-400 shadow-lg shadow-emerald-500/10 ring-2 ring-emerald-100" : "border-zinc-100 hover:border-zinc-300 hover:shadow-xl hover:shadow-zinc-900/5"
+                }`}
               >
                 <div className="relative w-28 h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden bg-zinc-100 shrink-0">
                   <img src={item.img} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
@@ -411,35 +470,84 @@ function LiveDemoSection({ activeCategory, setActiveCategory, onCta }: { activeC
                       {item.tag}
                     </span>
                   )}
+                  {inCart && (
+                    <span className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-lg">
+                      {inCart.qty}
+                    </span>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col">
                   <h4 className="text-lg font-black text-zinc-900 tracking-tight mb-1 truncate">{item.name}</h4>
                   <p className="text-xs text-zinc-500 font-medium leading-relaxed line-clamp-2 mb-3">{item.desc}</p>
                   <div className="mt-auto flex items-center justify-between gap-3">
                     <span className="text-base font-black text-zinc-900">{item.price}</span>
-                    <button className="w-9 h-9 rounded-full bg-zinc-900 text-white flex items-center justify-center hover:bg-primary transition-colors shadow-md">
-                      <Plus className="w-4 h-4" />
-                    </button>
+                    {inCart ? (
+                      <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-full p-1">
+                        <button
+                          aria-label={`Remover ${item.name}`}
+                          onClick={() => removeItem(item.name)}
+                          className="w-7 h-7 rounded-full bg-white text-emerald-700 flex items-center justify-center hover:bg-emerald-100 transition-colors shadow-sm"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="text-sm font-black text-emerald-700 min-w-[1ch] text-center">{inCart.qty}</span>
+                        <button
+                          aria-label={`Adicionar ${item.name}`}
+                          onClick={() => addItem(item)}
+                          className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-600 transition-colors shadow-sm"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        aria-label={`Adicionar ${item.name} ao carrinho`}
+                        onClick={() => addItem(item)}
+                        className="w-9 h-9 rounded-full bg-zinc-900 text-white flex items-center justify-center hover:bg-emerald-500 transition-colors shadow-md"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </motion.article>
+              );
+              })()
             ))}
           </div>
 
           {/* Sticky cart */}
-          <div className="border-t border-zinc-100 bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 md:px-10 py-5 flex items-center justify-between gap-4">
+          <div
+            className={`border-t border-zinc-100 px-6 md:px-10 py-5 flex items-center justify-between gap-4 transition-colors ${
+              totalQty > 0
+                ? "bg-gradient-to-r from-emerald-500 to-emerald-600"
+                : "bg-zinc-100"
+            }`}
+          >
             <div className="flex items-center gap-4 min-w-0">
-              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
-                <ShoppingBag className="w-5 h-5 text-white" />
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${totalQty > 0 ? "bg-white/20 backdrop-blur" : "bg-white border border-zinc-200"}`}>
+                <ShoppingBag className={`w-5 h-5 ${totalQty > 0 ? "text-white" : "text-zinc-400"}`} />
               </div>
-              <div className="text-white min-w-0">
-                <div className="text-[10px] font-black uppercase tracking-widest opacity-80">3 itens · R$ 121,80</div>
-                <div className="font-black tracking-tight truncate">Seu pedido está pronto</div>
+              <div className={`min-w-0 ${totalQty > 0 ? "text-white" : "text-zinc-500"}`}>
+                <div className="text-[10px] font-black uppercase tracking-widest opacity-80">
+                  {totalQty > 0 ? `${totalQty} ${totalQty === 1 ? "item" : "itens"} · ${formatBRL(subtotal)}` : "Carrinho vazio"}
+                </div>
+                <div className="font-black tracking-tight truncate">
+                  {totalQty > 0 ? "Seu pedido está pronto" : "Adicione itens para começar"}
+                </div>
               </div>
             </div>
-            <button className="shrink-0 bg-white text-emerald-600 font-black uppercase tracking-widest text-[11px] px-6 py-3 rounded-2xl hover:scale-105 transition-transform shadow-lg inline-flex items-center gap-2">
+            <button
+              onClick={() => totalQty > 0 && setCartOpen(true)}
+              disabled={totalQty === 0}
+              className={`shrink-0 font-black uppercase tracking-widest text-[11px] px-6 py-3 rounded-2xl transition-all shadow-lg inline-flex items-center gap-2 ${
+                totalQty > 0
+                  ? "bg-white text-emerald-600 hover:scale-105 cursor-pointer"
+                  : "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+              }`}
+            >
               <MessageCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">Pedir no WhatsApp</span>
+              <span className="hidden sm:inline">Ver Pedido</span>
               <span className="sm:hidden">Pedir</span>
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -462,6 +570,95 @@ function LiveDemoSection({ activeCategory, setActiveCategory, onCta }: { activeC
           </Button>
         </div>
       </div>
+
+      {/* Cart Dialog */}
+      <Dialog open={cartOpen} onOpenChange={setCartOpen}>
+        <DialogContent className="max-w-lg p-0 overflow-hidden gap-0">
+          {sent ? (
+            <div className="p-12 text-center">
+              <div className="w-20 h-20 mx-auto rounded-full bg-emerald-100 flex items-center justify-center mb-6">
+                <Check className="w-10 h-10 text-emerald-600" strokeWidth={3} />
+              </div>
+              <h3 className="text-2xl font-black text-zinc-900 mb-2 tracking-tight">Pedido enviado!</h3>
+              <p className="text-sm text-zinc-500 font-medium">O restaurante recebeu seu pedido via WhatsApp e já está preparando.</p>
+            </div>
+          ) : (
+            <>
+              <DialogHeader className="px-6 pt-6 pb-4 border-b border-zinc-100">
+                <DialogTitle className="text-2xl font-black tracking-tight text-zinc-900 flex items-center gap-3">
+                  <ShoppingBag className="w-6 h-6 text-emerald-500" /> Seu Pedido
+                </DialogTitle>
+                <DialogDescription className="text-zinc-500 font-medium">
+                  Revise os itens e envie direto para o WhatsApp do Bistro Master.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="max-h-[45vh] overflow-y-auto px-6 py-4 space-y-3">
+                {entries.length === 0 && (
+                  <p className="text-center text-sm text-zinc-400 py-8">Carrinho vazio.</p>
+                )}
+                {entries.map((e) => {
+                  const lineTotal = parseBRL(e.item.price) * e.qty;
+                  return (
+                    <div key={e.item.name} className="flex items-center gap-3 p-3 rounded-2xl border border-zinc-100 bg-zinc-50/50">
+                      <img src={e.item.img} alt={e.item.name} className="w-14 h-14 rounded-xl object-cover shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-black text-sm text-zinc-900 truncate">{e.item.name}</div>
+                        <div className="text-xs text-zinc-500 font-medium">{e.item.price} cada</div>
+                      </div>
+                      <div className="inline-flex items-center gap-1.5 bg-white border border-zinc-200 rounded-full p-1">
+                        <button onClick={() => removeItem(e.item.name)} className="w-6 h-6 rounded-full hover:bg-zinc-100 flex items-center justify-center">
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="text-xs font-black w-4 text-center">{e.qty}</span>
+                        <button onClick={() => addItem(e.item)} className="w-6 h-6 rounded-full bg-emerald-500 text-white hover:bg-emerald-600 flex items-center justify-center">
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <div className="text-sm font-black text-zinc-900 w-20 text-right tabular-nums">{formatBRL(lineTotal)}</div>
+                      <button onClick={() => deleteItem(e.item.name)} aria-label="Remover item" className="w-7 h-7 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="px-6 py-4 border-t border-zinc-100 bg-zinc-50 space-y-2 text-sm">
+                <div className="flex justify-between text-zinc-500 font-medium">
+                  <span>Subtotal</span><span className="tabular-nums">{formatBRL(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-zinc-500 font-medium">
+                  <span>Taxa de entrega</span><span className="tabular-nums">{formatBRL(deliveryFee)}</span>
+                </div>
+                <div className="flex justify-between text-zinc-900 font-black text-lg pt-2 border-t border-zinc-200">
+                  <span>Total</span><span className="tabular-nums">{formatBRL(total)}</span>
+                </div>
+              </div>
+
+              <div className="px-6 py-5 bg-white flex gap-3">
+                <button
+                  onClick={() => setCartOpen(false)}
+                  className="flex-1 h-12 rounded-2xl border border-zinc-200 font-black uppercase tracking-widest text-[10px] text-zinc-600 hover:bg-zinc-50 inline-flex items-center justify-center gap-2"
+                >
+                  <X className="w-4 h-4" /> Continuar
+                </button>
+                <button
+                  onClick={sendOrder}
+                  disabled={entries.length === 0}
+                  className="flex-[2] h-12 rounded-2xl bg-emerald-500 text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 disabled:bg-zinc-200 disabled:text-zinc-400 disabled:shadow-none inline-flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4" /> Enviar no WhatsApp
+                </button>
+              </div>
+              <div className="px-6 pb-4 text-[10px] text-center text-zinc-400 font-medium">
+                Simulação · Nenhuma mensagem real será enviada · Prévia: <span className="text-zinc-600">"Olá! Gostaria de fazer um pedido…"</span>
+              </div>
+              <input type="hidden" value={whatsappMsg} readOnly />
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
