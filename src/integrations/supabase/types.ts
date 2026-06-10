@@ -82,6 +82,118 @@ export type Database = {
           },
         ]
       }
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          order_id: string
+          product_name: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id: string
+          product_name: string
+          quantity?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id?: string
+          product_name?: string
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          change_for: number | null
+          created_at: string
+          customer_address: string | null
+          customer_name: string
+          customer_neighborhood: string | null
+          customer_phone: string | null
+          customer_reference: string | null
+          delivery_fee: number
+          id: string
+          notes: string | null
+          order_number: number
+          order_type: string
+          payment_method: string | null
+          printed_at: string | null
+          restaurant_id: string
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          change_for?: number | null
+          created_at?: string
+          customer_address?: string | null
+          customer_name: string
+          customer_neighborhood?: string | null
+          customer_phone?: string | null
+          customer_reference?: string | null
+          delivery_fee?: number
+          id?: string
+          notes?: string | null
+          order_number?: number
+          order_type?: string
+          payment_method?: string | null
+          printed_at?: string | null
+          restaurant_id: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          change_for?: number | null
+          created_at?: string
+          customer_address?: string | null
+          customer_name?: string
+          customer_neighborhood?: string | null
+          customer_phone?: string | null
+          customer_reference?: string | null
+          delivery_fee?: number
+          id?: string
+          notes?: string | null
+          order_number?: number
+          order_type?: string
+          payment_method?: string | null
+          printed_at?: string | null
+          restaurant_id?: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category_id: string

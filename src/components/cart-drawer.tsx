@@ -10,6 +10,8 @@ import { Trash2, Plus, Minus, X, Clock, ShoppingCart, Lock } from "lucide-react"
 import { Restaurant } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
 import { buildMenuTheme } from "@/lib/theme";
+import { createOrder } from "@/lib/orders";
+import { toast } from "sonner";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -37,7 +39,7 @@ export function CartDrawer({ isOpen, onClose, restaurant }: CartDrawerProps) {
   const total = subtotal + deliveryFee;
   const t = buildMenuTheme(restaurant);
 
-  const handleSendOrder = () => {
+  const handleSendOrder = async () => {
     const newErrors: Record<string, boolean> = {};
     if (!customer.name) newErrors.name = true;
     if (!customer.phone) newErrors.phone = true;
@@ -49,7 +51,23 @@ export function CartDrawer({ isOpen, onClose, restaurant }: CartDrawerProps) {
     }
     setErrors({});
 
-    const message = generateWhatsAppMessage(
+    const order = await createOrder({
+      restaurantId: restaurant.id,
+      items,
+      customer,
+      subtotal,
+      deliveryFee,
+      total,
+    });
+    if (!order) {
+      toast.error("Não conseguimos salvar o pedido. Tente novamente.");
+      return;
+    }
+
+    const orderTag = encodeURIComponent(
+      `*Pedido #${String(order.order_number).padStart(4, "0")}*\n\n`,
+    );
+    const message = orderTag + generateWhatsAppMessage(
       restaurant.name,
       items,
       customer,

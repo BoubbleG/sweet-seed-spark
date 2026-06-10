@@ -72,3 +72,37 @@ export interface CartItem extends Product {
   selectedOptions?: any[];
   notes?: string;
 }
+
+export type OrderStatus = "novo" | "preparando" | "pronto" | "entregue" | "cancelado";
+
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  product_name: string;
+  unit_price: number;
+  quantity: number;
+  notes?: string | null;
+}
+
+export interface Order {
+  id: string;
+  restaurant_id: string;
+  order_number: number;
+  customer_name: string;
+  customer_phone?: string | null;
+  customer_address?: string | null;
+  customer_neighborhood?: string | null;
+  customer_reference?: string | null;
+  payment_method?: string | null;
+  change_for?: number | null;
+  notes?: string | null;
+  subtotal: number;
+  delivery_fee: number;
+  total: number;
+  order_type: string;
+  status: OrderStatus;
+  printed_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  items?: OrderItem[];
+}

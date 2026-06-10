@@ -1,70 +1,100 @@
-# Editor mobile-first para donos de restaurante
+## Sistema de Pedidos + Impressão Automática
 
-O link `/editar/{token}` que o dono recebe vai ser usado **quase sempre no celular** por pessoas que **não têm familiaridade com painéis**. Vou refazer toda a navegação e os formulários do editor com foco em: textos curtos em português simples, botões grandes que cabem o polegar, uma ação principal visível por tela, e zero "jargão de admin".
+### Observação importante sobre Bluetooth
+Você escolheu **impressora Bluetooth no celular** + **impressão automática pelo navegador**. Essas duas coisas combinam de um jeito específico:
 
-## O que muda
+- **No PC (Chrome/Edge)**: o navegador imprime direto na impressora térmica USB do driver do sistema. Funciona 100% automático.
+- **No celular Android**: navegador não fala com Bluetooth de impressora térmica direto. A solução real é o app **RawBT** (grátis, na Play Store) — ele vira a "impressora padrão" do Android e qualquer `window.print()` do Chrome vai pra impressora Bluetooth pareada. Eu deixo o painel pronto pra isso e escrevo as instruções de 3 passos pro dono dentro do próprio painel.
+- **No iPhone**: não tem solução boa via navegador. Cai pro botão manual "Imprimir" + share sheet.
 
-### 1. Nova navegação mobile (substitui as abas atuais)
+Tudo isso fica no mesmo painel, mesmo link.
 
-Atualmente a página usa abas no topo (`Cardápio / Visual / Informações`) que ficam apertadas no celular. Vou trocar por:
+---
 
-- **Tela inicial do editor** com 4 cartões grandes empilhados (estilo "menu de app"):
-  - 🍔 **Meu cardápio** — "Adicionar, editar ou remover pratos"
-  - 🏷️ **Promoções** — "Marcar oferta do dia e preço promocional"
-  - 🎨 **Aparência** — "Logo, capa e cores"
-  - 📞 **Meu restaurante** — "WhatsApp, endereço, horário, taxa"
-- Cada cartão abre uma **tela cheia** com um botão "← Voltar" gigante no topo e a ação principal fixa no rodapé (`Salvar` ou `+ Adicionar`).
-- **Barra fixa inferior** (bottom bar) com 3 atalhos sempre visíveis: `Editar`, `Ver meu cardápio`, `Compartilhar link`.
+### O que vou construir
 
-### 2. Cardápio — fluxo simplificado
+**1. Banco de dados (1 migração)**
+- Tabela `orders`: número do pedido (sequencial por restaurante), nome do cliente, telefone, endereço, forma de pagamento, troco, observações, subtotal, taxa de entrega, total, tipo (entrega/retirada), status (`novo` → `preparando` → `pronto` → `entregue` / `cancelado`), `created_at`, `printed_at`.
+- Tabela `order_items`: vínculo com o pedido, nome do produto (snapshot), preço unitário (snapshot), quantidade, observações.
+- Realtime habilitado em `orders` pra notificar o painel na hora.
+- RLS aberta (mesmo modelo dos outros): token no link controla o acesso no front, igual já faz hoje.
 
-- Lista de categorias em **cards grandes expansíveis** (acordeão), não em colunas.
-- Cada produto vira um cartão com: foto, nome, preço, e um único botão "Editar". Sem ícones de lápis/lixeira soltos — tudo dentro do diálogo de edição.
-- Botão flutuante `+` no canto inferior direito para "Adicionar prato".
-- Reordenar via setas ↑ ↓ (drag-and-drop não funciona bem no toque).
-- Toggle grande "Disponível hoje" em cada prato (em vez de checkbox pequeno).
+**2. Salvar pedido no checkout (cardápio público `/$slug`)**
+- No `cart-drawer.tsx`, antes de abrir o WhatsApp: gravar o pedido + itens no banco.
+- O WhatsApp continua sendo enviado igual hoje (você pediu pra manter).
+- Mensagem do WhatsApp passa a incluir o número do pedido (#0042) pra casar com o painel.
 
-### 3. Promoções — tela dedicada e visual
+**3. Nova aba "Pedidos" no `/editar/{token}`**
+Adiciono um 5º card grande na home do editor: **"Pedidos chegando"** com badge de quantos pedidos novos tem.
 
-Hoje a promoção fica escondida dentro do diálogo do produto. Vou criar uma **aba própria "Promoções"** que mostra:
-- Lista de todos os pratos com um **switch grande** "Em promoção".
-- Quando ligado, aparecem dois campos lado a lado: `Preço normal` (cinza, riscado) e `Preço promocional` (destaque) + um campo `Etiqueta` ("Oferta do dia", "-20%", etc).
-- Pré-visualização imediata em cima mostrando como o cliente vai ver.
+Dentro:
+- Lista em tempo real (Supabase Realtime). Pedido novo entra no topo com **som de campainha** + **destaque vermelho piscando**.
+- Cada pedido em card grande: número, hora, nome, total, itens resumidos, botão "Ver completo".
+- Filtros por status em pílulas grandes (Novos / Preparando / Prontos / Hoje).
+- Botões grandes pra mover status: **"Aceitar"** → **"Pronto"** → **"Entregue"**.
+- Botão **"Imprimir novamente"** em cada pedido.
 
-### 4. Aparência — só o essencial, sem técnico
+**4. Impressão automática**
+- Toggle no topo do painel: **"Imprimir automático"** (on/off, salvo no `localStorage` do dispositivo).
+- Quando ligado e chega pedido novo via Realtime: monta um cupom HTML otimizado pra 80mm (fonte monoespaçada, alto contraste, sem cores) e dispara `window.print()`.
+- Marca `printed_at` no banco pra não imprimir duplicado se a aba reabrir.
+- CSS `@media print` esconde o resto da página e mostra só o cupom.
 
-- 3 blocos grandes: **Logo**, **Capa**, **Cor principal**.
-- Upload com botão "Tirar foto / Escolher do celular" (input `capture` quando útil).
-- Cor principal via paleta de **8 cores predefinidas** (não color-picker hex).
-- Pré-visualização ao vivo embaixo mostrando "Assim seu cliente vai ver".
+**5. Cupom térmico (componente novo)**
+Layout otimizado pra papel 80mm:
+```text
+========================
+   NOME DO RESTAURANTE
+========================
+PEDIDO #0042
+10/06/2026  20:35
+------------------------
+CLIENTE: João Silva
+TEL: (11) 99999-9999
+ENTREGA: Rua X, 123
+------------------------
+2x  X-Burger        30,00
+    sem cebola
+1x  Coca 2L         12,00
+------------------------
+Subtotal           42,00
+Taxa entrega        5,00
+TOTAL              47,00
+------------------------
+PAGAMENTO: Dinheiro
+TROCO PARA: R$ 50,00
+========================
+```
 
-### 5. Informações — formulário em passos
+**6. Card de instrução pro dono (dentro do painel)**
+Bloco colapsável "Como configurar minha impressora?" com 3 abas curtas:
+- **No PC**: 1. Instale o driver da sua impressora térmica. 2. Deixe esta aba aberta. 3. Ligue "Imprimir automático".
+- **Celular Android (Bluetooth)**: 1. Baixe o app RawBT na Play Store. 2. Pareie sua impressora Bluetooth nele. 3. Volte aqui, deixe esta aba aberta e ligue "Imprimir automático".
+- **iPhone**: Toque no botão "Imprimir" em cada pedido (automático não é suportado).
 
-Em vez de um formulão único:
-- Tela rolável com **cards de seção**: `Contato` (WhatsApp), `Endereço`, `Horário`, `Entrega`.
-- Cada campo com label grande, exemplo embaixo (ex.: "Ex.: 11 99999-9999"), `inputMode` correto para abrir teclado numérico/telefone, `autocomplete`.
-- Botão `Salvar` fixo no rodapé (sticky) com feedback "✓ Salvo!" inline.
+---
 
-### 6. Microajustes de UX mobile
+### Arquivos
 
-- Todos os botões com altura mínima de **52px** (`min-h-13`) e texto legível (≥14px).
-- Inputs com altura **48px** mínimo, `text-base` (16px) para evitar zoom do iOS.
-- Toasts grandes, posicionados no topo no mobile (para não cobrir o teclado).
-- Diálogos viram **bottom sheets** que cobrem 100% no celular e rolam internamente.
-- "Salvar" automático com debounce em campos simples (toggle de promoção, disponibilidade), com indicador "Salvando… ✓ Salvo".
-- Linguagem 100% em português coloquial: "Apagar" em vez de "Excluir", "Mostrar para clientes" em vez de "Ativar", etc.
+**Migração**
+- `supabase/migrations/<timestamp>_orders.sql` — tabelas `orders` + `order_items` com GRANTs, RLS, e sequência de número de pedido por restaurante.
 
-## Arquivos envolvidos
+**Edição**
+- `src/components/cart-drawer.tsx` — salvar pedido no banco antes do WhatsApp.
+- `src/routes/editar.$token.tsx` — adicionar card "Pedidos chegando" na home.
+- `src/types/index.ts` — tipos `Order`, `OrderItem`.
 
-- `src/routes/editar.$token.tsx` — refeito com home + sub-telas e bottom bar.
-- `src/components/admin/menu-manager.tsx` — versão mobile (cards expansíveis, FAB, toggles grandes).
-- `src/components/admin/product-dialog.tsx` — vira bottom sheet, separa edição de promoção.
-- `src/components/admin/visual-manager.tsx` — paleta predefinida, uploads simplificados, preview.
-- Novo `src/components/admin/promo-manager.tsx` — tela dedicada de promoções.
-- Novo `src/components/admin/owner-info-form.tsx` — substitui o `InfoForm` inline em cards seccionados.
+**Novos**
+- `src/components/owner/orders-screen.tsx` — painel de pedidos em tempo real.
+- `src/components/owner/order-card.tsx` — card de pedido com ações de status.
+- `src/components/owner/order-receipt.tsx` — cupom térmico 80mm com `@media print`.
+- `src/components/owner/printer-help.tsx` — bloco de instruções PC/Android/iPhone.
+- `src/lib/orders.ts` — helpers (criar pedido, próximo número, hook de realtime + auto-print).
+- `src/assets/new-order.mp3` — som de notificação (ou usar Web Audio API com beep gerado).
 
-## Fora do escopo
+### Fora de escopo
+- Integração nativa com impressoras (ESC/POS via WebUSB) — fica pra v2 se você quiser depois.
+- Notificação push quando a aba está fechada (precisa de service worker + permissão; podemos adicionar depois).
+- `/admin` master e cardápio público (a parte de salvar pedido é a única mudança no checkout).
 
-- O `/admin` (master) **não muda** — continua igual; foco é só no link que o dono recebe.
-- O cardápio público `/{slug}` **não muda**.
-- Sem mexer em banco de dados ou lógica de backend.
+Posso seguir?
