@@ -125,15 +125,16 @@ function OwnerHome({
 
   const share = async () => {
     try {
-      if (typeof navigator !== "undefined" && "share" in navigator) {
-        await (navigator as any).share({
+      const nav: any = typeof navigator !== "undefined" ? navigator : null;
+      if (nav && typeof nav.share === "function") {
+        await nav.share({
           title: restaurant.name,
           text: `Veja o cardápio de ${restaurant.name}`,
           url: publicUrl,
         });
         return;
       }
-      await navigator.clipboard.writeText(publicUrl);
+      await nav.clipboard.writeText(publicUrl);
       setCopied(true);
       toast.success("Link copiado!");
       setTimeout(() => setCopied(false), 2000);
