@@ -71,7 +71,11 @@ function LandingPage() {
               <Button onClick={() => navigate({ to: '/admin' })} className="h-16 px-12 rounded-full bg-zinc-900 text-white font-black uppercase tracking-widest shadow-2xl shadow-zinc-900/20 hover:scale-105 transition-all">
                 Criar Meu Cardápio Agora <ArrowRight className="ml-3 w-5 h-5" />
               </Button>
-              <Button variant="outline" className="h-16 px-12 rounded-full border-2 border-zinc-200 font-black uppercase tracking-widest text-[11px] hover:bg-zinc-50 transition-all">
+              <Button
+                variant="outline"
+                onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                className="h-16 px-12 rounded-full border-2 border-zinc-200 font-black uppercase tracking-widest text-[11px] hover:bg-zinc-50 transition-all"
+              >
                 Ver Demonstração
               </Button>
             </div>
@@ -303,7 +307,7 @@ const DEMO_ITEMS: Record<string, Array<{ name: string; desc: string; price: stri
 function LiveDemoSection({ activeCategory, setActiveCategory, onCta }: { activeCategory: string; setActiveCategory: (id: string) => void; onCta: () => void }) {
   const items = DEMO_ITEMS[activeCategory] ?? [];
   return (
-    <section className="py-32 px-8 bg-gradient-to-b from-white via-zinc-50 to-white relative overflow-hidden">
+    <section id="demo" className="scroll-mt-24 py-32 px-8 bg-gradient-to-b from-white via-zinc-50 to-white relative overflow-hidden">
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-16 max-w-3xl mx-auto">
           <span className="inline-flex items-center gap-2 px-5 py-2 bg-primary/10 rounded-full mb-6">
