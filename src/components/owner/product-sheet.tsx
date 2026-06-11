@@ -289,7 +289,15 @@ export function OwnerProductSheet({
             />
           </label>
 
-          <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 space-y-3">
+          <div
+            className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 space-y-3"
+            style={form.has_sizes ? { opacity: 0.45, pointerEvents: "none" } : undefined}
+          >
+            {form.has_sizes && (
+              <p className="text-[11px] text-amber-700 font-bold">
+                Promoção indisponível em pratos com tamanhos.
+              </p>
+            )}
             <label className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-bold text-zinc-900 flex items-center gap-1.5">
