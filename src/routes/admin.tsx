@@ -480,8 +480,8 @@ function AdminDashboard() {
                   </Button>
                 </div>
               </div>
-              <div className="flex-1 flex justify-center items-center p-4">
-                <div className="relative w-[375px] h-[760px] rounded-[3.5rem] border-[12px] border-zinc-900 bg-white shadow-[0_0_0_2px_rgba(255,255,255,0.1),0_20px_50px_-10px_rgba(0,0,0,0.5)] overflow-hidden">
+              <div className="flex-1 flex justify-center items-start sm:items-center p-2 sm:p-4 overflow-x-hidden">
+                <div className="relative w-full max-w-[375px] aspect-[375/760] mx-auto rounded-[2.5rem] sm:rounded-[3.5rem] border-[10px] sm:border-[12px] border-zinc-900 bg-white shadow-[0_0_0_2px_rgba(255,255,255,0.1),0_20px_50px_-10px_rgba(0,0,0,0.5)] overflow-hidden">
                    {/* Dynamic Island / Notch */}
                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-7 bg-zinc-900 rounded-b-3xl z-50 flex items-center justify-center">
                      <div className="w-10 h-1 bg-zinc-800 rounded-full" />
