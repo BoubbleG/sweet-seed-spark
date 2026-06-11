@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sheet";
 import { Category, Product } from "@/types";
 import { toast } from "sonner";
-import { Sparkles, X } from "lucide-react";
+import { Sparkles, X, ImagePlus, Loader2, Trash2 } from "lucide-react";
 
 export function OwnerProductSheet({
   open,
@@ -27,6 +27,7 @@ export function OwnerProductSheet({
   restaurantId: string;
 }) {
   const qc = useQueryClient();
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -41,6 +42,7 @@ export function OwnerProductSheet({
     price_m: "",
     price_g: "",
     sides_note: "",
+    image_url: "",
   });
 
   useEffect(() => {
@@ -60,6 +62,7 @@ export function OwnerProductSheet({
         price_m: product.price_m != null ? String(product.price_m) : "",
         price_g: product.price_g != null ? String(product.price_g) : "",
         sides_note: product.sides_note || "",
+        image_url: product.image_url || "",
       });
     } else {
       setForm({
@@ -76,6 +79,7 @@ export function OwnerProductSheet({
         price_m: "",
         price_g: "",
         sides_note: "",
+        image_url: "",
       });
     }
   }, [open, product, defaultCategoryId, categories]);
@@ -104,6 +108,7 @@ export function OwnerProductSheet({
         price_m: form.has_sizes && form.price_m !== "" ? Number(String(form.price_m).replace(",", ".")) : null,
         price_g: form.has_sizes && form.price_g !== "" ? Number(String(form.price_g).replace(",", ".")) : null,
         sides_note: form.sides_note?.trim() || null,
+        image_url: form.image_url?.trim() || null,
       };
       if (product?.id) {
         const { error } = await supabase
