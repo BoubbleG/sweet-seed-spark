@@ -559,6 +559,23 @@ function RestaurantPublicMenu() {
         onClose={() => setShowOrder(false)} 
         restaurant={restaurant} 
       />
+
+      <MixSelectorDialog
+        open={mixState.open}
+        onOpenChange={(o) => setMixState((s) => ({ ...s, open: o }))}
+        baseProduct={mixState.product}
+        size={mixState.size}
+        price={mixState.price}
+        options={mixOptions}
+        maxMisturas={mixState.size === "G" ? 3 : mixState.size === "M" ? 2 : 1}
+        onConfirm={(names) => {
+          if (!mixState.product || !mixState.size) return;
+          addItem(
+            { ...mixState.product, price: mixState.price },
+            { size: mixState.size, notes: `Misturas: ${names.join(", ")}` }
+          );
+        }}
+      />
     </div>
   );
 }
