@@ -1,31 +1,46 @@
-## Cardápio Point do Gordinho — novos itens + taxa de entrega
+## Arquivo de prompts de imagem — Point do Gordinho
 
-### 1. Novos produtos
+Vou criar um único arquivo markdown em `docs/prompts-imagens-point-do-gordinho.md` com um prompt detalhado por produto, listando exatamente os ingredientes que aparecem na descrição cadastrada. Assim você gera as imagens e elas batem com o que o cliente vai receber.
 
-**Categoria "Combos"**
+### Formato de cada item
 
-- **Combo Família — R$ 75,00**  
-Descrição: "4 hambúrgueres + 20 mini coxinhas + porção de batata com cheddar e bacon + refri 1L"
-- **Combo Burguer Mac — R$ 20,00**  
-Descrição: "1 Burguer Mac + refri 269ml"
+Para cada produto, uma seção com:
 
-**Categoria "Batatinhas"**
+- **Nome do produto**
+- **Ingredientes** (lista do que tem dentro)
+- **Prompt** (texto pronto pra colar no gerador de imagem, em inglês, descrevendo enquadramento, iluminação e cada ingrediente visível)
 
-- **Batata com Costela Desfiada — R$ 20,00**  
-Descrição: "Porção de batata frita coberta com costela desfiada"
+### Produtos cobertos (15 no total)
 
-### 2. Taxa de entrega
+Hambúrgueres:
+- Burguer Simples — pão brioche, hambúrguer bovino, batata palha, cebola caramelizada, mussarela, molho da casa
+- X-Bacon — pão brioche, hambúrguer, bacon, ovo, cebola caramelizada, mussarela, molho da casa
+- X-Calabresa — pão brioche, hambúrguer, calabresa, ovo, cebola caramelizada, mussarela, molho da casa
+- Smash Burguer — pão brioche, hambúrguer, bacon, cebola caramelizada, mussarela, cheddar especial
+- Duplo Cheddar — pão brioche, **2x** hambúrguer, bacon, cebola caramelizada, mussarela, cheddar especial
 
-- Atualizar `delivery_fee` do restaurante para **R$ 2,00** (atualmente está R$ 0,00).
+Batatas:
+- Batata Simples
+- Batata Turbinada (cheddar + bacon)
+- Batata com Costela Desfiada
 
-### 3. Imagens
+Combos (foto da composição completa, com cada item visível):
+- Combo Família — 4 hambúrgueres + 20 mini coxinhas + batata cheddar/bacon + refri 1L
+- Combo Burguer Mac — 1 Burguer Mac + refri 269ml
+- Combo Duplo Cheddar — duplo cheddar + batata + refri lata 350ml
 
-- Gerar 3 imagens (combo família, combo burguer mac, batata com costela) e fazer upload pra CDN, salvando em `image_url` de cada produto novo — mesmo padrão usado nos pratos da Delícias da Taty.
+Bebidas:
+- Coca-Cola 350ml, Coca-Cola Zero 350ml, Fanta 350ml, Kuat 350ml
 
-### Detalhes técnicos
+### Padrão visual aplicado a todos os prompts
 
-- Os inserts vão direto na tabela `products` (sem migration, é só dado).
-- Update do `delivery_fee` na tabela `restaurants` (id `72b11ac1-...`).
-- Nada de mudar schema nem código do app — o front já lê esses campos.
+- Fundo: mesa de madeira escura, iluminação quente lateral, estilo food photography
+- Enquadramento: 3/4, close-up, foco no produto
+- Sem texto, sem logos, sem mãos
 
-Confirma que posso seguir? Se quiser ajustar nomes/descrições/preços ou pular as imagens, me avisa. e quero tambem que seja possivel eu fazer o upload das imagens dos produtos
+### Observações
+
+- É só um arquivo de documentação (markdown). Nenhuma mudança no código do app, no banco ou nas imagens já existentes.
+- Os prompts vão em **inglês** (modelos de imagem respondem melhor), mas com nomes/contexto fiéis ao cardápio brasileiro.
+
+Confirma que posso criar o arquivo assim? Se quiser em português ou em outro caminho/nome, me avisa.
