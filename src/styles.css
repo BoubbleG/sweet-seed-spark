@@ -148,6 +148,11 @@
 @media print {
   body * { visibility: hidden !important; }
   .print-receipt, .print-receipt * { visibility: visible !important; }
+  .hidden-on-screen {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+  }
   .print-receipt {
     position: absolute !important;
     left: 0; top: 0;
