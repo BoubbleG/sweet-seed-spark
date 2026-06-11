@@ -151,6 +151,115 @@ export function OwnerProductSheet({
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           <div>
             <label className="block text-sm font-bold text-zinc-900 mb-1.5">
+              Foto do prato
+            </label>
+            {form.image_url ? (
+              <div className="relative rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-100 aspect-[4/3]">
+                <img
+                  src={form.image_url}
+                  alt="Prévia do prato"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-2 right-2 flex gap-2">
+                  <label className="h-10 px-3 rounded-xl bg-white/95 text-zinc-900 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow">
+                    <ImagePlus className="w-4 h-4" />
+                    Trocar
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploading(true);
+                        try {
+                          const ext = file.name.split(".").pop() || "jpg";
+                          const path = `products/${restaurantId}/${crypto.randomUUID()}.${ext}`;
+                          const { error: upErr } = await supabase.storage
+                            .from("restaurant-assets")
+                            .upload(path, file, { upsert: true, contentType: file.type });
+                          if (upErr) throw upErr;
+                          const { data, error: signErr } = await supabase.storage
+                            .from("restaurant-assets")
+                            .createSignedUrl(path, 60 * 60 * 24 * 365 * 50);
+                          if (signErr) throw signErr;
+                          setForm((f) => ({ ...f, image_url: data.signedUrl }));
+                          toast.success("Foto carregada!");
+                        } catch (err: any) {
+                          toast.error(err.message || "Falha no upload");
+                        } finally {
+                          setUploading(false);
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, image_url: "" }))}
+                    className="h-10 w-10 rounded-xl bg-white/95 text-rose-600 flex items-center justify-center shadow"
+                    aria-label="Remover foto"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center gap-2 w-full aspect-[4/3] rounded-2xl border-2 border-dashed border-zinc-300 bg-zinc-50 text-zinc-600 font-bold cursor-pointer active:scale-[0.99] transition">
+                {uploading ? (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    Enviando…
+                  </>
+                ) : (
+                  <>
+                    <ImagePlus className="w-7 h-7" />
+                    <span className="text-sm">Toque para enviar uma foto</span>
+                    <span className="text-[11px] text-zinc-500 font-medium">
+                      JPG, PNG ou WEBP — até 5MB
+                    </span>
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploading}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 5 * 1024 * 1024) {
+                      toast.error("Imagem muito grande (máx. 5MB)");
+                      return;
+                    }
+                    setUploading(true);
+                    try {
+                      const ext = file.name.split(".").pop() || "jpg";
+                      const path = `products/${restaurantId}/${crypto.randomUUID()}.${ext}`;
+                      const { error: upErr } = await supabase.storage
+                        .from("restaurant-assets")
+                        .upload(path, file, { upsert: true, contentType: file.type });
+                      if (upErr) throw upErr;
+                      const { data, error: signErr } = await supabase.storage
+                        .from("restaurant-assets")
+                        .createSignedUrl(path, 60 * 60 * 24 * 365 * 50);
+                      if (signErr) throw signErr;
+                      setForm((f) => ({ ...f, image_url: data.signedUrl }));
+                      toast.success("Foto carregada!");
+                    } catch (err: any) {
+                      toast.error(err.message || "Falha no upload");
+                    } finally {
+                      setUploading(false);
+                      e.target.value = "";
+                    }
+                  }}
+                />
+              </label>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-zinc-900 mb-1.5">
               Nome do prato
             </label>
             <input
