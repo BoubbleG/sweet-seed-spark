@@ -43,7 +43,7 @@ export function OrderReceipt({
           <div key={it.id} className="mb-1">
             <div className="flex justify-between font-bold">
               <span>
-                {it.quantity}x {it.product_name}
+                {it.quantity}x {it.product_name}{it.size ? ` (${it.size})` : ''}
               </span>
               <span>{formatCurrency(it.unit_price * it.quantity)}</span>
             </div>
