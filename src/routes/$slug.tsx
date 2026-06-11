@@ -427,7 +427,7 @@ function RestaurantPublicMenu() {
                           </p>
                         )}
                         {prod.sides_note && (
-                          <p className="text-[11px] leading-snug line-clamp-2 mt-1 italic" style={{ color: t.textFaint }}>
+                          <p className="text-[11px] leading-snug mt-1 italic" style={{ color: t.textFaint }}>
                             Acompanha: {prod.sides_note}
                           </p>
                         )}
