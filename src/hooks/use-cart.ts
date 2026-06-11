@@ -1,31 +1,42 @@
 import { create } from 'zustand';
-import { CartItem, Product } from '@/types';
+import { CartItem, Product, ProductSize } from '@/types';
+
+interface AddOpts {
+  quantity?: number;
+  notes?: string;
+  size?: ProductSize;
+}
 
 interface CartState {
   items: CartItem[];
-  addItem: (product: Product, quantity?: number, notes?: string) => void;
+  addItem: (product: Product, opts?: AddOpts) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   getTotal: () => number;
 }
 
+const lineId = (productId: string, size?: ProductSize) =>
+  size ? `${productId}__${size}` : productId;
+
 export const useCart = create<CartState>((set, get) => ({
   items: [],
-  addItem: (product: Product, quantity = 1, notes = '') => {
+  addItem: (product, opts = {}) => {
+    const { quantity = 1, notes = '', size } = opts;
+    const id = lineId(product.id, size);
     const items = get().items;
-    const existingItem = items.find((item) => item.id === product.id);
+    const existingItem = items.find((item) => item.id === id);
 
     if (existingItem) {
       set({
         items: items.map((item) =>
-          item.id === product.id
+          item.id === id
             ? { ...item, quantity: item.quantity + quantity, notes: notes || item.notes }
             : item
         ),
       });
     } else {
-      set({ items: [...items, { ...product, quantity, notes }] });
+      set({ items: [...items, { ...product, id, quantity, notes, size }] });
     }
   },
   removeItem: (productId: string) => {
