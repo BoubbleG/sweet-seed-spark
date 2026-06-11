@@ -10,6 +10,7 @@ import { Sparkles, Tag, Flame } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { CartDrawer } from "@/components/cart-drawer";
 import { motion } from "framer-motion";
+import { MixSelectorDialog } from "@/components/mix-selector-dialog";
 
 
 
@@ -33,6 +34,12 @@ function RestaurantPublicMenu() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<'inicio' | 'cardapio' | 'pedido'>('inicio');
+  const [mixState, setMixState] = useState<{
+    open: boolean;
+    product: any | null;
+    size: ProductSize | null;
+    price: number;
+  }>({ open: false, product: null, size: null, price: 0 });
   const searchRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -57,6 +64,22 @@ function RestaurantPublicMenu() {
   const priceForSize = (p: any, size: ProductSize): number => {
     const v = size === "P" ? p.price_p : size === "M" ? p.price_m : p.price_g;
     return Number(v ?? 0);
+  };
+
+  const mixOptions = useMemo(
+    () =>
+      (menu?.products || [])
+        .filter((p: any) => p.has_sizes && p.is_available !== false)
+        .map((p: any) => ({ id: p.id, name: p.name })),
+    [menu?.products]
+  );
+
+  const handleSizeClick = (prod: any, size: ProductSize, val: number) => {
+    if (size === "P") {
+      addItem({ ...prod, price: val }, { size });
+      return;
+    }
+    setMixState({ open: true, product: prod, size, price: val });
   };
 
   // Track active category while scrolling
@@ -419,12 +442,7 @@ function RestaurantPublicMenu() {
                               <button
                                 key={size}
                                 type="button"
-                                onClick={() =>
-                                  addItem(
-                                    { ...prod, price: val },
-                                    { size }
-                                  )
-                                }
+                                onClick={() => handleSizeClick(prod, size, val)}
                                 aria-label={`Adicionar ${prod.name} tamanho ${size}`}
                                 className="flex-1 min-w-[88px] h-11 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform"
                                 style={{
