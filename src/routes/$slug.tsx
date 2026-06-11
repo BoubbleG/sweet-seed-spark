@@ -325,10 +325,7 @@ function RestaurantPublicMenu() {
                           </div>
                           <button
                             onClick={() =>
-                              addItem({
-                                ...prod,
-                                price: Number(prod.promo_price),
-                              })
+                              addItem({ ...prod, price: Number(prod.promo_price) })
                             }
                             type="button"
                             aria-label={`Adicionar ${prod.name}`}
