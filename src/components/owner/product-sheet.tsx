@@ -183,6 +183,73 @@ export function OwnerProductSheet({
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
                 placeholder="0,00"
                 className="w-full h-14 pl-12 pr-4 rounded-xl border border-zinc-200 text-base font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                disabled={form.has_sizes}
+                style={form.has_sizes ? { opacity: 0.5 } : undefined}
+              />
+            </div>
+            {form.has_sizes && (
+              <p className="text-[11px] text-zinc-500 mt-1.5">
+                Este prato usa os preços por tamanho abaixo.
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-zinc-200 bg-zinc-50/60 p-4 space-y-3">
+            <label className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-bold text-zinc-900">Tamanhos P / M / G</p>
+                <p className="text-xs text-zinc-500">
+                  Cliente escolhe o tamanho ao adicionar
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={form.has_sizes}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    has_sizes: e.target.checked,
+                    is_on_promo: e.target.checked ? false : form.is_on_promo,
+                  })
+                }
+                className="w-12 h-7 appearance-none rounded-full bg-zinc-300 checked:bg-zinc-900 relative transition-colors cursor-pointer
+                before:content-[''] before:absolute before:top-0.5 before:left-0.5 before:w-6 before:h-6 before:bg-white before:rounded-full before:transition-transform checked:before:translate-x-5"
+              />
+            </label>
+            {form.has_sizes && (
+              <div className="grid grid-cols-3 gap-2 pt-1">
+                {(["p", "m", "g"] as const).map((k) => (
+                  <div key={k}>
+                    <label className="block text-xs font-black text-zinc-900 mb-1.5 uppercase">
+                      {k}
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs font-bold">
+                        R$
+                      </span>
+                      <input
+                        inputMode="decimal"
+                        value={(form as any)[`price_${k}`]}
+                        onChange={(e) =>
+                          setForm({ ...form, [`price_${k}`]: e.target.value } as any)
+                        }
+                        placeholder="0,00"
+                        className="w-full h-12 pl-9 pr-2 rounded-xl border border-zinc-200 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div>
+              <label className="block text-xs font-bold text-zinc-900 mb-1.5">
+                Acompanhamentos (opcional)
+              </label>
+              <input
+                value={form.sides_note}
+                onChange={(e) => setForm({ ...form, sides_note: e.target.value })}
+                placeholder="Ex: arroz, salada, farofa, batata palha"
+                className="w-full h-12 px-4 rounded-xl border border-zinc-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900"
               />
             </div>
           </div>
