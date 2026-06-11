@@ -103,7 +103,7 @@ export function OrderCard({
           {(order.items ?? []).map((it) => (
             <li key={it.id} className="flex justify-between gap-2">
               <span className="truncate">
-                <b>{it.quantity}x</b> {it.product_name}
+                <b>{it.quantity}x</b> {it.product_name}{it.size ? ` (${it.size})` : ''}
                 {it.notes ? <em className="text-zinc-500"> · {it.notes}</em> : null}
               </span>
               <span className="text-zinc-500 shrink-0">

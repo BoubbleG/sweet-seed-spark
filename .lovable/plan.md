@@ -1,100 +1,50 @@
-## Sistema de Pedidos + Impressão Automática
+## Objetivo
 
-### Observação importante sobre Bluetooth
-Você escolheu **impressora Bluetooth no celular** + **impressão automática pelo navegador**. Essas duas coisas combinam de um jeito específico:
+Permitir que o dono cadastre um prato com 3 preços (P, M, G) — como no cardápio da Delícias da Taty. No menu público, o cliente escolhe o tamanho antes de adicionar ao carrinho, e o preço/nome muda conforme a escolha. Tudo flui no WhatsApp, no painel de pedidos e na impressão.
 
-- **No PC (Chrome/Edge)**: o navegador imprime direto na impressora térmica USB do driver do sistema. Funciona 100% automático.
-- **No celular Android**: navegador não fala com Bluetooth de impressora térmica direto. A solução real é o app **RawBT** (grátis, na Play Store) — ele vira a "impressora padrão" do Android e qualquer `window.print()` do Chrome vai pra impressora Bluetooth pareada. Eu deixo o painel pronto pra isso e escrevo as instruções de 3 passos pro dono dentro do próprio painel.
-- **No iPhone**: não tem solução boa via navegador. Cai pro botão manual "Imprimir" + share sheet.
+## Como o dono cadastra
 
-Tudo isso fica no mesmo painel, mesmo link.
+Na ficha do produto (painel `/editar/{token}` → Cardápio → produto), abaixo do campo "Preço" atual, um bloco novo:
 
----
+- Switch: **"Este prato tem tamanhos (P / M / G)"**
+- Quando ligado, aparecem 3 campos: Preço P, Preço M, Preço G
+- Quando desligado, fica o preço único como hoje
+- Campo opcional **"Acompanhamentos / observação"** (texto livre, ex: "arroz, salada, farofa, batata palha") — aparece como nota no card do prato
 
-### O que vou construir
+Promoção fica desabilitada quando o prato tem tamanhos (pra não complicar — pode ser feature futura).
 
-**1. Banco de dados (1 migração)**
-- Tabela `orders`: número do pedido (sequencial por restaurante), nome do cliente, telefone, endereço, forma de pagamento, troco, observações, subtotal, taxa de entrega, total, tipo (entrega/retirada), status (`novo` → `preparando` → `pronto` → `entregue` / `cancelado`), `created_at`, `printed_at`.
-- Tabela `order_items`: vínculo com o pedido, nome do produto (snapshot), preço unitário (snapshot), quantidade, observações.
-- Realtime habilitado em `orders` pra notificar o painel na hora.
-- RLS aberta (mesmo modelo dos outros): token no link controla o acesso no front, igual já faz hoje.
+## Como o cliente vê
 
-**2. Salvar pedido no checkout (cardápio público `/$slug`)**
-- No `cart-drawer.tsx`, antes de abrir o WhatsApp: gravar o pedido + itens no banco.
-- O WhatsApp continua sendo enviado igual hoje (você pediu pra manter).
-- Mensagem do WhatsApp passa a incluir o número do pedido (#0042) pra casar com o painel.
+No card do produto no cardápio público:
+- Em vez do preço único, mostra 3 pílulas: `P R$13` · `M R$16` · `G R$20`
+- Cliente toca em uma pílula → ela fica selecionada
+- Botão `+` adiciona ao carrinho com o tamanho escolhido
+- Se o cliente não tocou em nenhuma, abre uma mini-folha pedindo pra escolher
+- No carrinho, o nome aparece como **"Strogonoff de frango (M)"** com o preço do tamanho escolhido
+- Se tiver texto de acompanhamento, aparece em cinza abaixo do nome no card
 
-**3. Nova aba "Pedidos" no `/editar/{token}`**
-Adiciono um 5º card grande na home do editor: **"Pedidos chegando"** com badge de quantos pedidos novos tem.
+## Pedidos e impressão
 
-Dentro:
-- Lista em tempo real (Supabase Realtime). Pedido novo entra no topo com **som de campainha** + **destaque vermelho piscando**.
-- Cada pedido em card grande: número, hora, nome, total, itens resumidos, botão "Ver completo".
-- Filtros por status em pílulas grandes (Novos / Preparando / Prontos / Hoje).
-- Botões grandes pra mover status: **"Aceitar"** → **"Pronto"** → **"Entregue"**.
-- Botão **"Imprimir novamente"** em cada pedido.
+- Cada item do pedido grava `size` (`P` / `M` / `G` ou null) e o preço efetivo
+- WhatsApp e cupom impresso mostram o tamanho entre parênteses no nome
+- Painel de pedidos do dono idem
 
-**4. Impressão automática**
-- Toggle no topo do painel: **"Imprimir automático"** (on/off, salvo no `localStorage` do dispositivo).
-- Quando ligado e chega pedido novo via Realtime: monta um cupom HTML otimizado pra 80mm (fonte monoespaçada, alto contraste, sem cores) e dispara `window.print()`.
-- Marca `printed_at` no banco pra não imprimir duplicado se a aba reabrir.
-- CSS `@media print` esconde o resto da página e mostra só o cupom.
+## Mudanças técnicas
 
-**5. Cupom térmico (componente novo)**
-Layout otimizado pra papel 80mm:
-```text
-========================
-   NOME DO RESTAURANTE
-========================
-PEDIDO #0042
-10/06/2026  20:35
-------------------------
-CLIENTE: João Silva
-TEL: (11) 99999-9999
-ENTREGA: Rua X, 123
-------------------------
-2x  X-Burger        30,00
-    sem cebola
-1x  Coca 2L         12,00
-------------------------
-Subtotal           42,00
-Taxa entrega        5,00
-TOTAL              47,00
-------------------------
-PAGAMENTO: Dinheiro
-TROCO PARA: R$ 50,00
-========================
-```
+### Banco (migração)
+- `products`: adicionar `has_sizes boolean default false`, `price_p numeric`, `price_m numeric`, `price_g numeric`, `sides_note text`
+- `order_items`: adicionar `size text` (P/M/G ou null)
 
-**6. Card de instrução pro dono (dentro do painel)**
-Bloco colapsável "Como configurar minha impressora?" com 3 abas curtas:
-- **No PC**: 1. Instale o driver da sua impressora térmica. 2. Deixe esta aba aberta. 3. Ligue "Imprimir automático".
-- **Celular Android (Bluetooth)**: 1. Baixe o app RawBT na Play Store. 2. Pareie sua impressora Bluetooth nele. 3. Volte aqui, deixe esta aba aberta e ligue "Imprimir automático".
-- **iPhone**: Toque no botão "Imprimir" em cada pedido (automático não é suportado).
+### Frontend
+- `src/components/owner/product-sheet.tsx` — bloco de tamanhos + campo de acompanhamentos
+- `src/routes/$slug.tsx` — pílulas P/M/G no card de produto; lógica de seleção; bloqueia adicionar sem tamanho
+- `src/hooks/use-cart.ts` + `src/types/index.ts` — `CartItem` ganha `size?: 'P'|'M'|'G'`; produtos do mesmo id+size agrupam; ids diferentes ficam separados
+- `src/components/cart-drawer.tsx` — exibe `(P/M/G)` no nome; envia no WhatsApp; persiste `size` no `createOrder`
+- `src/lib/orders.ts` — propaga `size`
+- `src/components/owner/order-card.tsx` e `order-receipt.tsx` — exibem `(P/M/G)` no nome
+- Promo: ocultar UI de promo quando `has_sizes` está ligado; seção "Ofertas de hoje" ignora produtos com `has_sizes`
 
----
-
-### Arquivos
-
-**Migração**
-- `supabase/migrations/<timestamp>_orders.sql` — tabelas `orders` + `order_items` com GRANTs, RLS, e sequência de número de pedido por restaurante.
-
-**Edição**
-- `src/components/cart-drawer.tsx` — salvar pedido no banco antes do WhatsApp.
-- `src/routes/editar.$token.tsx` — adicionar card "Pedidos chegando" na home.
-- `src/types/index.ts` — tipos `Order`, `OrderItem`.
-
-**Novos**
-- `src/components/owner/orders-screen.tsx` — painel de pedidos em tempo real.
-- `src/components/owner/order-card.tsx` — card de pedido com ações de status.
-- `src/components/owner/order-receipt.tsx` — cupom térmico 80mm com `@media print`.
-- `src/components/owner/printer-help.tsx` — bloco de instruções PC/Android/iPhone.
-- `src/lib/orders.ts` — helpers (criar pedido, próximo número, hook de realtime + auto-print).
-- `src/assets/new-order.mp3` — som de notificação (ou usar Web Audio API com beep gerado).
-
-### Fora de escopo
-- Integração nativa com impressoras (ESC/POS via WebUSB) — fica pra v2 se você quiser depois.
-- Notificação push quando a aba está fechada (precisa de service worker + permissão; podemos adicionar depois).
-- `/admin` master e cardápio público (a parte de salvar pedido é a única mudança no checkout).
-
-Posso seguir?
+### Fora de escopo (não vou fazer agora)
+- Não vou popular um restaurante demo "Delícias da Taty" — a feature serve pra qualquer cardápio, e o dono cadastra os pratos dele normalmente
+- Promo em produtos com tamanhos (pode virar feature depois)
+- Tamanhos customizáveis (ex: 300ml/500ml) — fica P/M/G fixo conforme você pediu

@@ -199,7 +199,9 @@ export function CartDrawer({ isOpen, onClose, restaurant }: CartDrawerProps) {
                         )}
                         <div className="flex-1 min-w-0 flex flex-col justify-between">
                           <div className="flex justify-between gap-2">
-                            <h4 className="text-sm font-bold line-clamp-2 leading-snug" style={{ color: t.text }}>{item.name}</h4>
+                            <h4 className="text-sm font-bold line-clamp-2 leading-snug" style={{ color: t.text }}>
+                              {item.name}{item.size ? ` (${item.size})` : ''}
+                            </h4>
                             <button
                               onClick={() => removeItem(item.id)}
                               type="button"

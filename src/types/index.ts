@@ -65,12 +65,20 @@ export interface Product {
   promo_price?: number | null;
   is_on_promo?: boolean;
   promo_label?: string | null;
+  has_sizes?: boolean;
+  price_p?: number | null;
+  price_m?: number | null;
+  price_g?: number | null;
+  sides_note?: string | null;
 }
+
+export type ProductSize = "P" | "M" | "G";
 
 export interface CartItem extends Product {
   quantity: number;
   selectedOptions?: any[];
   notes?: string;
+  size?: ProductSize;
 }
 
 export type OrderStatus = "novo" | "preparando" | "pronto" | "entregue" | "cancelado";
@@ -82,6 +90,7 @@ export interface OrderItem {
   unit_price: number;
   quantity: number;
   notes?: string | null;
+  size?: string | null;
 }
 
 export interface Order {

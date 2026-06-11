@@ -5,6 +5,7 @@ import { useCart } from "@/hooks/use-cart";
 import { formatCurrency } from "@/lib/utils";
 import { buildMenuTheme } from "@/lib/theme";
 import { ShoppingCart, Plus, Search, Menu as MenuIcon, Package, Home as HomeIcon } from "lucide-react";
+import type { ProductSize } from "@/types";
 import { Sparkles, Tag, Flame } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { CartDrawer } from "@/components/cart-drawer";
@@ -48,10 +49,15 @@ function RestaurantPublicMenu() {
   const promoProducts = useMemo(
     () =>
       (filteredProducts || []).filter(
-        (p) => p.is_on_promo && p.promo_price != null
+        (p) => !p.has_sizes && p.is_on_promo && p.promo_price != null
       ),
     [filteredProducts]
   );
+
+  const priceForSize = (p: any, size: ProductSize): number => {
+    const v = size === "P" ? p.price_p : size === "M" ? p.price_m : p.price_g;
+    return Number(v ?? 0);
+  };
 
   // Track active category while scrolling
   useEffect(() => {
@@ -317,10 +323,7 @@ function RestaurantPublicMenu() {
                           </div>
                           <button
                             onClick={() =>
-                              addItem({
-                                ...prod,
-                                price: Number(prod.promo_price),
-                              })
+                              addItem({ ...prod, price: Number(prod.promo_price) })
                             }
                             type="button"
                             aria-label={`Adicionar ${prod.name}`}
@@ -400,8 +403,43 @@ function RestaurantPublicMenu() {
                             {prod.description}
                           </p>
                         )}
+                        {prod.sides_note && (
+                          <p className="text-[11px] leading-snug line-clamp-2 mt-1 italic" style={{ color: t.textFaint }}>
+                            Acompanha: {prod.sides_note}
+                          </p>
+                        )}
                       </div>
 
+                      {prod.has_sizes ? (
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {(["P", "M", "G"] as const).map((size) => {
+                            const val = priceForSize(prod, size);
+                            if (!val) return null;
+                            return (
+                              <button
+                                key={size}
+                                type="button"
+                                onClick={() =>
+                                  addItem(
+                                    { ...prod, price: val },
+                                    { size }
+                                  )
+                                }
+                                aria-label={`Adicionar ${prod.name} tamanho ${size}`}
+                                className="flex-1 min-w-[88px] h-11 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform"
+                                style={{
+                                  backgroundColor: t.buttonColor,
+                                  color: t.onButton,
+                                }}
+                              >
+                                <span className="text-sm font-black opacity-90">{size}</span>
+                                <span className="opacity-90">·</span>
+                                <span>{formatCurrency(val)}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
                       <div className="flex items-center justify-between gap-2 mt-3">
                         <div className="flex items-baseline gap-2 min-w-0">
                           {prod.is_on_promo && prod.promo_price != null ? (
@@ -432,6 +470,7 @@ function RestaurantPublicMenu() {
                           <Plus className="w-5 h-5" />
                         </button>
                       </div>
+                      )}
                     </div>
                   </motion.article>
                 ))}

@@ -55,6 +55,7 @@ export async function createOrder(params: {
       unit_price: it.price,
       quantity: it.quantity,
       notes: it.notes ?? null,
+      size: it.size ?? null,
     }));
     await supabase.from("order_items").insert(rows);
   }
