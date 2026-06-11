@@ -90,6 +90,7 @@ export type Database = {
           order_id: string
           product_name: string
           quantity: number
+          size: string | null
           unit_price: number
         }
         Insert: {
@@ -99,6 +100,7 @@ export type Database = {
           order_id: string
           product_name: string
           quantity?: number
+          size?: string | null
           unit_price?: number
         }
         Update: {
@@ -108,6 +110,7 @@ export type Database = {
           order_id?: string
           product_name?: string
           quantity?: number
+          size?: string | null
           unit_price?: number
         }
         Relationships: [
@@ -200,6 +203,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           estimated_time: string | null
+          has_sizes: boolean
           id: string
           image_url: string | null
           internal_notes: string | null
@@ -211,9 +215,13 @@ export type Database = {
           nutritional_info: string | null
           options: Json | null
           price: number
+          price_g: number | null
+          price_m: number | null
+          price_p: number | null
           promo_label: string | null
           promo_price: number | null
           restaurant_id: string
+          sides_note: string | null
           updated_at: string | null
           variants: Json | null
         }
@@ -222,6 +230,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           estimated_time?: string | null
+          has_sizes?: boolean
           id?: string
           image_url?: string | null
           internal_notes?: string | null
@@ -233,9 +242,13 @@ export type Database = {
           nutritional_info?: string | null
           options?: Json | null
           price: number
+          price_g?: number | null
+          price_m?: number | null
+          price_p?: number | null
           promo_label?: string | null
           promo_price?: number | null
           restaurant_id: string
+          sides_note?: string | null
           updated_at?: string | null
           variants?: Json | null
         }
@@ -244,6 +257,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           estimated_time?: string | null
+          has_sizes?: boolean
           id?: string
           image_url?: string | null
           internal_notes?: string | null
@@ -255,9 +269,13 @@ export type Database = {
           nutritional_info?: string | null
           options?: Json | null
           price?: number
+          price_g?: number | null
+          price_m?: number | null
+          price_p?: number | null
           promo_label?: string | null
           promo_price?: number | null
           restaurant_id?: string
+          sides_note?: string | null
           updated_at?: string | null
           variants?: Json | null
         }
