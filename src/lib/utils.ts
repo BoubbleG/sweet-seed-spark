@@ -18,7 +18,8 @@ export function generateWhatsAppMessage(restaurantName: string, items: any[], cu
   message += `*Itens:*\n`;
   
   items.forEach(item => {
-    message += `${item.quantity}x ${item.name} — ${formatCurrency(item.price * item.quantity)}\n`;
+    const sz = item.size ? ` (${item.size})` : '';
+    message += `${item.quantity}x ${item.name}${sz} — ${formatCurrency(item.price * item.quantity)}\n`;
     if (item.notes) message += `Observação: ${item.notes}\n`;
     message += `\n`;
   });
