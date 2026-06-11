@@ -54,8 +54,6 @@ function RestaurantPublicMenu() {
     [filteredProducts]
   );
 
-  const [selectedSize, setSelectedSize] = useState<Record<string, ProductSize>>({});
-
   const priceForSize = (p: any, size: ProductSize): number => {
     const v = size === "P" ? p.price_p : size === "M" ? p.price_m : p.price_g;
     return Number(v ?? 0);
