@@ -16,14 +16,20 @@ interface CartState {
   getTotal: () => number;
 }
 
-const lineId = (productId: string, size?: ProductSize) =>
-  size ? `${productId}__${size}` : productId;
+const lineId = (productId: string, size?: ProductSize, notes?: string) => {
+  const base = size ? `${productId}__${size}` : productId;
+  if (!notes) return base;
+  // distinct line when notes (e.g. misturas) differ
+  let h = 0;
+  for (let i = 0; i < notes.length; i++) h = (h * 31 + notes.charCodeAt(i)) | 0;
+  return `${base}__${h}`;
+};
 
 export const useCart = create<CartState>((set, get) => ({
   items: [],
   addItem: (product, opts = {}) => {
     const { quantity = 1, notes = '', size } = opts;
-    const id = lineId(product.id, size);
+    const id = lineId(product.id, size, notes);
     const items = get().items;
     const existingItem = items.find((item) => item.id === id);
 
