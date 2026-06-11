@@ -36,6 +36,11 @@ export function OwnerProductSheet({
     is_on_promo: false,
     promo_price: "",
     promo_label: "Oferta do dia",
+    has_sizes: false,
+    price_p: "",
+    price_m: "",
+    price_g: "",
+    sides_note: "",
   });
 
   useEffect(() => {
@@ -50,6 +55,11 @@ export function OwnerProductSheet({
         is_on_promo: !!product.is_on_promo,
         promo_price: product.promo_price != null ? String(product.promo_price) : "",
         promo_label: product.promo_label || "Oferta do dia",
+        has_sizes: !!product.has_sizes,
+        price_p: product.price_p != null ? String(product.price_p) : "",
+        price_m: product.price_m != null ? String(product.price_m) : "",
+        price_g: product.price_g != null ? String(product.price_g) : "",
+        sides_note: product.sides_note || "",
       });
     } else {
       setForm({
@@ -61,6 +71,11 @@ export function OwnerProductSheet({
         is_on_promo: false,
         promo_price: "",
         promo_label: "Oferta do dia",
+        has_sizes: false,
+        price_p: "",
+        price_m: "",
+        price_g: "",
+        sides_note: "",
       });
     }
   }, [open, product, defaultCategoryId, categories]);
@@ -76,14 +91,19 @@ export function OwnerProductSheet({
         description: form.description?.trim() || null,
         price: Number(String(form.price).replace(",", ".")) || 0,
         is_available: form.is_available,
-        is_on_promo: form.is_on_promo,
+        is_on_promo: form.has_sizes ? false : form.is_on_promo,
         promo_price:
-          form.is_on_promo && form.promo_price !== ""
+          !form.has_sizes && form.is_on_promo && form.promo_price !== ""
             ? Number(String(form.promo_price).replace(",", "."))
             : null,
-        promo_label: form.is_on_promo
+        promo_label: !form.has_sizes && form.is_on_promo
           ? form.promo_label?.trim() || "Oferta do dia"
           : null,
+        has_sizes: form.has_sizes,
+        price_p: form.has_sizes && form.price_p !== "" ? Number(String(form.price_p).replace(",", ".")) : null,
+        price_m: form.has_sizes && form.price_m !== "" ? Number(String(form.price_m).replace(",", ".")) : null,
+        price_g: form.has_sizes && form.price_g !== "" ? Number(String(form.price_g).replace(",", ".")) : null,
+        sides_note: form.sides_note?.trim() || null,
       };
       if (product?.id) {
         const { error } = await supabase
