@@ -405,8 +405,43 @@ function RestaurantPublicMenu() {
                             {prod.description}
                           </p>
                         )}
+                        {prod.sides_note && (
+                          <p className="text-[11px] leading-snug line-clamp-2 mt-1 italic" style={{ color: t.textFaint }}>
+                            Acompanha: {prod.sides_note}
+                          </p>
+                        )}
                       </div>
 
+                      {prod.has_sizes ? (
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {(["P", "M", "G"] as const).map((size) => {
+                            const val = priceForSize(prod, size);
+                            if (!val) return null;
+                            return (
+                              <button
+                                key={size}
+                                type="button"
+                                onClick={() =>
+                                  addItem(
+                                    { ...prod, price: val },
+                                    { size }
+                                  )
+                                }
+                                aria-label={`Adicionar ${prod.name} tamanho ${size}`}
+                                className="flex-1 min-w-[88px] h-11 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform"
+                                style={{
+                                  backgroundColor: t.buttonColor,
+                                  color: t.onButton,
+                                }}
+                              >
+                                <span className="text-sm font-black opacity-90">{size}</span>
+                                <span className="opacity-90">·</span>
+                                <span>{formatCurrency(val)}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
                       <div className="flex items-center justify-between gap-2 mt-3">
                         <div className="flex items-baseline gap-2 min-w-0">
                           {prod.is_on_promo && prod.promo_price != null ? (
@@ -437,6 +472,7 @@ function RestaurantPublicMenu() {
                           <Plus className="w-5 h-5" />
                         </button>
                       </div>
+                      )}
                     </div>
                   </motion.article>
                 ))}
