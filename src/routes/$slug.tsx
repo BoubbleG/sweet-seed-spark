@@ -5,6 +5,7 @@ import { useCart } from "@/hooks/use-cart";
 import { formatCurrency } from "@/lib/utils";
 import { buildMenuTheme } from "@/lib/theme";
 import { ShoppingCart, Plus, Search, Menu as MenuIcon, Package, Home as HomeIcon } from "lucide-react";
+import type { ProductSize } from "@/types";
 import { Sparkles, Tag, Flame } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { CartDrawer } from "@/components/cart-drawer";
@@ -48,10 +49,17 @@ function RestaurantPublicMenu() {
   const promoProducts = useMemo(
     () =>
       (filteredProducts || []).filter(
-        (p) => p.is_on_promo && p.promo_price != null
+        (p) => !p.has_sizes && p.is_on_promo && p.promo_price != null
       ),
     [filteredProducts]
   );
+
+  const [selectedSize, setSelectedSize] = useState<Record<string, ProductSize>>({});
+
+  const priceForSize = (p: any, size: ProductSize): number => {
+    const v = size === "P" ? p.price_p : size === "M" ? p.price_m : p.price_g;
+    return Number(v ?? 0);
+  };
 
   // Track active category while scrolling
   useEffect(() => {
