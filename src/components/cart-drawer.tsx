@@ -342,6 +342,75 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
                 </div>
               ) : step === 3 ? (
                 <div className="space-y-5">
+                  {acceptsDelivery && acceptsPickup && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setOrderType("delivery")}
+                        className="h-24 rounded-2xl flex flex-col items-center justify-center gap-1.5 active:scale-[0.97] transition shadow-sm"
+                        style={{
+                          backgroundColor: orderType === "delivery" ? `${t.primary}15` : t.surface,
+                          color: orderType === "delivery" ? t.primary : t.text,
+                          border: `3px solid ${orderType === "delivery" ? t.primary : t.border}`,
+                        }}
+                      >
+                        <Bike className="w-7 h-7" />
+                        <span className="text-sm font-black">Entrega</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOrderType("pickup")}
+                        className="h-24 rounded-2xl flex flex-col items-center justify-center gap-1.5 active:scale-[0.97] transition shadow-sm"
+                        style={{
+                          backgroundColor: orderType === "pickup" ? `${t.primary}15` : t.surface,
+                          color: orderType === "pickup" ? t.primary : t.text,
+                          border: `3px solid ${orderType === "pickup" ? t.primary : t.border}`,
+                        }}
+                      >
+                        <Store className="w-7 h-7" />
+                        <span className="text-sm font-black">Retirar no local</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {orderType === "pickup" ? (
+                    <>
+                      <div
+                        className="rounded-2xl p-4 shadow-sm space-y-2"
+                        style={{ backgroundColor: t.surface, border: `1px solid ${t.border}` }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Store className="w-5 h-5" style={{ color: t.primary }} />
+                          <p className="text-sm font-black" style={{ color: t.text }}>Retire seu pedido em:</p>
+                        </div>
+                        {restaurant.address && (
+                          <p className="text-sm" style={{ color: t.text }}>
+                            {restaurant.address}{restaurant.city ? ` — ${restaurant.city}` : ''}
+                          </p>
+                        )}
+                        {restaurant.opening_hours && (
+                          <p className="text-xs flex items-center gap-1.5" style={{ color: t.textMuted }}>
+                            <Clock className="w-3.5 h-3.5" />
+                            {restaurant.opening_hours}
+                          </p>
+                        )}
+                      </div>
+                      <BigField
+                        icon={<MessageSquare className="w-6 h-6" />}
+                        label="Algum recado? (opcional)"
+                        theme={t}
+                      >
+                        <Textarea
+                          value={customer.generalNotes}
+                          onChange={(e) => setCustomer({ ...customer, generalNotes: e.target.value })}
+                          placeholder="Ex: sem cebola, retiro às 19h..."
+                          className="rounded-2xl text-base p-4 min-h-[90px] placeholder:opacity-40"
+                          style={{ backgroundColor: t.surface, color: t.text, border: `2px solid ${t.border}` }}
+                        />
+                      </BigField>
+                    </>
+                  ) : (
+                  <>
                   <BigField
                     icon={<Home className="w-6 h-6" />}
                     label="Rua e número"
@@ -397,6 +466,8 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
                       style={{ backgroundColor: t.surface, color: t.text, border: `2px solid ${t.border}` }}
                     />
                   </BigField>
+                  </>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-5">
@@ -405,34 +476,16 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
                       Escolha como pagar
                     </p>
                     <div className="grid grid-cols-2 gap-3">
-                      <PaymentCard
-                        label="PIX"
-                        icon={<Smartphone className="w-8 h-8" />}
-                        selected={customer.paymentMethod === "PIX"}
-                        onClick={() => setCustomer({ ...customer, paymentMethod: "PIX" })}
-                        theme={t}
-                      />
-                      <PaymentCard
-                        label="Dinheiro"
-                        icon={<Banknote className="w-8 h-8" />}
-                        selected={customer.paymentMethod === "Dinheiro"}
-                        onClick={() => setCustomer({ ...customer, paymentMethod: "Dinheiro" })}
-                        theme={t}
-                      />
-                      <PaymentCard
-                        label="Crédito"
-                        icon={<CreditCard className="w-8 h-8" />}
-                        selected={customer.paymentMethod === "Cartão de Crédito"}
-                        onClick={() => setCustomer({ ...customer, paymentMethod: "Cartão de Crédito" })}
-                        theme={t}
-                      />
-                      <PaymentCard
-                        label="Débito"
-                        icon={<CreditCard className="w-8 h-8" />}
-                        selected={customer.paymentMethod === "Cartão de Débito"}
-                        onClick={() => setCustomer({ ...customer, paymentMethod: "Cartão de Débito" })}
-                        theme={t}
-                      />
+                      {paymentOptions.map((p) => (
+                        <PaymentCard
+                          key={p.key}
+                          label={p.label}
+                          icon={p.icon}
+                          selected={customer.paymentMethod === p.key}
+                          onClick={() => setCustomer({ ...customer, paymentMethod: p.key })}
+                          theme={t}
+                        />
+                      ))}
                     </div>
                   </div>
 
