@@ -296,6 +296,35 @@ export type Database = {
           },
         ]
       }
+      restaurant_edit_tokens: {
+        Row: {
+          created_at: string
+          edit_token: string
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          edit_token: string
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          edit_token?: string
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_edit_tokens_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurants: {
         Row: {
           address: string | null
@@ -312,7 +341,6 @@ export type Database = {
           custom_css: string | null
           delivery_fee: number | null
           description: string | null
-          edit_token: string
           font_family: string | null
           header_style: string | null
           id: string
@@ -349,7 +377,6 @@ export type Database = {
           custom_css?: string | null
           delivery_fee?: number | null
           description?: string | null
-          edit_token?: string
           font_family?: string | null
           header_style?: string | null
           id?: string
@@ -386,7 +413,6 @@ export type Database = {
           custom_css?: string | null
           delivery_fee?: number | null
           description?: string | null
-          edit_token?: string
           font_family?: string | null
           header_style?: string | null
           id?: string
@@ -415,7 +441,75 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_ensure_edit_token: {
+        Args: { _password_hash: string; _restaurant_id: string }
+        Returns: string
+      }
+      admin_list_edit_tokens: {
+        Args: { _password_hash: string }
+        Returns: {
+          edit_token: string
+          restaurant_id: string
+        }[]
+      }
+      admin_password_exists: { Args: never; Returns: boolean }
+      admin_rotate_edit_token: {
+        Args: {
+          _new_token: string
+          _password_hash: string
+          _restaurant_id: string
+        }
+        Returns: undefined
+      }
+      find_restaurant_by_edit_token: {
+        Args: { _token: string }
+        Returns: {
+          address: string | null
+          average_delivery_time: string | null
+          background_color: string | null
+          banner_url: string | null
+          border_radius: string | null
+          business_type: string
+          button_color: string | null
+          card_style: string | null
+          category_layout: string | null
+          city: string | null
+          created_at: string | null
+          custom_css: string | null
+          delivery_fee: number | null
+          description: string | null
+          font_family: string | null
+          header_style: string | null
+          id: string
+          instagram: string | null
+          logo_url: string | null
+          min_order_for_free_delivery: number | null
+          name: string
+          opening_hours: string | null
+          primary_color: string | null
+          product_card_layout: string | null
+          secondary_color: string | null
+          show_categories: boolean | null
+          show_delivery_status: boolean | null
+          show_search: boolean | null
+          slug: string
+          status: string | null
+          text_color: string | null
+          updated_at: string | null
+          visual_style: string | null
+          whatsapp: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "restaurants"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      verify_admin_password: {
+        Args: { _password_hash: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
