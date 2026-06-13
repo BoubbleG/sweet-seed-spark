@@ -165,6 +165,13 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
         <style dangerouslySetInnerHTML={{ __html: restaurant.custom_css }} />
       )}
 
+      {isPreview && (
+        <div className="sticky top-0 z-40 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-center py-2 px-4 text-xs sm:text-sm font-bold shadow-lg">
+          ✨ MODELO DE DEMONSTRAÇÃO — Seu cardápio pode ficar assim! 
+          <a href="https://wa.me/" className="underline ml-2">Fale conosco</a>
+        </div>
+      )}
+
       {/* Header */}
       <header className="px-5 pt-6 pb-4 sm:px-6">
         <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4">
