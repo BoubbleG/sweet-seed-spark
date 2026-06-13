@@ -38,12 +38,10 @@ function OwnerEditor() {
     queryKey: ["restaurant-by-token", token],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("restaurants")
-        .select("*")
-        .eq("edit_token", token)
-        .maybeSingle();
+        .rpc("find_restaurant_by_edit_token", { _token: token });
       if (error) throw error;
-      return data as Restaurant | null;
+      const row = Array.isArray(data) ? data[0] : data;
+      return (row ?? null) as Restaurant | null;
     },
     enabled: !!token,
   });
