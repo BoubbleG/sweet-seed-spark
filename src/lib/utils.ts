@@ -12,7 +12,7 @@ export function formatCurrency(value: number) {
   }).format(value);
 }
 
-export function generateWhatsAppMessage(restaurantName: string, items: any[], customer: any, subtotal: number, deliveryFee: number, total: number) {
+export function generateWhatsAppMessage(restaurantName: string, items: any[], customer: any, subtotal: number, deliveryFee: number, total: number, restaurantAddress?: string) {
   let message = `Olá, gostaria de fazer um pedido:\n\n`;
   message += `Restaurante: *${restaurantName}*\n\n`;
   message += `*Itens:*\n`;
@@ -26,15 +26,23 @@ export function generateWhatsAppMessage(restaurantName: string, items: any[], cu
 
   message += `*Resumo:*\n`;
   message += `Subtotal: ${formatCurrency(subtotal)}\n`;
-  message += `Taxa de entrega: ${formatCurrency(deliveryFee)}\n`;
+  if (customer.orderType === 'pickup') {
+    message += `Tipo: *Retirada no local*\n`;
+  } else {
+    message += `Taxa de entrega: ${formatCurrency(deliveryFee)}\n`;
+  }
   message += `*Total: ${formatCurrency(total)}*\n\n`;
 
   message += `*Dados do cliente:*\n`;
   message += `Nome: ${customer.name}\n`;
   message += `Telefone: ${customer.phone}\n`;
-  message += `Endereço: ${customer.address}\n`;
-  message += `Bairro: ${customer.neighborhood}\n`;
-  message += `Referência: ${customer.reference || 'N/A'}\n`;
+  if (customer.orderType === 'pickup') {
+    message += `Retirada no local${restaurantAddress ? ` — ${restaurantAddress}` : ''}\n`;
+  } else {
+    message += `Endereço: ${customer.address}\n`;
+    message += `Bairro: ${customer.neighborhood}\n`;
+    message += `Referência: ${customer.reference || 'N/A'}\n`;
+  }
   message += `Forma de pagamento: ${customer.paymentMethod}\n`;
   if (customer.paymentMethod === 'Dinheiro' && customer.changeFor) {
     message += `Troco para: ${formatCurrency(parseFloat(customer.changeFor))}\n`;
