@@ -10,6 +10,7 @@ export interface CustomerInfo {
   paymentMethod: string;
   changeFor: string;
   generalNotes: string;
+  orderType?: "delivery" | "pickup";
 }
 
 export async function createOrder(params: {
@@ -37,7 +38,7 @@ export async function createOrder(params: {
       subtotal,
       delivery_fee: deliveryFee,
       total,
-      order_type: "delivery",
+      order_type: customer.orderType ?? "delivery",
       status: "novo",
     })
     .select()

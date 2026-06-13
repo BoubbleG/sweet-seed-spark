@@ -327,6 +327,8 @@ export type Database = {
       }
       restaurants: {
         Row: {
+          accepts_delivery: boolean
+          accepts_pickup: boolean
           address: string | null
           average_delivery_time: string | null
           background_color: string | null
@@ -349,6 +351,7 @@ export type Database = {
           min_order_for_free_delivery: number | null
           name: string
           opening_hours: string | null
+          payment_methods: Json
           primary_color: string | null
           product_card_layout: string | null
           secondary_color: string | null
@@ -363,6 +366,8 @@ export type Database = {
           whatsapp: string
         }
         Insert: {
+          accepts_delivery?: boolean
+          accepts_pickup?: boolean
           address?: string | null
           average_delivery_time?: string | null
           background_color?: string | null
@@ -385,6 +390,7 @@ export type Database = {
           min_order_for_free_delivery?: number | null
           name: string
           opening_hours?: string | null
+          payment_methods?: Json
           primary_color?: string | null
           product_card_layout?: string | null
           secondary_color?: string | null
@@ -399,6 +405,8 @@ export type Database = {
           whatsapp: string
         }
         Update: {
+          accepts_delivery?: boolean
+          accepts_pickup?: boolean
           address?: string | null
           average_delivery_time?: string | null
           background_color?: string | null
@@ -421,6 +429,7 @@ export type Database = {
           min_order_for_free_delivery?: number | null
           name?: string
           opening_hours?: string | null
+          payment_methods?: Json
           primary_color?: string | null
           product_card_layout?: string | null
           secondary_color?: string | null
@@ -464,6 +473,8 @@ export type Database = {
       find_restaurant_by_edit_token: {
         Args: { _token: string }
         Returns: {
+          accepts_delivery: boolean
+          accepts_pickup: boolean
           address: string | null
           average_delivery_time: string | null
           background_color: string | null
@@ -486,6 +497,7 @@ export type Database = {
           min_order_for_free_delivery: number | null
           name: string
           opening_hours: string | null
+          payment_methods: Json
           primary_color: string | null
           product_card_layout: string | null
           secondary_color: string | null

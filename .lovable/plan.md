@@ -1,58 +1,45 @@
-## Objetivo
+# Plano: Retirada no local + Toggles de pagamento/entrega
 
-Adicionar **"Empadas da Eva"** como um 4º modelo de demonstração no portfólio `/modelos`, reproduzindo o tema visual (vermelho vinho profundo + dourado, tipografia script elegante para títulos) e todos os 12 produtos do cardápio da imagem.
+## 1. Banco de dados (migration)
 
-## Onde
+Adicionar colunas na tabela `restaurants`:
 
-- **Migration** — insere o restaurante + 4 categorias + 12 produtos no banco (mesmo padrão dos modelos existentes "point-do-gordinho", "delicias-da-taty", "cardapio-saudavel").
-- **`src/routes/modelos.tsx`** — adicionar o card "Empadas da Eva" na grade do portfólio com `STYLE_META`.
+- `accepts_delivery` (boolean, default true) — aceita entrega
+- `accepts_pickup` (boolean, default false) — aceita retirada no local
+- `payment_methods` (jsonb, default `{"pix": true, "credit_card": true, "debit_card": true, "cash": true, "meal_voucher": false}`) — métodos de pagamento ativos
 
-## Tema visual (extraído da imagem)
+Para "Empadas da Eva", ativar `accepts_pickup = true` já no seed.
 
-- `background_color`: **#3D0A0A** (vermelho vinho profundo / bordô)
-- `primary_color`: **#D4A24C** (dourado quente dos preços e detalhes)
-- `button_color`: **#D4A24C** (dourado)
-- `text_color`: **#F5E6C8** (creme suave para contraste)
-- `font_family`: **Playfair Display** (serif elegante, mais próximo do script "Cardápio")
-- `visual_style`: `premium`
-- `card_style`: `elevated`
-- `border_radius`: `1rem`
+## 2. Checkout do cliente (`src/components/cart-drawer.tsx`)
 
-## Dados do cardápio
+- Se o restaurante aceitar ambos (entrega e retirada), exibir 2 botões no topo do checkout: **Entrega** / **Retirada**.
+- Se aceitar só um, fixar nessa opção (sem mostrar seletor).
+- Quando **Retirada** selecionada:
+  - Ocultar campos de endereço (rua, número, bairro, complemento, referência, taxa de entrega).
+  - Mostrar bloco com endereço do restaurante + horário de funcionamento + aviso "Retirar no local".
+  - Zerar taxa de entrega no total.
+- Seletor de pagamento passa a listar apenas os métodos ativos em `payment_methods`.
+- Enviar `order_type` ("delivery" | "pickup") ao inserir o pedido e incluir no texto do WhatsApp.
 
-**Restaurante:**
-- Nome: Empadas da Eva
-- Slug: `empadas-da-eva`
-- Tipo: Salgados Artesanais
-- Descrição: "Sabor que encanta, qualidade que fideliza"
-- WhatsApp: (71) 98743-5520
-- Instagram: @empadasdaeva
-- Status: active
+## 3. Painel do dono do restaurante (`src/routes/editar.$token.tsx`)
 
-**Categorias e produtos:**
+Adicionar nova seção **"Entrega e Pagamento"** com:
 
-| Categoria | Produto | Preço |
-|---|---|---|
-| Coxinhas | Frango | 7,99 |
-| Coxinhas | Frango c/ Catupiry | 9,99 |
-| Coxinhas | Costela | 11,99 |
-| Coxinhas | Camarão | 11,99 |
-| Empadas | Frango Cremoso | 7,99 |
-| Empadas | Camarão | 8,99 |
-| Mini Empadão | Frango Cremoso | 14,99 |
-| Mini Empadão | Camarão | 19,99 |
-| Batatas (porções 200g) | C/ Cheddar | 9,99 |
-| Batatas (porções 200g) | Calabresa | 14,99 |
+- Switch **Aceitar entrega** (`accepts_delivery`)
+- Switch **Aceitar retirada no local** (`accepts_pickup`)
+- Grupo de switches **Formas de pagamento aceitas**:
+  - PIX
+  - Cartão de crédito
+  - Cartão de débito
+  - Dinheiro
+  - Vale-refeição
 
-## Como ficará disponível
+Validação: pelo menos uma forma de entrega e uma de pagamento devem estar ativas antes de salvar.
 
-- Listado em `https://sweet-seed-spark.lovable.app/modelos` ao lado dos 3 modelos atuais.
-- Preview interativo em `https://sweet-seed-spark.lovable.app/modelos/empadas-da-eva`.
-- Também acessível no link público `/empadas-da-eva` (como qualquer restaurante real).
-- Pedidos no preview continuam **simulados** (toast de demonstração, sem enviar pro WhatsApp).
+## 4. Detalhes técnicos
 
-## Fora de escopo
+- Tipo TS gerado automaticamente após migration aprovada.
+- `cart-drawer.tsx` já tem lógica de pickup no demo — vamos portar/adaptar para a versão real.
+- Sem mudanças no fluxo de criação de pedido além de `order_type` e `payment_method` já existentes.
 
-- Gerar imagens dos produtos (sem `image_url` — vão usar o placeholder padrão do template).
-- Importar a logo da imagem como asset (a imagem foi enviada como referência de design, não como logo a embutir).
-- Alterar o tema dos modelos já existentes.
+Sem alterações em RLS — colunas adicionadas a uma tabela já pública.

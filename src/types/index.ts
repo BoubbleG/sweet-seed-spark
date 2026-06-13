@@ -33,6 +33,15 @@ export interface Restaurant {
   custom_css?: string;
   created_at?: string;
   edit_token?: string;
+  accepts_delivery?: boolean;
+  accepts_pickup?: boolean;
+  payment_methods?: {
+    pix?: boolean;
+    credit_card?: boolean;
+    debit_card?: boolean;
+    cash?: boolean;
+    meal_voucher?: boolean;
+  } | null;
 }
 
 export interface Category {

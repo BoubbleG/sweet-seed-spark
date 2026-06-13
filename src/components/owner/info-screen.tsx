@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SectionShell, SectionCard, StickySaveBar } from "./shared";
-import { Phone, MapPin, Clock, Truck, AtSign, Store } from "lucide-react";
+import { Phone, MapPin, Clock, Truck, AtSign, Store, CreditCard } from "lucide-react";
 
 export function OwnerInfoScreen({
   restaurant,
@@ -20,7 +20,24 @@ export function OwnerInfoScreen({
 
   useEffect(() => setForm(restaurant), [restaurant.id]);
 
+  const pm = (form.payment_methods ?? {
+    pix: true, credit_card: true, debit_card: true, cash: true, meal_voucher: false,
+  }) as NonNullable<Restaurant["payment_methods"]>;
+  const setPm = (key: keyof NonNullable<Restaurant["payment_methods"]>, value: boolean) =>
+    setForm({ ...form, payment_methods: { ...pm, [key]: value } });
+
   const save = async () => {
+    const acceptsDelivery = form.accepts_delivery !== false;
+    const acceptsPickup = form.accepts_pickup === true;
+    if (!acceptsDelivery && !acceptsPickup) {
+      toast.error("Ative ao menos uma opção: entrega ou retirada.");
+      return;
+    }
+    const anyPayment = Object.values(pm).some(Boolean);
+    if (!anyPayment) {
+      toast.error("Ative ao menos uma forma de pagamento.");
+      return;
+    }
     setSaving(true);
     setSaved(false);
     const { error } = await supabase
@@ -39,6 +56,9 @@ export function OwnerInfoScreen({
         average_delivery_time: form.average_delivery_time ?? null,
         instagram: form.instagram ?? null,
         status: form.status,
+        accepts_delivery: acceptsDelivery,
+        accepts_pickup: acceptsPickup,
+        payment_methods: pm,
       })
       .eq("id", restaurant.id);
     setSaving(false);
@@ -154,6 +174,18 @@ export function OwnerInfoScreen({
       </SectionCard>
 
       <SectionCard title="Entrega" icon={<Truck className="w-4 h-4" />}>
+        <Toggle
+          label="Aceitar entrega"
+          hint="Cliente informa endereço."
+          checked={form.accepts_delivery !== false}
+          onChange={(v) => setForm({ ...form, accepts_delivery: v })}
+        />
+        <Toggle
+          label="Aceitar retirada no local"
+          hint="Cliente retira no endereço do restaurante."
+          checked={form.accepts_pickup === true}
+          onChange={(v) => setForm({ ...form, accepts_pickup: v })}
+        />
         <Field label="Taxa de entrega" hint="Em reais. Deixe 0 para grátis.">
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">
@@ -200,6 +232,17 @@ export function OwnerInfoScreen({
         </Field>
       </SectionCard>
 
+      <SectionCard title="Formas de pagamento" icon={<CreditCard className="w-4 h-4" />}>
+        <p className="text-xs text-zinc-500 -mt-1 mb-1">
+          Ative as opções que você aceita. Só elas aparecem no checkout do cliente.
+        </p>
+        <Toggle label="PIX" checked={pm.pix !== false} onChange={(v) => setPm("pix", v)} />
+        <Toggle label="Cartão de Crédito" checked={pm.credit_card !== false} onChange={(v) => setPm("credit_card", v)} />
+        <Toggle label="Cartão de Débito" checked={pm.debit_card !== false} onChange={(v) => setPm("debit_card", v)} />
+        <Toggle label="Dinheiro" checked={pm.cash !== false} onChange={(v) => setPm("cash", v)} />
+        <Toggle label="Vale-refeição" checked={pm.meal_voucher === true} onChange={(v) => setPm("meal_voucher", v)} />
+      </SectionCard>
+
       <StickySaveBar saving={saving} saved={saved} onSave={save} />
     </SectionShell>
   );
@@ -222,5 +265,33 @@ function Field({
       {children}
       {hint && <p className="text-xs text-zinc-500 mt-1.5 font-medium">{hint}</p>}
     </div>
+  );
+}
+
+function Toggle({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 border border-zinc-200 cursor-pointer">
+      <div className="min-w-0 pr-3">
+        <p className="font-bold text-zinc-900">{label}</p>
+        {hint && <p className="text-xs text-zinc-500">{hint}</p>}
+      </div>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="w-12 h-7 appearance-none rounded-full bg-zinc-300 checked:bg-emerald-500 relative transition-colors cursor-pointer shrink-0
+        before:content-[''] before:absolute before:top-0.5 before:left-0.5 before:w-6 before:h-6 before:bg-white before:rounded-full before:transition-transform checked:before:translate-x-5"
+      />
+    </label>
   );
 }

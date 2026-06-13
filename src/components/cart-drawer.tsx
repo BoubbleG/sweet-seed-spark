@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Trash2, Plus, Minus, X, Clock, ShoppingCart, Lock,
   User, Phone, MapPin, Home, Navigation, Smartphone, Banknote, CreditCard,
-  ArrowLeft, ArrowRight, Check, MessageSquare,
+  ArrowLeft, ArrowRight, Check, MessageSquare, Bike, Store, Ticket,
 } from "lucide-react";
 import { Restaurant } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
@@ -37,13 +37,29 @@ function formatPhone(value: string) {
 export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: CartDrawerProps) {
   const { items, removeItem, updateQuantity, getTotal, clearCart } = useCart();
   const [step, setStep] = useState<Step>(1);
+  const acceptsDelivery = restaurant.accepts_delivery !== false;
+  const acceptsPickup = restaurant.accepts_pickup === true;
+  const initialOrderType: "delivery" | "pickup" =
+    acceptsDelivery ? "delivery" : acceptsPickup ? "pickup" : "delivery";
+  const [orderType, setOrderType] = useState<"delivery" | "pickup">(initialOrderType);
+  const pm = restaurant.payment_methods ?? {
+    pix: true, credit_card: true, debit_card: true, cash: true, meal_voucher: false,
+  };
+  const paymentOptions = [
+    { key: "PIX", label: "PIX", icon: <Smartphone className="w-8 h-8" />, enabled: pm.pix !== false },
+    { key: "Dinheiro", label: "Dinheiro", icon: <Banknote className="w-8 h-8" />, enabled: pm.cash !== false },
+    { key: "Cartão de Crédito", label: "Crédito", icon: <CreditCard className="w-8 h-8" />, enabled: pm.credit_card !== false },
+    { key: "Cartão de Débito", label: "Débito", icon: <CreditCard className="w-8 h-8" />, enabled: pm.debit_card !== false },
+    { key: "Vale-refeição", label: "Vale-refeição", icon: <Ticket className="w-8 h-8" />, enabled: pm.meal_voucher === true },
+  ].filter((p) => p.enabled);
+  const defaultPayment = paymentOptions[0]?.key ?? "PIX";
   const [customer, setCustomer] = useState({
     name: "",
     phone: "",
     address: "",
     neighborhood: "",
     reference: "",
-    paymentMethod: "PIX",
+    paymentMethod: defaultPayment,
     changeFor: "",
     generalNotes: ""
   });
@@ -51,7 +67,9 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
 
   const subtotal = getTotal();
   const minFree = restaurant.min_order_for_free_delivery || 0;
-  const deliveryFee = minFree > 0 && subtotal >= minFree ? 0 : (restaurant.delivery_fee || 0);
+  const deliveryFee = orderType === "pickup"
+    ? 0
+    : (minFree > 0 && subtotal >= minFree ? 0 : (restaurant.delivery_fee || 0));
   const total = subtotal + deliveryFee;
   const t = buildMenuTheme(restaurant);
 
@@ -61,7 +79,7 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
       if (!customer.name.trim()) e.name = true;
       if (customer.phone.replace(/\D/g, "").length < 10) e.phone = true;
     }
-    if (step === 3) {
+    if (step === 3 && orderType === "delivery") {
       if (!customer.address.trim()) e.address = true;
       if (!customer.neighborhood.trim()) e.neighborhood = true;
     }
@@ -89,7 +107,7 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
     const order = await createOrder({
       restaurantId: restaurant.id,
       items,
-      customer,
+      customer: { ...customer, orderType },
       subtotal,
       deliveryFee,
       total,
@@ -105,10 +123,11 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
     const message = orderTag + generateWhatsAppMessage(
       restaurant.name,
       items,
-      customer,
+      { ...customer, orderType },
       subtotal,
       deliveryFee,
-      total
+      total,
+      restaurant.address ?? undefined,
     );
 
     window.open(`https://wa.me/${restaurant.whatsapp}?text=${message}`, "_blank");
@@ -122,7 +141,7 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
   const stepTitles: Record<Step, string> = {
     1: "Seu pedido",
     2: "Quem está pedindo?",
-    3: "Onde entregar?",
+    3: orderType === "pickup" ? "Retirada no local" : "Onde entregar?",
     4: "Como vai pagar?",
   };
 
@@ -323,6 +342,75 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
                 </div>
               ) : step === 3 ? (
                 <div className="space-y-5">
+                  {acceptsDelivery && acceptsPickup && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setOrderType("delivery")}
+                        className="h-24 rounded-2xl flex flex-col items-center justify-center gap-1.5 active:scale-[0.97] transition shadow-sm"
+                        style={{
+                          backgroundColor: orderType === "delivery" ? `${t.primary}15` : t.surface,
+                          color: orderType === "delivery" ? t.primary : t.text,
+                          border: `3px solid ${orderType === "delivery" ? t.primary : t.border}`,
+                        }}
+                      >
+                        <Bike className="w-7 h-7" />
+                        <span className="text-sm font-black">Entrega</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOrderType("pickup")}
+                        className="h-24 rounded-2xl flex flex-col items-center justify-center gap-1.5 active:scale-[0.97] transition shadow-sm"
+                        style={{
+                          backgroundColor: orderType === "pickup" ? `${t.primary}15` : t.surface,
+                          color: orderType === "pickup" ? t.primary : t.text,
+                          border: `3px solid ${orderType === "pickup" ? t.primary : t.border}`,
+                        }}
+                      >
+                        <Store className="w-7 h-7" />
+                        <span className="text-sm font-black">Retirar no local</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {orderType === "pickup" ? (
+                    <>
+                      <div
+                        className="rounded-2xl p-4 shadow-sm space-y-2"
+                        style={{ backgroundColor: t.surface, border: `1px solid ${t.border}` }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Store className="w-5 h-5" style={{ color: t.primary }} />
+                          <p className="text-sm font-black" style={{ color: t.text }}>Retire seu pedido em:</p>
+                        </div>
+                        {restaurant.address && (
+                          <p className="text-sm" style={{ color: t.text }}>
+                            {restaurant.address}{restaurant.city ? ` — ${restaurant.city}` : ''}
+                          </p>
+                        )}
+                        {restaurant.opening_hours && (
+                          <p className="text-xs flex items-center gap-1.5" style={{ color: t.textMuted }}>
+                            <Clock className="w-3.5 h-3.5" />
+                            {restaurant.opening_hours}
+                          </p>
+                        )}
+                      </div>
+                      <BigField
+                        icon={<MessageSquare className="w-6 h-6" />}
+                        label="Algum recado? (opcional)"
+                        theme={t}
+                      >
+                        <Textarea
+                          value={customer.generalNotes}
+                          onChange={(e) => setCustomer({ ...customer, generalNotes: e.target.value })}
+                          placeholder="Ex: sem cebola, retiro às 19h..."
+                          className="rounded-2xl text-base p-4 min-h-[90px] placeholder:opacity-40"
+                          style={{ backgroundColor: t.surface, color: t.text, border: `2px solid ${t.border}` }}
+                        />
+                      </BigField>
+                    </>
+                  ) : (
+                  <>
                   <BigField
                     icon={<Home className="w-6 h-6" />}
                     label="Rua e número"
@@ -378,6 +466,8 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
                       style={{ backgroundColor: t.surface, color: t.text, border: `2px solid ${t.border}` }}
                     />
                   </BigField>
+                  </>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-5">
@@ -386,34 +476,16 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
                       Escolha como pagar
                     </p>
                     <div className="grid grid-cols-2 gap-3">
-                      <PaymentCard
-                        label="PIX"
-                        icon={<Smartphone className="w-8 h-8" />}
-                        selected={customer.paymentMethod === "PIX"}
-                        onClick={() => setCustomer({ ...customer, paymentMethod: "PIX" })}
-                        theme={t}
-                      />
-                      <PaymentCard
-                        label="Dinheiro"
-                        icon={<Banknote className="w-8 h-8" />}
-                        selected={customer.paymentMethod === "Dinheiro"}
-                        onClick={() => setCustomer({ ...customer, paymentMethod: "Dinheiro" })}
-                        theme={t}
-                      />
-                      <PaymentCard
-                        label="Crédito"
-                        icon={<CreditCard className="w-8 h-8" />}
-                        selected={customer.paymentMethod === "Cartão de Crédito"}
-                        onClick={() => setCustomer({ ...customer, paymentMethod: "Cartão de Crédito" })}
-                        theme={t}
-                      />
-                      <PaymentCard
-                        label="Débito"
-                        icon={<CreditCard className="w-8 h-8" />}
-                        selected={customer.paymentMethod === "Cartão de Débito"}
-                        onClick={() => setCustomer({ ...customer, paymentMethod: "Cartão de Débito" })}
-                        theme={t}
-                      />
+                      {paymentOptions.map((p) => (
+                        <PaymentCard
+                          key={p.key}
+                          label={p.label}
+                          icon={p.icon}
+                          selected={customer.paymentMethod === p.key}
+                          onClick={() => setCustomer({ ...customer, paymentMethod: p.key })}
+                          theme={t}
+                        />
+                      ))}
                     </div>
                   </div>
 
@@ -463,9 +535,15 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
                     <div className="flex justify-between text-sm mb-1.5" style={{ color: t.textMuted }}>
                       <span>Subtotal</span><span>{formatCurrency(subtotal)}</span>
                     </div>
-                    <div className="flex justify-between text-sm" style={{ color: t.textMuted }}>
-                      <span>Entrega</span><span>{deliveryFee === 0 ? "Grátis" : formatCurrency(deliveryFee)}</span>
-                    </div>
+                    {orderType === "pickup" ? (
+                      <div className="flex justify-between text-sm" style={{ color: t.textMuted }}>
+                        <span>Retirada no local</span><span>Sem taxa</span>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between text-sm" style={{ color: t.textMuted }}>
+                        <span>Entrega</span><span>{deliveryFee === 0 ? "Grátis" : formatCurrency(deliveryFee)}</span>
+                      </div>
+                    )}
                     <div className="h-px my-3" style={{ backgroundColor: t.border }} />
                     <div className="flex justify-between items-baseline">
                       <span className="text-sm font-black uppercase tracking-widest" style={{ color: t.text }}>Total</span>
