@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { Restaurant } from "@/types";
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, UtensilsCrossed, Eye, Flame, Leaf, Pizza, Coffee } from "lucide-react";
+import { ArrowRight, Sparkles, UtensilsCrossed, Eye, Flame, Leaf, Pizza, Coffee, Cookie } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/modelos/")({
@@ -36,6 +36,12 @@ const STYLE_META: Record<string, { tagline: string; icon: typeof Flame; vibe: st
     icon: Leaf,
     vibe: "Estilo clean, fotos leves, ideal para bowls, saladas e sucos.",
     accent: "from-emerald-500 to-teal-500",
+  },
+  "empadas-da-eva": {
+    tagline: "Salgados artesanais",
+    icon: Cookie,
+    vibe: "Tema bordô elegante com dourado — perfeito para salgaderias, doceria e confeitaria.",
+    accent: "from-red-900 to-amber-700",
   },
 };
 
