@@ -535,9 +535,15 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
                     <div className="flex justify-between text-sm mb-1.5" style={{ color: t.textMuted }}>
                       <span>Subtotal</span><span>{formatCurrency(subtotal)}</span>
                     </div>
-                    <div className="flex justify-between text-sm" style={{ color: t.textMuted }}>
-                      <span>Entrega</span><span>{deliveryFee === 0 ? "Grátis" : formatCurrency(deliveryFee)}</span>
-                    </div>
+                    {orderType === "pickup" ? (
+                      <div className="flex justify-between text-sm" style={{ color: t.textMuted }}>
+                        <span>Retirada no local</span><span>Sem taxa</span>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between text-sm" style={{ color: t.textMuted }}>
+                        <span>Entrega</span><span>{deliveryFee === 0 ? "Grátis" : formatCurrency(deliveryFee)}</span>
+                      </div>
+                    )}
                     <div className="h-px my-3" style={{ backgroundColor: t.border }} />
                     <div className="flex justify-between items-baseline">
                       <span className="text-sm font-black uppercase tracking-widest" style={{ color: t.text }}>Total</span>
