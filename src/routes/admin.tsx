@@ -33,25 +33,20 @@ function AdminDashboard() {
   const navigate = useNavigate();
   const search = useSearch({ from: '/admin' });
   const [unlocked, setUnlocked] = useState(false);
-  useEffect(() => {
-    if (typeof window !== "undefined" && sessionStorage.getItem("admin_unlocked") === "1") {
-      setUnlocked(true);
-    }
-  }, []);
   const [pwd, setPwd] = useState("");
   const [pwdConfirm, setPwdConfirm] = useState("");
   const [pwdError, setPwdError] = useState(false);
   const [pwdErrorMsg, setPwdErrorMsg] = useState("");
-  const [storedHash, setStoredHash] = useState<string | null>(null);
+  // Hash of the password entered at login. Kept only in memory (not in storage).
+  // Required to call admin-only RPCs (list tokens, rotate, etc.).
+  const [sessionHash, setSessionHash] = useState<string | null>(null);
   const [isFirstTime, setIsFirstTime] = useState(false);
   const [authChecking, setAuthChecking] = useState(true);
 
   useEffect(() => {
     (async () => {
-      const { data } = await sb.from("app_settings").select("admin_password_hash").eq("id", 1).maybeSingle();
-      const hash = data?.admin_password_hash || null;
-      setStoredHash(hash);
-      setIsFirstTime(!hash);
+      const { data } = await sb.rpc("admin_password_exists");
+      setIsFirstTime(!data);
       setAuthChecking(false);
     })();
   }, []);
@@ -98,10 +93,15 @@ function AdminDashboard() {
 
   async function regenerateToken(rest: Restaurant) {
     if (!confirm(`Regenerar link de edição de "${rest.name}"? O link antigo deixará de funcionar imediatamente.`)) return;
+    if (!sessionHash) { toast.error("Sessão expirada. Entre novamente."); return; }
     const newToken = Array.from(crypto.getRandomValues(new Uint8Array(24)))
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
-    const { error } = await sb.from("restaurants").update({ edit_token: newToken }).eq("id", rest.id);
+    const { error } = await sb.rpc("admin_rotate_edit_token", {
+      _password_hash: sessionHash,
+      _restaurant_id: rest.id,
+      _new_token: newToken,
+    });
     if (error) {
       toast.error("Erro ao regenerar: " + error.message);
     } else {
@@ -115,7 +115,29 @@ function AdminDashboard() {
     try {
       const { data, error } = await sb.from('restaurants').select('*');
       if (error) throw error;
-      setRestaurants(data as Restaurant[]);
+      let rows = (data ?? []) as Restaurant[];
+      // Fetch edit tokens via password-gated RPC and merge.
+      if (sessionHash) {
+        const { data: tokens } = await sb.rpc("admin_list_edit_tokens", {
+          _password_hash: sessionHash,
+        });
+        const tokenMap = new Map<string, string>(
+          ((tokens ?? []) as Array<{ restaurant_id: string; edit_token: string }>)
+            .map((t) => [t.restaurant_id, t.edit_token])
+        );
+        // Ensure every restaurant has a token (new ones don't get one automatically).
+        for (const r of rows) {
+          if (!tokenMap.has(r.id)) {
+            const { data: created } = await sb.rpc("admin_ensure_edit_token", {
+              _password_hash: sessionHash,
+              _restaurant_id: r.id,
+            });
+            if (created) tokenMap.set(r.id, created as string);
+          }
+        }
+        rows = rows.map((r) => ({ ...r, edit_token: tokenMap.get(r.id) }));
+      }
+      setRestaurants(rows);
     } catch (error) {
       console.error("Error loading restaurants:", error);
     } finally {
@@ -124,8 +146,8 @@ function AdminDashboard() {
   }
 
   useEffect(() => {
-    if (unlocked) loadData();
-  }, [unlocked]);
+    if (unlocked && sessionHash) loadData();
+  }, [unlocked, sessionHash]);
 
   async function handleAuthSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -139,19 +161,24 @@ function AdminDashboard() {
         setPwdError(true); setPwdErrorMsg("As senhas não coincidem."); return;
       }
       const hash = await sha256Hex(pwd);
-      const { error } = await sb.from("app_settings").upsert({ id: 1, admin_password_hash: hash });
+      const { error } = await sb.from("app_settings").insert({ id: 1, admin_password_hash: hash });
       if (error) {
         setPwdError(true); setPwdErrorMsg("Erro ao definir senha: " + error.message); return;
       }
-      setStoredHash(hash);
       setIsFirstTime(false);
-      sessionStorage.setItem("admin_unlocked", "1");
+      setSessionHash(hash);
       setUnlocked(true);
       return;
     }
     const hash = await sha256Hex(pwd);
-    if (hash === storedHash) {
-      sessionStorage.setItem("admin_unlocked", "1");
+    const { data: ok, error } = await sb.rpc("verify_admin_password", { _password_hash: hash });
+    if (error) {
+      setPwdError(true);
+      setPwdErrorMsg("Erro ao verificar: " + error.message);
+      return;
+    }
+    if (ok) {
+      setSessionHash(hash);
       setUnlocked(true);
     } else {
       setPwdError(true);
