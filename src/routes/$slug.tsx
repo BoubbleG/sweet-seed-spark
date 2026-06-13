@@ -21,12 +21,15 @@ export const Route = createFileRoute("/$slug")({
       { name: "description", content: "Faça seu pedido agora pelo WhatsApp!" },
     ],
   }),
-  component: RestaurantPublicMenu,
+  component: RouteComponent,
 });
 
-function RestaurantPublicMenu() {
+function RouteComponent() {
   const params = useParams({ from: '/$slug' });
-  const slug = params?.slug;
+  return <RestaurantPublicMenu slug={params?.slug} />;
+}
+
+export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string; isPreview?: boolean }) {
   const { data: restaurant, isLoading: restLoading, error: restError } = useRestaurant(slug);
   const { data: menu, isLoading: menuLoading, error: menuError } = useMenu(restaurant?.id || '');
   const { items, addItem } = useCart();
@@ -160,6 +163,13 @@ function RestaurantPublicMenu() {
     >
       {restaurant.custom_css && (
         <style dangerouslySetInnerHTML={{ __html: restaurant.custom_css }} />
+      )}
+
+      {isPreview && (
+        <div className="sticky top-0 z-40 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-center py-2 px-4 text-xs sm:text-sm font-bold shadow-lg">
+          ✨ MODELO DE DEMONSTRAÇÃO — Seu cardápio pode ficar assim! 
+          <a href="https://wa.me/" className="underline ml-2">Fale conosco</a>
+        </div>
       )}
 
       {/* Header */}
