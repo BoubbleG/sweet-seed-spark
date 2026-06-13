@@ -568,6 +568,7 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
         isOpen={showOrder} 
         onClose={() => setShowOrder(false)} 
         restaurant={restaurant} 
+        isPreview={isPreview}
       />
 
       <MixSelectorDialog
