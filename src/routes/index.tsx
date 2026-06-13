@@ -45,6 +45,7 @@ function LandingPage() {
           <span className="font-black text-2xl tracking-tighter text-zinc-900 uppercase italic">MenuMaster</span>
         </div>
         <div className="flex gap-6 items-center">
+          <Button variant="ghost" className="text-zinc-500 font-bold hover:text-zinc-900 transition-colors" onClick={() => navigate({ to: '/modelos' })}>Modelos</Button>
           <Button variant="ghost" className="text-zinc-500 font-bold hover:text-zinc-900 transition-colors" onClick={() => navigate({ to: '/admin' })}>Painel Admin</Button>
           <Button className="bg-zinc-900 text-white rounded-full px-10 h-12 font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-zinc-900/20 hover:bg-primary transition-all" onClick={() => navigate({ to: '/admin' })}>Começar Grátis</Button>
         </div>
@@ -77,10 +78,10 @@ function LandingPage() {
               <Button
                 variant="outline"
                 id="ver-demo-btn"
-                onClick={() => setDemoOpen(true)}
+                onClick={() => navigate({ to: '/modelos' })}
                 className="h-16 px-12 rounded-full border-2 border-zinc-200 font-black uppercase tracking-widest text-[11px] hover:bg-zinc-50 transition-all"
               >
-                Ver Demonstração
+                Ver Modelos
               </Button>
             </div>
           </motion.div>
