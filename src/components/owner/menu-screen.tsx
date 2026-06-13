@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Category, Product } from "@/types";
 import { SectionShell } from "./shared";
 import { OwnerProductSheet } from "./product-sheet";
+import { Switch } from "@/components/ui/switch";
 import {
   Plus,
   ChevronDown,
@@ -185,6 +186,7 @@ export function OwnerMenuScreen({
         )}
         {categories?.map((cat, idx) => {
           const items = (products || []).filter((p) => p.category_id === cat.id);
+          const offCount = items.filter((p) => p.is_available === false).length;
           const isOpen = openCat === cat.id;
           return (
             <div
@@ -201,6 +203,7 @@ export function OwnerMenuScreen({
                   </h3>
                   <p className="text-xs text-zinc-500 font-medium">
                     {items.length} {items.length === 1 ? "prato" : "pratos"}
+                    {offCount > 0 && ` · ${offCount} esgotado${offCount === 1 ? "" : "s"}`}
                   </p>
                 </div>
                 <motion.div animate={{ rotate: isOpen ? 180 : 0 }}>
@@ -251,15 +254,30 @@ export function OwnerMenuScreen({
                         </p>
                       )}
                       {items.map((p) => (
+                        (() => {
+                          const available = p.is_available !== false;
+                          return (
                         <div
                           key={p.id}
-                          className="bg-zinc-50 border border-zinc-200 rounded-2xl p-3"
+                          className={`bg-zinc-50 border border-zinc-200 rounded-2xl p-3 transition ${available ? "" : "opacity-60"}`}
                         >
                           <div className="flex items-start gap-3">
                             <div className="min-w-0 flex-1">
-                              <h4 className="font-black text-zinc-900 text-base leading-tight truncate">
-                                {p.name}
-                              </h4>
+                              <div className="flex items-start gap-2">
+                                <h4 className="font-black text-zinc-900 text-base leading-tight truncate flex-1">
+                                  {p.name}
+                                </h4>
+                                <Switch
+                                  checked={available}
+                                  onCheckedChange={() => toggleAvailable(p)}
+                                  aria-label={available ? "Desativar prato" : "Ativar prato"}
+                                />
+                              </div>
+                              {!available && (
+                                <span className="inline-block mt-1 text-[10px] font-black uppercase tracking-wider text-zinc-600 bg-zinc-200 px-2 py-0.5 rounded-full">
+                                  Esgotado
+                                </span>
+                              )}
                               {p.description && (
                                 <p className="text-xs text-zinc-500 line-clamp-2 mt-0.5">
                                   {p.description}
@@ -297,25 +315,6 @@ export function OwnerMenuScreen({
 
                           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-zinc-200">
                             <button
-                              onClick={() => toggleAvailable(p)}
-                              className={`h-10 px-3 rounded-xl text-xs font-bold flex-1 flex items-center justify-center gap-2 transition ${
-                                p.is_available !== false
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : "bg-zinc-200 text-zinc-500"
-                              }`}
-                            >
-                              <span
-                                className={`w-2 h-2 rounded-full ${
-                                  p.is_available !== false
-                                    ? "bg-emerald-500"
-                                    : "bg-zinc-400"
-                                }`}
-                              />
-                              {p.is_available !== false
-                                ? "Disponível"
-                                : "Esgotado"}
-                            </button>
-                            <button
                               onClick={() =>
                                 setProductSheet({
                                   open: true,
@@ -323,10 +322,11 @@ export function OwnerMenuScreen({
                                   categoryId: cat.id,
                                 })
                               }
-                              className="h-10 w-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center"
+                              className="h-10 flex-1 rounded-xl bg-zinc-900 text-white flex items-center justify-center gap-2 text-xs font-bold"
                               aria-label="Editar"
                             >
                               <Pencil className="w-4 h-4" />
+                              Editar
                             </button>
                             <button
                               onClick={() => deleteProduct(p.id, p.name)}
@@ -337,6 +337,8 @@ export function OwnerMenuScreen({
                             </button>
                           </div>
                         </div>
+                          );
+                        })()
                       ))}
 
                       <button
