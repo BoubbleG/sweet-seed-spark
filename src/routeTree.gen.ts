@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ModelosRouteImport } from './routes/modelos'
 import { Route as ModeloRouteImport } from './routes/modelo'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EditarTokenRouteImport } from './routes/editar.$token'
 
+const ModelosRoute = ModelosRouteImport.update({
+  id: '/modelos',
+  path: '/modelos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ModeloRoute = ModeloRouteImport.update({
   id: '/modelo',
   path: '/modelo',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/$slug': typeof SlugRoute
   '/admin': typeof AdminRoute
   '/modelo': typeof ModeloRoute
+  '/modelos': typeof ModelosRoute
   '/editar/$token': typeof EditarTokenRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/$slug': typeof SlugRoute
   '/admin': typeof AdminRoute
   '/modelo': typeof ModeloRoute
+  '/modelos': typeof ModelosRoute
   '/editar/$token': typeof EditarTokenRoute
 }
 export interface FileRoutesById {
@@ -61,14 +69,28 @@ export interface FileRoutesById {
   '/$slug': typeof SlugRoute
   '/admin': typeof AdminRoute
   '/modelo': typeof ModeloRoute
+  '/modelos': typeof ModelosRoute
   '/editar/$token': typeof EditarTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$slug' | '/admin' | '/modelo' | '/editar/$token'
+  fullPaths:
+    | '/'
+    | '/$slug'
+    | '/admin'
+    | '/modelo'
+    | '/modelos'
+    | '/editar/$token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$slug' | '/admin' | '/modelo' | '/editar/$token'
-  id: '__root__' | '/' | '/$slug' | '/admin' | '/modelo' | '/editar/$token'
+  to: '/' | '/$slug' | '/admin' | '/modelo' | '/modelos' | '/editar/$token'
+  id:
+    | '__root__'
+    | '/'
+    | '/$slug'
+    | '/admin'
+    | '/modelo'
+    | '/modelos'
+    | '/editar/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,11 +98,19 @@ export interface RootRouteChildren {
   SlugRoute: typeof SlugRoute
   AdminRoute: typeof AdminRoute
   ModeloRoute: typeof ModeloRoute
+  ModelosRoute: typeof ModelosRoute
   EditarTokenRoute: typeof EditarTokenRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/modelos': {
+      id: '/modelos'
+      path: '/modelos'
+      fullPath: '/modelos'
+      preLoaderRoute: typeof ModelosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/modelo': {
       id: '/modelo'
       path: '/modelo'
@@ -124,8 +154,19 @@ const rootRouteChildren: RootRouteChildren = {
   SlugRoute: SlugRoute,
   AdminRoute: AdminRoute,
   ModeloRoute: ModeloRoute,
+  ModelosRoute: ModelosRoute,
   EditarTokenRoute: EditarTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
