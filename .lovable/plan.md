@@ -1,33 +1,58 @@
 ## Objetivo
 
-Permitir ativar/desativar qualquer prato com um único toque, direto no card, sem precisar abrir edição.
+Adicionar **"Empadas da Eva"** como um 4º modelo de demonstração no portfólio `/modelos`, reproduzindo o tema visual (vermelho vinho profundo + dourado, tipografia script elegante para títulos) e todos os 12 produtos do cardápio da imagem.
 
 ## Onde
 
-Arquivo: `src/components/owner/menu-screen.tsx` (tela "Meu cardápio" do dono).
+- **Migration** — insere o restaurante + 4 categorias + 12 produtos no banco (mesmo padrão dos modelos existentes "point-do-gordinho", "delicias-da-taty", "cardapio-saudavel").
+- **`src/routes/modelos.tsx`** — adicionar o card "Empadas da Eva" na grade do portfólio com `STYLE_META`.
 
-Hoje cada prato já tem um botão "Disponível / Esgotado", mas ele só aparece quando a categoria está expandida e fica misturado com os botões de editar/apagar. Vou trocar por um **toggle (switch) sempre visível no topo do card de cada prato**.
+## Tema visual (extraído da imagem)
 
-## Mudanças
+- `background_color`: **#3D0A0A** (vermelho vinho profundo / bordô)
+- `primary_color`: **#D4A24C** (dourado quente dos preços e detalhes)
+- `button_color`: **#D4A24C** (dourado)
+- `text_color`: **#F5E6C8** (creme suave para contraste)
+- `font_family`: **Playfair Display** (serif elegante, mais próximo do script "Cardápio")
+- `visual_style`: `premium`
+- `card_style`: `elevated`
+- `border_radius`: `1rem`
 
-1. No card de cada prato (dentro da categoria expandida):
-   - Adicionar um `Switch` no canto superior direito, ao lado do nome do prato.
-   - Estado: ligado = disponível, desligado = esgotado.
-   - Ao alternar, chama o `toggleAvailable(p)` que já existe (UPDATE em `products.is_available`).
-   - Feedback visual: quando esgotado, o card fica com opacidade reduzida e uma tag cinza "Esgotado" abaixo do nome.
+## Dados do cardápio
 
-2. Remover o botão grande "Disponível / Esgotado" da barra inferior (fica redundante) — sobram só **Editar** e **Apagar**.
+**Restaurante:**
+- Nome: Empadas da Eva
+- Slug: `empadas-da-eva`
+- Tipo: Salgados Artesanais
+- Descrição: "Sabor que encanta, qualidade que fideliza"
+- WhatsApp: (71) 98743-5520
+- Instagram: @empadasdaeva
+- Status: active
 
-3. Mostrar contagem de disponíveis na categoria (ex.: "5 pratos · 2 esgotados") para o dono ter visão rápida.
+**Categorias e produtos:**
 
-## Detalhes técnicos
+| Categoria | Produto | Preço |
+|---|---|---|
+| Coxinhas | Frango | 7,99 |
+| Coxinhas | Frango c/ Catupiry | 9,99 |
+| Coxinhas | Costela | 11,99 |
+| Coxinhas | Camarão | 11,99 |
+| Empadas | Frango Cremoso | 7,99 |
+| Empadas | Camarão | 8,99 |
+| Mini Empadão | Frango Cremoso | 14,99 |
+| Mini Empadão | Camarão | 19,99 |
+| Batatas (porções 200g) | C/ Cheddar | 9,99 |
+| Batatas (porções 200g) | Calabresa | 14,99 |
 
-- Componente `Switch` já existe em `src/components/ui/switch.tsx`.
-- A mutação otimista pode ser adicionada depois; por ora mantém o `invalidateQueries` atual para simplicidade.
-- Nenhuma mudança de schema, RLS ou backend.
+## Como ficará disponível
+
+- Listado em `https://sweet-seed-spark.lovable.app/modelos` ao lado dos 3 modelos atuais.
+- Preview interativo em `https://sweet-seed-spark.lovable.app/modelos/empadas-da-eva`.
+- Também acessível no link público `/empadas-da-eva` (como qualquer restaurante real).
+- Pedidos no preview continuam **simulados** (toast de demonstração, sem enviar pro WhatsApp).
 
 ## Fora de escopo
 
-- Ativar/desativar a categoria inteira de uma vez.
-- Toggle nas telas pública (`$slug.tsx`) ou admin global — só na tela do dono.
-- Correções de segurança das policies (assunto separado já discutido).
+- Gerar imagens dos produtos (sem `image_url` — vão usar o placeholder padrão do template).
+- Importar a logo da imagem como asset (a imagem foi enviada como referência de design, não como logo a embutir).
+- Alterar o tema dos modelos já existentes.
