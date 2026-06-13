@@ -20,6 +20,7 @@ interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   restaurant: Restaurant;
+  isPreview?: boolean;
 }
 
 type Step = 1 | 2 | 3 | 4;
@@ -33,7 +34,7 @@ function formatPhone(value: string) {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
 
-export function CartDrawer({ isOpen, onClose, restaurant }: CartDrawerProps) {
+export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: CartDrawerProps) {
   const { items, removeItem, updateQuantity, getTotal, clearCart } = useCart();
   const [step, setStep] = useState<Step>(1);
   const [customer, setCustomer] = useState({
@@ -78,6 +79,13 @@ export function CartDrawer({ isOpen, onClose, restaurant }: CartDrawerProps) {
   };
 
   const handleSendOrder = async () => {
+    if (isPreview) {
+      toast.success("Demonstração: em um cardápio real, o pedido seria enviado pelo WhatsApp agora! 🎉");
+      clearCart();
+      setStep(1);
+      onClose();
+      return;
+    }
     const order = await createOrder({
       restaurantId: restaurant.id,
       items,
