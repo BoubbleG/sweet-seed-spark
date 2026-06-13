@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Trash2, Plus, Minus, X, Clock, ShoppingCart, Lock,
   User, Phone, MapPin, Home, Navigation, Smartphone, Banknote, CreditCard,
-  ArrowLeft, ArrowRight, Check, MessageSquare,
+  ArrowLeft, ArrowRight, Check, MessageSquare, Bike, Store, Ticket,
 } from "lucide-react";
 import { Restaurant } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
@@ -37,13 +37,29 @@ function formatPhone(value: string) {
 export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: CartDrawerProps) {
   const { items, removeItem, updateQuantity, getTotal, clearCart } = useCart();
   const [step, setStep] = useState<Step>(1);
+  const acceptsDelivery = restaurant.accepts_delivery !== false;
+  const acceptsPickup = restaurant.accepts_pickup === true;
+  const initialOrderType: "delivery" | "pickup" =
+    acceptsDelivery ? "delivery" : acceptsPickup ? "pickup" : "delivery";
+  const [orderType, setOrderType] = useState<"delivery" | "pickup">(initialOrderType);
+  const pm = restaurant.payment_methods ?? {
+    pix: true, credit_card: true, debit_card: true, cash: true, meal_voucher: false,
+  };
+  const paymentOptions = [
+    { key: "PIX", label: "PIX", icon: <Smartphone className="w-8 h-8" />, enabled: pm.pix !== false },
+    { key: "Dinheiro", label: "Dinheiro", icon: <Banknote className="w-8 h-8" />, enabled: pm.cash !== false },
+    { key: "Cartão de Crédito", label: "Crédito", icon: <CreditCard className="w-8 h-8" />, enabled: pm.credit_card !== false },
+    { key: "Cartão de Débito", label: "Débito", icon: <CreditCard className="w-8 h-8" />, enabled: pm.debit_card !== false },
+    { key: "Vale-refeição", label: "Vale-refeição", icon: <Ticket className="w-8 h-8" />, enabled: pm.meal_voucher === true },
+  ].filter((p) => p.enabled);
+  const defaultPayment = paymentOptions[0]?.key ?? "PIX";
   const [customer, setCustomer] = useState({
     name: "",
     phone: "",
     address: "",
     neighborhood: "",
     reference: "",
-    paymentMethod: "PIX",
+    paymentMethod: defaultPayment,
     changeFor: "",
     generalNotes: ""
   });
@@ -51,7 +67,9 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
 
   const subtotal = getTotal();
   const minFree = restaurant.min_order_for_free_delivery || 0;
-  const deliveryFee = minFree > 0 && subtotal >= minFree ? 0 : (restaurant.delivery_fee || 0);
+  const deliveryFee = orderType === "pickup"
+    ? 0
+    : (minFree > 0 && subtotal >= minFree ? 0 : (restaurant.delivery_fee || 0));
   const total = subtotal + deliveryFee;
   const t = buildMenuTheme(restaurant);
 
@@ -61,7 +79,7 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
       if (!customer.name.trim()) e.name = true;
       if (customer.phone.replace(/\D/g, "").length < 10) e.phone = true;
     }
-    if (step === 3) {
+    if (step === 3 && orderType === "delivery") {
       if (!customer.address.trim()) e.address = true;
       if (!customer.neighborhood.trim()) e.neighborhood = true;
     }
@@ -89,7 +107,7 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
     const order = await createOrder({
       restaurantId: restaurant.id,
       items,
-      customer,
+      customer: { ...customer, orderType },
       subtotal,
       deliveryFee,
       total,
@@ -105,10 +123,11 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
     const message = orderTag + generateWhatsAppMessage(
       restaurant.name,
       items,
-      customer,
+      { ...customer, orderType },
       subtotal,
       deliveryFee,
-      total
+      total,
+      restaurant.address ?? undefined,
     );
 
     window.open(`https://wa.me/${restaurant.whatsapp}?text=${message}`, "_blank");
@@ -122,7 +141,7 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
   const stepTitles: Record<Step, string> = {
     1: "Seu pedido",
     2: "Quem está pedindo?",
-    3: "Onde entregar?",
+    3: orderType === "pickup" ? "Retirada no local" : "Onde entregar?",
     4: "Como vai pagar?",
   };
 
