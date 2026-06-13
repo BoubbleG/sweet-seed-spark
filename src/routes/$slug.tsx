@@ -21,12 +21,15 @@ export const Route = createFileRoute("/$slug")({
       { name: "description", content: "Faça seu pedido agora pelo WhatsApp!" },
     ],
   }),
-  component: RestaurantPublicMenu,
+  component: RouteComponent,
 });
 
-function RestaurantPublicMenu() {
+function RouteComponent() {
   const params = useParams({ from: '/$slug' });
-  const slug = params?.slug;
+  return <RestaurantPublicMenu slug={params?.slug} />;
+}
+
+export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string; isPreview?: boolean }) {
   const { data: restaurant, isLoading: restLoading, error: restError } = useRestaurant(slug);
   const { data: menu, isLoading: menuLoading, error: menuError } = useMenu(restaurant?.id || '');
   const { items, addItem } = useCart();
