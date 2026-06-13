@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/modelos")({
   head: () => ({
@@ -9,5 +9,3 @@ export const Route = createFileRoute("/modelos")({
   }),
   component: () => <Outlet />,
 });
-
-export { useMatches, Link };
