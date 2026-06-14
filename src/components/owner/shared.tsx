@@ -104,3 +104,51 @@ export function SectionCard({
     </section>
   );
 }
+
+export function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-bold text-zinc-900 mb-1.5">
+        {label}
+      </label>
+      {children}
+      {hint && <p className="text-xs text-zinc-500 mt-1.5 font-medium">{hint}</p>}
+    </div>
+  );
+}
+
+export function Toggle({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 border border-zinc-200 cursor-pointer">
+      <div className="min-w-0 pr-3">
+        <p className="font-bold text-zinc-900">{label}</p>
+        {hint && <p className="text-xs text-zinc-500">{hint}</p>}
+      </div>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="w-12 h-7 appearance-none rounded-full bg-zinc-300 checked:bg-emerald-500 relative transition-colors cursor-pointer shrink-0
+        before:content-[''] before:absolute before:top-0.5 before:left-0.5 before:w-6 before:h-6 before:bg-white before:rounded-full before:transition-transform checked:before:translate-x-5"
+      />
+    </label>
+  );
+}
