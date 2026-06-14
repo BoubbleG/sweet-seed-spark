@@ -1,45 +1,36 @@
-# Plano: Retirada no local + Toggles de pagamento/entrega
+## Objetivo
 
-## 1. Banco de dados (migration)
+Adicionar um novo atalho **"Entrega e Pagamento"** na tela inicial do painel do dono (`/editar/:token`), abrindo uma tela dedicada com os toggles de:
+- Aceitar entrega
+- Aceitar retirada no local
+- Taxa de entrega, pedido mínimo grátis e tempo médio
+- Formas de pagamento (PIX, Crédito, Débito, Dinheiro, Vale-refeição)
 
-Adicionar colunas na tabela `restaurants`:
+Os mesmos toggles continuam disponíveis dentro de **"Meu restaurante"** (sem remoção), atendendo ao pedido de manter em ambos os lugares.
 
-- `accepts_delivery` (boolean, default true) — aceita entrega
-- `accepts_pickup` (boolean, default false) — aceita retirada no local
-- `payment_methods` (jsonb, default `{"pix": true, "credit_card": true, "debit_card": true, "cash": true, "meal_voucher": false}`) — métodos de pagamento ativos
+## Mudanças
 
-Para "Empadas da Eva", ativar `accepts_pickup = true` já no seed.
+### 1. `src/components/owner/delivery-payment-screen.tsx` (novo)
+Tela nova reutilizando `SectionShell`, `SectionCard`, `StickySaveBar`, `Toggle` e `Field`. Salva apenas os campos relacionados:
+`accepts_delivery`, `accepts_pickup`, `delivery_fee`, `min_order_for_free_delivery`, `average_delivery_time`, `payment_methods`.
 
-## 2. Checkout do cliente (`src/components/cart-drawer.tsx`)
+Mesma validação já usada em `info-screen.tsx`:
+- ao menos uma opção de entrega ativa (entrega OU retirada)
+- ao menos uma forma de pagamento ativa
 
-- Se o restaurante aceitar ambos (entrega e retirada), exibir 2 botões no topo do checkout: **Entrega** / **Retirada**.
-- Se aceitar só um, fixar nessa opção (sem mostrar seletor).
-- Quando **Retirada** selecionada:
-  - Ocultar campos de endereço (rua, número, bairro, complemento, referência, taxa de entrega).
-  - Mostrar bloco com endereço do restaurante + horário de funcionamento + aviso "Retirar no local".
-  - Zerar taxa de entrega no total.
-- Seletor de pagamento passa a listar apenas os métodos ativos em `payment_methods`.
-- Enviar `order_type` ("delivery" | "pickup") ao inserir o pedido e incluir no texto do WhatsApp.
+Invalida as queries `restaurant-by-token` e `restaurant` após salvar.
 
-## 3. Painel do dono do restaurante (`src/routes/editar.$token.tsx`)
+### 2. `src/components/owner/shared.tsx`
+Exportar os helpers internos `Toggle` e `Field` de `info-screen.tsx` movendo-os para `shared.tsx` (ou re-exportando), para que a nova tela use os mesmos componentes sem duplicação. Atualizar `info-screen.tsx` para importar deles.
 
-Adicionar nova seção **"Entrega e Pagamento"** com:
+### 3. `src/routes/editar.$token.tsx`
+- Adicionar `"delivery"` ao tipo `Screen`.
+- Adicionar novo card na lista da home, posicionado logo após "Meu cardápio":
+  - título: **"Entrega e Pagamento"**
+  - descrição: "Ative entrega, retirada e formas de pagamento"
+  - ícone: `Truck` (lucide-react)
+  - cores: `bg-sky-100` / `text-sky-700`
+- Roteamento: ao clicar, montar `<OwnerDeliveryPaymentScreen restaurant={restaurant} onBack={() => setScreen("home")} />`.
 
-- Switch **Aceitar entrega** (`accepts_delivery`)
-- Switch **Aceitar retirada no local** (`accepts_pickup`)
-- Grupo de switches **Formas de pagamento aceitas**:
-  - PIX
-  - Cartão de crédito
-  - Cartão de débito
-  - Dinheiro
-  - Vale-refeição
-
-Validação: pelo menos uma forma de entrega e uma de pagamento devem estar ativas antes de salvar.
-
-## 4. Detalhes técnicos
-
-- Tipo TS gerado automaticamente após migration aprovada.
-- `cart-drawer.tsx` já tem lógica de pickup no demo — vamos portar/adaptar para a versão real.
-- Sem mudanças no fluxo de criação de pedido além de `order_type` e `payment_method` já existentes.
-
-Sem alterações em RLS — colunas adicionadas a uma tabela já pública.
+### 4. Nenhuma mudança em banco, RLS ou checkout
+Reusa as colunas e a lógica já existentes. `cart-drawer.tsx` continua lendo `accepts_delivery`, `accepts_pickup` e `payment_methods` como hoje.
