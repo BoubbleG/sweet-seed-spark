@@ -8,6 +8,7 @@ import { OwnerPromoScreen } from "@/components/owner/promo-screen";
 import { OwnerVisualScreen } from "@/components/owner/visual-screen";
 import { OwnerInfoScreen } from "@/components/owner/info-screen";
 import { OwnerOrdersScreen } from "@/components/owner/orders-screen";
+import { OwnerDeliveryPaymentScreen } from "@/components/owner/delivery-payment-screen";
 import {
   Utensils,
   Palette,
@@ -21,6 +22,7 @@ import {
   Pencil,
   Check,
   ReceiptText,
+  Truck,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,7 +31,7 @@ export const Route = createFileRoute("/editar/$token")({
   component: OwnerEditor,
 });
 
-type Screen = "home" | "orders" | "menu" | "promo" | "visual" | "info";
+type Screen = "home" | "orders" | "menu" | "promo" | "visual" | "info" | "delivery";
 
 function OwnerEditor() {
   const { token } = useParams({ from: "/editar/$token" });
@@ -89,6 +91,13 @@ function OwnerShell({ restaurant }: { restaurant: Restaurant }) {
     return (
       <OwnerMenuScreen
         restaurantId={restaurant.id}
+        onBack={() => setScreen("home")}
+      />
+    );
+  if (screen === "delivery")
+    return (
+      <OwnerDeliveryPaymentScreen
+        restaurant={restaurant}
         onBack={() => setScreen("home")}
       />
     );
@@ -173,6 +182,14 @@ function OwnerHome({
       icon: <Utensils className="w-6 h-6" />,
       bg: "bg-orange-100",
       fg: "text-orange-600",
+    },
+    {
+      key: "delivery",
+      title: "Entrega e Pagamento",
+      desc: "Ative entrega, retirada e formas de pagamento",
+      icon: <Truck className="w-6 h-6" />,
+      bg: "bg-sky-100",
+      fg: "text-sky-700",
     },
     {
       key: "promo",
