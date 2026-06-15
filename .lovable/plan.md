@@ -1,61 +1,70 @@
+
 ## Objetivo
 
-Refazer todas as 16 imagens do cardápio do **Mix Burger XIS** com prompts mais precisos e estilo visual consistente: **foto realista profissional de hamburgueria, fundo escuro de madeira rústica, iluminação quente lateral, top-down ou 45°**.
+Criar um novo restaurante **Isas Lanches e Variedades** no banco com cardápio completo extraído do panfleto enviado, com imagem realista em cada item (estilo foto de hamburgueria, fundo laranja/madeira combinando com a identidade visual).
 
-## Por que as atuais estão erradas
+## Identidade visual
 
-- Combos/X-burgers genéricos (não parecem hambúrguer artesanal de hamburgueria)
-- Porções, molhos e bebidas com aparência fora de contexto (ex.: maionese parecendo sorvete)
-- Estilo visual inconsistente entre itens
+- **Nome:** Isas Lanches e Variedades
+- **Slug:** `isas-lanches`
+- **Tema:** Laranja vibrante (cor primária `#F26A1F`), texto branco/escuro, fundo creme claro — combinando com o panfleto
+- **WhatsApp:** (11) 95928-3650
+- **Endereço:** Rua Santo Ivo, 272
+- **Slogan/descrição:** "Lanches, hot dogs, pastéis e muito mais. Peça já!"
+- **Logo:** vou gerar uma logo "isas lanches" laranja no estilo do panfleto
 
-## O que vou fazer
+## Cardápio (21 itens, 4 categorias)
 
-1. **Gerar 16 novas imagens** com `imagegen--generate_image` (qualidade `standard` para fidelidade fotográfica), todas no mesmo estilo base:
-   > *"professional food photography, dark rustic wooden table background, warm side lighting, shallow depth of field, hamburgueria artesanal style, appetizing, high detail"*
+**Lanches (X) — 6 itens**
+- X-Burguer — R$ 20,00 — pão, hambúrguer e mussarela
+- X-Bacon — R$ 26,00 — pão, hambúrguer, bacon, mussarela e tomate
+- X-Egg — R$ 27,00 — pão, hambúrguer, ovo, tomate e mussarela
+- X-Egg Salada — R$ 28,00 — pão, hambúrguer, ovo, tomate, alface, mussarela, milho e presunto
+- X-Salada — R$ 24,00 — pão, hambúrguer, alface, milho e mussarela
+- X-Tudo — R$ 47,00 — pão, hambúrguer, bacon, frango, presunto, ovo, mussarela, alface, tomate, milho e batata palha
 
-2. **Prompts específicos por item** (resumidos):
+**Hot Dogs — 3 itens**
+- Hot Dog Simples — R$ 15,00
+- Hot Dog Completo — R$ 20,00
+- Hot Dog à Moda da Casa — R$ 25,00
 
-   **Combos** (3) — composição com vários itens no mesmo prato/tábua:
-   - Combo Casal: 2 X-Bacon + batata frita + bolinhas de queijo + rodelas de cebola + 2 potinhos molho
-   - Combo Solteiro: 1 X-Salada + batata frita + bolinhas de queijo + rodelas de cebola
-   - Combo Mix: hambúrguer duplo grande + batata + acompanhamentos variados
+**Pastéis — 10 itens**
+- Queijo, Pizza, Carne, Bauru, Frango, Calabresa — R$ 13,00 cada
+- Carne com Queijo, Frango com Catupiry, Calabresa com Queijo — R$ 14,00 cada
+- Especial da Casa — R$ 15,00
 
-   **Lanches/Xis** (4) — hambúrguer brasileiro típico (pão brioche, ingredientes visíveis em corte lateral 45°):
-   - X-Tudo: pão, 2 carnes, queijo derretido, bacon, ovo, presunto, alface, tomate
-   - X-Salada: pão, carne, queijo, alface, tomate, maionese
-   - X-Bacon: pão, carne, queijo derretido, bacon crocante abundante
-   - X-Egg: pão, carne, ovo com gema, queijo, bacon
+**Porções e Bebidas — 2 itens base**
+- Porção de Batata Frita — R$ 18,00
+- Refrigerante Lata — R$ 7,00
 
-   **Porções** (5):
-   - Batata Frita: porção em cestinha de papel
-   - Batata com Cheddar e Bacon: batata coberta com cheddar derretido e bacon
-   - Bolinha de Queijo: bolinhas fritas douradas com queijo derretido
-   - Coxinha: coxinhas brasileiras douradas
-   - Rodelas de Cebola: onion rings empanados crocantes
+## Imagens (23 imagens novas)
 
-   **Molhos** (2):
-   - Maionese: potinho pequeno com maionese cremosa branca
-   - Ketchup: potinho pequeno com ketchup vermelho
+Geradas com `imagegen--generate_image` (qualidade `standard`, 1024x1024, .jpg), estilo unificado:
 
-   **Bebidas** (2):
-   - Refrigerante Lata: lata genérica de refrigerante gelada com gotas de condensação
-   - Suco Natural: copo de vidro com suco de laranja natural e fatia de laranja
+> *"professional food photography, warm orange/wooden background, top-down or 45°, appetizing, brazilian street food style, high detail"*
 
-3. **Upload via `lovable-assets`** de cada imagem para o CDN.
+- 1 logo "isas lanches e variedades" (laranja, fonte arredondada bold)
+- 6 lanches (cada X com ingredientes visíveis em corte 45°)
+- 3 hot dogs (simples, completo com purê/vinagrete/milho, moda da casa carregado)
+- 10 pastéis (cada um com recheio aparente)
+- 2 porção/bebida
+- 1 banner do restaurante (composição com lanches, fundo laranja)
 
-4. **Atualizar `products.image_url`** no banco de dados para cada um dos 16 produtos com a nova URL.
+Total: **23 imagens via CDN (lovable-assets)**.
 
-## Detalhes técnicos
+## Banco de dados
 
-- Modelo: `imagegen--generate_image` com `model: "standard"` (fidelidade fotográfica)
-- Dimensões: `1024x1024`
-- Formato: `.jpg` (sem transparência)
-- Update SQL único com `CASE WHEN slug = ... THEN ...` para todas as 16 linhas
-- Logo e dados do restaurante permanecem inalterados
+1. `INSERT` em `restaurants` com slug `isas-lanches`, cores, WhatsApp, endereço, logo_url, banner_url, edit_token gerado
+2. `INSERT` em `categories` (4 categorias com display_order)
+3. `INSERT` em `products` (21 produtos) com `image_url` apontando para o CDN
 
 ## Não vou alterar
 
-- Logo, cores, nome, slug, descrição do restaurante
-- Preços, descrições e nomes dos produtos
-- Categorias
-- Token de edição
+- Restaurante Mix Burger XIS (permanece intacto)
+- Estrutura de componentes/rotas (o cardápio já é renderizado por `/$slug`)
+- Schema de tabelas
+
+## URLs finais
+
+- Cardápio público: `/isas-lanches`
+- Painel de edição: `/editar/{token}`
