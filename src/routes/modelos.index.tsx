@@ -45,9 +45,12 @@ const STYLE_META: Record<string, { tagline: string; icon: typeof Flame; vibe: st
   },
 };
 
+const PUBLISHED_URL = "https://sweet-seed-spark.lovable.app";
+
 function ModelosPage() {
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
