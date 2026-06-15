@@ -117,6 +117,49 @@ function ModelosPage() {
       </section>
 
       <section className="max-w-6xl mx-auto px-6 pb-32">
+        {/* Links para compartilhar */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-10 bg-white border border-zinc-200 rounded-3xl p-6 md:p-8 shadow-sm"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <Link2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-zinc-900 tracking-tight">Links para enviar aos clientes</h2>
+              <p className="text-xs text-zinc-500 font-medium">Copie o link do modelo e envie no WhatsApp como exemplo.</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {restaurants.map((rest) => {
+              const url = `${PUBLISHED_URL}/${rest.slug}`;
+              const isCopied = copiedSlug === rest.slug;
+              return (
+                <div
+                  key={rest.id}
+                  className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-2xl px-4 py-3"
+                >
+                  <span className="text-xs font-bold text-zinc-700 truncate flex-1">{url}</span>
+                  <button
+                    onClick={() => copyLink(rest.slug)}
+                    className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
+                      isCopied
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-zinc-900 text-white hover:bg-primary"
+                    }`}
+                  >
+                    {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {isCopied ? "Copiado!" : "Copiar"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {restaurants.map((rest) => {
             const meta = STYLE_META[rest.slug] || {
@@ -126,6 +169,8 @@ function ModelosPage() {
               accent: "from-zinc-700 to-zinc-900",
             };
             const Icon = meta.icon;
+            const url = `${PUBLISHED_URL}/${rest.slug}`;
+            const isCopied = copiedSlug === rest.slug;
             return (
               <motion.div
                 key={rest.id}
@@ -146,7 +191,20 @@ function ModelosPage() {
                 </div>
                 <div className="p-7 flex-1 flex flex-col">
                   <h3 className="text-2xl font-black tracking-tight mb-2">{rest.name}</h3>
-                  <p className="text-sm text-zinc-500 font-medium leading-relaxed mb-6 flex-1">{meta.vibe}</p>
+                  <p className="text-sm text-zinc-500 font-medium leading-relaxed mb-4 flex-1">{meta.vibe}</p>
+                  <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 mb-4">
+                    <span className="text-[10px] text-zinc-500 font-medium truncate flex-1">{url}</span>
+                    <button
+                      onClick={() => copyLink(rest.slug)}
+                      className={`shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${
+                        isCopied
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-white border border-zinc-200 text-zinc-700 hover:border-primary hover:text-primary"
+                      }`}
+                    >
+                      {isCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                    </button>
+                  </div>
                   <Link
                     to="/modelos/$slug"
                     params={{ slug: rest.slug }}
