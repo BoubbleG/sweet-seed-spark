@@ -1,70 +1,70 @@
 
-## Objetivo
+# Plano: Restaurante "André Bebidas"
 
-Criar um novo restaurante **Isas Lanches e Variedades** no banco com cardápio completo extraído do panfleto enviado, com imagem realista em cada item (estilo foto de hamburgueria, fundo laranja/madeira combinando com a identidade visual).
+Criar um novo restaurante de depósito de bebidas + petiscos no sistema existente, junto com a logo enviada, imagens das bebidas e dos espetinhos.
 
-## Identidade visual
+## 1. Dados do restaurante
 
-- **Nome:** Isas Lanches e Variedades
-- **Slug:** `isas-lanches`
-- **Tema:** Laranja vibrante (cor primária `#F26A1F`), texto branco/escuro, fundo creme claro — combinando com o panfleto
-- **WhatsApp:** (11) 95928-3650
-- **Endereço:** Rua Santo Ivo, 272
-- **Slogan/descrição:** "Lanches, hot dogs, pastéis e muito mais. Peça já!"
-- **Logo:** vou gerar uma logo "isas lanches" laranja no estilo do panfleto
+- **Nome**: André Bebidas
+- **Slug**: `andre-bebidas`
+- **Tipo**: depósito de bebidas / petiscos
+- **WhatsApp**: (83) 8838-8430
+- **Horário/observação**: "Atendemos sábado e domingo — tudo via delivery. Aos finais de semana trabalhamos com fava."
+- **Pagamentos**: PIX, Dinheiro, Cartão Débito, Cartão Crédito
+- **Cores**: fundo preto, dourado (#D4AF37) como primária, branco quente como secundária — combinando com a logo
+- **Estilo visual**: moderno, card glass, fonte elegante
 
-## Cardápio (21 itens, 4 categorias)
+## 2. Logo
 
-**Lanches (X) — 6 itens**
-- X-Burguer — R$ 20,00 — pão, hambúrguer e mussarela
-- X-Bacon — R$ 26,00 — pão, hambúrguer, bacon, mussarela e tomate
-- X-Egg — R$ 27,00 — pão, hambúrguer, ovo, tomate e mussarela
-- X-Egg Salada — R$ 28,00 — pão, hambúrguer, ovo, tomate, alface, mussarela, milho e presunto
-- X-Salada — R$ 24,00 — pão, hambúrguer, alface, milho e mussarela
-- X-Tudo — R$ 47,00 — pão, hambúrguer, bacon, frango, presunto, ovo, mussarela, alface, tomate, milho e batata palha
+Usar a imagem enviada `ChatGPT_Image_15_06_2026_01_33_49.png` como logo oficial (upload ao CDN via lovable-assets).
 
-**Hot Dogs — 3 itens**
-- Hot Dog Simples — R$ 15,00
-- Hot Dog Completo — R$ 20,00
-- Hot Dog à Moda da Casa — R$ 25,00
+## 3. Categorias e produtos
 
-**Pastéis — 10 itens**
-- Queijo, Pizza, Carne, Bauru, Frango, Calabresa — R$ 13,00 cada
-- Carne com Queijo, Frango com Catupiry, Calabresa com Queijo — R$ 14,00 cada
-- Especial da Casa — R$ 15,00
+### Cervejas (lata 350ml) — preços estimados, ajustáveis depois
+- Skol — R$ 4,50
+- Brahma — R$ 4,50
+- Schin — R$ 4,00
+- Budweiser — R$ 6,00
+- Heineken — R$ 7,50
+- Devassa Puro Malte — R$ 5,00
+- Corona Extra (long neck) — R$ 9,00
 
-**Porções e Bebidas — 2 itens base**
-- Porção de Batata Frita — R$ 18,00
-- Refrigerante Lata — R$ 7,00
+### Destilados
+- Johnnie Walker Black Label 1L — R$ 220,00
+- Gin Tanqueray London Dry 750ml — R$ 150,00
 
-## Imagens (23 imagens novas)
+### Espetinhos (R$ 9,00 cada — do cardápio enviado)
+Carne, Cupim, Carne de Charque, Carne Moída, Carne de Sol com Queijo, Carne com Bacon, Carneiro, Camarão, Coração, Frango com Bacon, Frango, Ovo com Bacon, Linguiça, Salsichão, Pão de Alho, Queijo Coalho, Romeu e Julieta, Moela, Fígado. (19 itens)
 
-Geradas com `imagegen--generate_image` (qualidade `standard`, 1024x1024, .jpg), estilo unificado:
+### Petiscos de fim de semana
+- Fava (porção) — R$ 25,00 (preço a confirmar)
 
-> *"professional food photography, warm orange/wooden background, top-down or 45°, appetizing, brazilian street food style, high detail"*
+## 4. Geração de imagens (estilo: foto realista, fundo escuro, iluminação dourada/quente, combinando com a logo)
 
-- 1 logo "isas lanches e variedades" (laranja, fonte arredondada bold)
-- 6 lanches (cada X com ingredientes visíveis em corte 45°)
-- 3 hot dogs (simples, completo com purê/vinagrete/milho, moda da casa carregado)
-- 10 pastéis (cada um com recheio aparente)
-- 2 porção/bebida
-- 1 banner do restaurante (composição com lanches, fundo laranja)
+- 1 logo (upload da imagem enviada)
+- 1 banner (composição com garrafas e brasas)
+- 7 cervejas (foto de cada garrafa/lata com o rótulo correto, em fundo escuro)
+- 2 destilados (Johnnie Walker, Tanqueray)
+- 19 espetinhos (cada espetinho grelhado, fundo de madeira escura com brasas)
+- 1 porção de fava
 
-Total: **23 imagens via CDN (lovable-assets)**.
+**Total: ~31 imagens** geradas em qualidade standard 1024x1024.
 
-## Banco de dados
+## 5. Banco de dados
 
-1. `INSERT` em `restaurants` com slug `isas-lanches`, cores, WhatsApp, endereço, logo_url, banner_url, edit_token gerado
-2. `INSERT` em `categories` (4 categorias com display_order)
-3. `INSERT` em `products` (21 produtos) com `image_url` apontando para o CDN
+- INSERT em `restaurants` (1 linha)
+- INSERT em `categories` (4: Cervejas, Destilados, Espetinhos, Petiscos)
+- INSERT em `products` (29 itens com `image_url` apontando para o CDN)
+- Gerar `edit_token` para o painel do dono
 
-## Não vou alterar
+## 6. Entrega
 
-- Restaurante Mix Burger XIS (permanece intacto)
-- Estrutura de componentes/rotas (o cardápio já é renderizado por `/$slug`)
-- Schema de tabelas
+Ao final, fornecer:
+- Link público do cardápio: `/andre-bebidas`
+- Link do painel do dono com edit token
 
-## URLs finais
+## Observações / suposições
 
-- Cardápio público: `/isas-lanches`
-- Painel de edição: `/editar/{token}`
+- **Preços das bebidas e da fava são estimativas** — o dono pode ajustar facilmente no painel do dono depois.
+- Considerei só lata 350ml para as cervejas. Se quiser long neck/600ml/1L também, é só me avisar.
+- Os itens Corona/Johnnie Walker/Tanqueray/Devassa aparecem na logo então incluí no catálogo.
