@@ -8,9 +8,18 @@ import {
   markPrinted,
   playNewOrderSound,
 } from "@/lib/orders";
+import {
+  isBluetoothSupported,
+  isPrinterConnected,
+  getConnectedPrinterName,
+  requestPrinter,
+  printOrderBluetooth,
+  disconnectPrinter,
+} from "@/lib/bluetooth-printer";
 import { supabase } from "@/integrations/supabase/client";
 import type { Order, Restaurant } from "@/types";
-import { ReceiptText } from "lucide-react";
+import { ReceiptText, Bluetooth, BluetoothConnected } from "lucide-react";
+import { toast } from "sonner";
 
 const FILTERS = [
   { key: "ativos", label: "Ativos" },
@@ -38,6 +47,7 @@ export function OwnerOrdersScreen({
     return localStorage.getItem(AUTOPRINT_KEY) === "1";
   });
   const [printing, setPrinting] = useState<Order | null>(null);
+  const [btName, setBtName] = useState<string | null>(getConnectedPrinterName());
   const seenIds = useRef<Set<string>>(new Set());
   const newlyArrived = useRef<Set<string>>(new Set());
   const initialLoaded = useRef(false);
@@ -91,12 +101,41 @@ export function OwnerOrdersScreen({
   }, [restaurant.id, autoPrint]);
 
   const triggerPrint = async (order: Order) => {
+    if (isPrinterConnected()) {
+      try {
+        await printOrderBluetooth(restaurant, order);
+        await markPrinted(order.id);
+        toast.success(`Pedido #${order.order_number} impresso`);
+        return;
+      } catch (e: any) {
+        toast.error("Falha na impressora Bluetooth — usando impressão do sistema");
+        console.error(e);
+      }
+    }
     setPrinting(order);
     // Allow React to render the receipt before window.print()
     await new Promise((r) => setTimeout(r, 100));
     window.print();
     await markPrinted(order.id);
     setTimeout(() => setPrinting(null), 400);
+  };
+
+  const connectBt = async () => {
+    try {
+      const name = await requestPrinter();
+      setBtName(name);
+      toast.success(`Conectado: ${name}`);
+    } catch (e: any) {
+      if (e?.name !== "NotFoundError") {
+        toast.error(e?.message ?? "Não foi possível conectar");
+      }
+    }
+  };
+
+  const disconnectBt = () => {
+    disconnectPrinter();
+    setBtName(null);
+    toast.success("Impressora desconectada");
   };
 
   const filtered = useMemo(() => {
@@ -136,6 +175,49 @@ export function OwnerOrdersScreen({
           />
         </button>
       </div>
+
+      {isBluetoothSupported() && (
+        <div className="bg-white border border-zinc-200 rounded-2xl p-4 mb-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                btName ? "bg-emerald-100 text-emerald-700" : "bg-zinc-100 text-zinc-500"
+              }`}
+            >
+              {btName ? (
+                <BluetoothConnected className="w-5 h-5" />
+              ) : (
+                <Bluetooth className="w-5 h-5" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-black text-zinc-900 leading-tight">
+                Impressora Bluetooth
+              </p>
+              <p className="text-xs text-zinc-500 leading-tight truncate">
+                {btName
+                  ? `Conectada: ${btName} — imprime grátis, sem app extra`
+                  : "Conecte sua impressora térmica para imprimir grátis (sem RawBT)"}
+              </p>
+            </div>
+            {btName ? (
+              <button
+                onClick={disconnectBt}
+                className="h-10 px-3 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold shrink-0"
+              >
+                Desconectar
+              </button>
+            ) : (
+              <button
+                onClick={connectBt}
+                className="h-10 px-3 rounded-xl bg-zinc-900 text-white text-xs font-bold shrink-0"
+              >
+                Conectar
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <PrinterHelp />
 
