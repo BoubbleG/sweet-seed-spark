@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { Restaurant } from "@/types";
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, UtensilsCrossed, Eye, Flame, Leaf, Pizza, Coffee, Cookie } from "lucide-react";
+import { ArrowRight, Sparkles, UtensilsCrossed, Eye, Flame, Leaf, Pizza, Coffee, Cookie, Copy, Check, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/modelos/")({
