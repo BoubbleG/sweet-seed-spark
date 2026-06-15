@@ -1,51 +1,61 @@
-# Plano: Cardápio Mix Burger XIS
+## Objetivo
 
-Vou criar um **novo restaurante** no sistema com a logo enviada, todas as categorias e itens, com imagens geradas para cada produto.
+Refazer todas as 16 imagens do cardápio do **Mix Burger XIS** com prompts mais precisos e estilo visual consistente: **foto realista profissional de hamburgueria, fundo escuro de madeira rústica, iluminação quente lateral, top-down ou 45°**.
 
-## 1. Upload da logo
-- Subir a imagem `WhatsApp_Image_2026-06-14_at_21.49.07.jpeg` como asset Lovable e usar como `logo_url` e `banner_url`.
+## Por que as atuais estão erradas
 
-## 2. Criar restaurante
-Migration insert na tabela `restaurants`:
-- `name`: Mix Burger XIS
-- `slug`: mix-burger-xis
-- `description`: "Sabor que vira vício!"
-- `business_type`: hamburgueria
-- `whatsapp`: placeholder (51999999999 — usuário edita depois pelo painel)
-- Cores fortes do logo: `primary_color` #E63946 (vermelho), `button_color` #F4A300 (amarelo), `background_color` #0B0B0B, `text_color` #FFFFFF, `secondary_color` #FFD23F
-- `accepts_delivery: true`, `accepts_pickup: true`
-- `payment_methods`: pix, dinheiro, débito, crédito ativos
+- Combos/X-burgers genéricos (não parecem hambúrguer artesanal de hamburgueria)
+- Porções, molhos e bebidas com aparência fora de contexto (ex.: maionese parecendo sorvete)
+- Estilo visual inconsistente entre itens
 
-## 3. Categorias (display_order)
-1. Combos
-2. Lanches (Xis)
-3. Porções
-4. Molhos
-5. Bebidas
+## O que vou fazer
 
-## 4. Produtos
-Cada produto recebe imagem gerada via `imagegen--generate_image` (fast, fundo escuro estilo do logo) e é inserido com nome, descrição, preço e `image_url` (asset URL).
+1. **Gerar 16 novas imagens** com `imagegen--generate_image` (qualidade `standard` para fidelidade fotográfica), todas no mesmo estilo base:
+   > *"professional food photography, dark rustic wooden table background, warm side lighting, shallow depth of field, hamburgueria artesanal style, appetizing, high detail"*
 
-**Combos:**
-- Combo Casal — R$ 99,90 — "2x X-Bacon, 6 bolinhas de queijo, 5 rodelas de cebola, batata frita, maionese e ketchup. Sabor, diversão e companhia."
-- Combo Solteiro — R$ 49,90 — "1 X-Salada, 6 bolinhas de queijo, 5 rodelas de cebola, batata frita, maionese e ketchup."
-- Combo Mix Burger XIS — R$ 109,90 — "3x X-Bacon, 6 coxinhas, 8 rodelas de cebola, batata frita, maionese e ketchup."
+2. **Prompts específicos por item** (resumidos):
 
-**Lanches (Xis):** X-Tudo, X-Salada, X-Bacon, X-Egg — preço sugerido R$ 24,90 cada (usuário ajusta no painel) com a lista de ingredientes na descrição.
+   **Combos** (3) — composição com vários itens no mesmo prato/tábua:
+   - Combo Casal: 2 X-Bacon + batata frita + bolinhas de queijo + rodelas de cebola + 2 potinhos molho
+   - Combo Solteiro: 1 X-Salada + batata frita + bolinhas de queijo + rodelas de cebola
+   - Combo Mix: hambúrguer duplo grande + batata + acompanhamentos variados
 
-**Porções:** Batata Frita R$ 19,90 · Batata com Cheddar e Bacon R$ 32,90 · Bolinha de Queijo R$ 18,90 · Coxinha R$ 16,90 · Rodelas de Cebola R$ 17,90.
+   **Lanches/Xis** (4) — hambúrguer brasileiro típico (pão brioche, ingredientes visíveis em corte lateral 45°):
+   - X-Tudo: pão, 2 carnes, queijo derretido, bacon, ovo, presunto, alface, tomate
+   - X-Salada: pão, carne, queijo, alface, tomate, maionese
+   - X-Bacon: pão, carne, queijo derretido, bacon crocante abundante
+   - X-Egg: pão, carne, ovo com gema, queijo, bacon
 
-**Molhos:** Maionese R$ 3,00 · Ketchup R$ 3,00.
+   **Porções** (5):
+   - Batata Frita: porção em cestinha de papel
+   - Batata com Cheddar e Bacon: batata coberta com cheddar derretido e bacon
+   - Bolinha de Queijo: bolinhas fritas douradas com queijo derretido
+   - Coxinha: coxinhas brasileiras douradas
+   - Rodelas de Cebola: onion rings empanados crocantes
 
-**Bebidas:** Refrigerante Lata R$ 7,00 · Suco Natural R$ 9,00.
+   **Molhos** (2):
+   - Maionese: potinho pequeno com maionese cremosa branca
+   - Ketchup: potinho pequeno com ketchup vermelho
 
-## 5. Token de edição
-Criar `restaurant_edit_tokens` (random uuid) para o dono acessar `/editar/:token` e ajustar WhatsApp e preços.
+   **Bebidas** (2):
+   - Refrigerante Lata: lata genérica de refrigerante gelada com gotas de condensação
+   - Suco Natural: copo de vidro com suco de laranja natural e fatia de laranja
 
-## 6. Entrega
-Ao final mostro:
-- Link público: `/mix-burger-xis`
-- Link de edição: `/editar/:token`
+3. **Upload via `lovable-assets`** de cada imagem para o CDN.
 
-## Observação
-Como preços de lanches individuais não vieram na lista, uso valores sugeridos coerentes — facilmente editáveis no painel do dono. WhatsApp também é placeholder até o usuário informar.
+4. **Atualizar `products.image_url`** no banco de dados para cada um dos 16 produtos com a nova URL.
+
+## Detalhes técnicos
+
+- Modelo: `imagegen--generate_image` com `model: "standard"` (fidelidade fotográfica)
+- Dimensões: `1024x1024`
+- Formato: `.jpg` (sem transparência)
+- Update SQL único com `CASE WHEN slug = ... THEN ...` para todas as 16 linhas
+- Logo e dados do restaurante permanecem inalterados
+
+## Não vou alterar
+
+- Logo, cores, nome, slug, descrição do restaurante
+- Preços, descrições e nomes dos produtos
+- Categorias
+- Token de edição
