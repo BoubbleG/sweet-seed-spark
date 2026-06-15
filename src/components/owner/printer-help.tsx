@@ -53,45 +53,25 @@ export function PrinterHelp() {
 
           {tab === "pc" && (
             <ol className="text-sm text-zinc-700 space-y-2 list-decimal pl-5">
-              <li>Conecte a impressora térmica no USB do PC e instale o driver dela.</li>
-              <li>Deixe esta página aberta no Chrome durante o expediente.</li>
-              <li>
-                Ative <b>"Imprimir automático"</b> aqui em cima — todo pedido novo
-                imprime sozinho.
-              </li>
-              <li>
-                Dica: na primeira impressão, marque <b>"Lembrar minha escolha"</b>{" "}
-                no diálogo do Chrome.
-              </li>
+              <li><b>Opção 1 (recomendada — Bluetooth):</b> clique em <b>"Conectar"</b> no card "Impressora Bluetooth" acima e escolha sua impressora. Imprime de graça, sem app extra.</li>
+              <li><b>Opção 2 (USB):</b> conecte a impressora no USB, instale o driver e use o botão <b>"Imprimir"</b> — abre o diálogo do Chrome.</li>
+              <li>Para automático, ative <b>"Imprimir automático"</b>. Com Bluetooth conectado, imprime direto; com USB, marque <b>"Lembrar minha escolha"</b> no Chrome na primeira impressão.</li>
             </ol>
           )}
 
           {tab === "android" && (
             <ol className="text-sm text-zinc-700 space-y-2 list-decimal pl-5">
-              <li>
-                Instale o app grátis <b>RawBT</b> na Play Store (ele transforma sua
-                impressora Bluetooth em impressora do sistema).
-              </li>
-              <li>Abra o RawBT e pareie sua impressora Bluetooth nele.</li>
-              <li>Volte aqui no Chrome e deixe esta página aberta.</li>
-              <li>
-                Ative <b>"Imprimir automático"</b>. Quando aparecer a tela de
-                impressão, escolha <b>RawBT</b>.
-              </li>
+              <li>Pareie sua impressora térmica no <b>Bluetooth do Android</b> (Configurações &gt; Bluetooth).</li>
+              <li>Abra esta página no <b>Google Chrome</b> (não funciona em outros navegadores).</li>
+              <li>Toque em <b>"Conectar"</b> no card "Impressora Bluetooth" acima e escolha sua impressora na lista.</li>
+              <li>Pronto! Cada pedido imprime direto — <b>sem RawBT</b>, sem aviso de uso comercial, totalmente grátis. Ative <b>"Imprimir automático"</b> para imprimir sozinho.</li>
             </ol>
           )}
 
           {tab === "iphone" && (
             <ol className="text-sm text-zinc-700 space-y-2 list-decimal pl-5">
-              <li>O iPhone não permite impressão automática via navegador.</li>
-              <li>
-                Você verá os pedidos chegando aqui — toque em <b>"Imprimir"</b> em
-                cada pedido e use o app da sua impressora.
-              </li>
-              <li>
-                Para automático, use um tablet/PC Android com RawBT ou um PC com a
-                impressora USB.
-              </li>
+              <li>O iPhone não suporta Bluetooth direto pelo navegador. Use <b>AirPrint</b>: toque em <b>"Imprimir"</b> em cada pedido e selecione sua impressora AirPrint.</li>
+              <li>Para impressão automática, use um celular/tablet Android ou PC com Chrome — ali o Bluetooth funciona sem apps de terceiros.</li>
             </ol>
           )}
         </div>
