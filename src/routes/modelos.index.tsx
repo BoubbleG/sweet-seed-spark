@@ -64,6 +64,25 @@ function ModelosPage() {
     load();
   }, []);
 
+  async function copyLink(slug: string) {
+    const url = `${PUBLISHED_URL}/${slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedSlug(slug);
+      setTimeout(() => setCopiedSlug(null), 2000);
+    } catch {
+      // fallback
+      const ta = document.createElement("textarea");
+      ta.value = url;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      setCopiedSlug(slug);
+      setTimeout(() => setCopiedSlug(null), 2000);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 font-['Outfit']">
       <header className="bg-white border-b border-zinc-100 px-8 py-5 flex justify-between items-center sticky top-0 z-50 backdrop-blur-xl bg-white/80">
