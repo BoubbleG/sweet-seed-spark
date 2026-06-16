@@ -1,39 +1,52 @@
-## Novo cardápio: Frango Assado Ponto Com
+## Restaurar o Point do Gordinho
 
-Vou criar um restaurante novo no sistema com tudo do panfleto e gerar imagem pra cada item.
+Olhei o histórico e confirmei: o cardápio original tinha **4 categorias** e **15 produtos**, mas hoje só restam **3 categorias** corretas + 1 categoria estranha ("adicionais") e **apenas 1 produto** ("Misto R$9", que nunca existiu no original).
 
-### Restaurante
-- **Nome**: Frango Assado Ponto Com
-- **Slug**: `frango-assado-ponto-com` (URL: `/frango-assado-ponto-com`)
-- **Tipo**: Churrasco / carnes assadas
-- **Descrição**: "Carnes assadas com sabor de churrasco de verdade!"
-- **Visual**: tema escuro com madeira queimada, dourado e laranja-fogo (combina com o panfleto)
-- **WhatsApp**: (62) 99459-7546 (principal) — segundo (62) 99343-8937 vai na descrição
-- **Endereço**: "Em frente ao Supermercado Família — aos domingos no antigo Bambuzal, saída pra Nova Fátima"
-- **Logo + banner**: gero a partir do panfleto
+Os dados do restaurante em si (nome, logo, banner, cores preto/laranja, WhatsApp, endereço) **continuam intactos** — só o cardápio foi apagado.
 
-### Categorias e produtos (10 itens, todos com imagem gerada)
+### O que vou restaurar
 
-**Carnes Assadas**
-1. Panceta Crocante — a partir de R$ 35,00 — "Suculenta por dentro, crocante por fora"
-2. Pernil Suíno — a partir de R$ 35,00 — "Macio, temperado e assado na brasa"
-3. Costela Gaúcha 2kg — R$ 90,00 — "Defumada lentamente para um sabor incomparável"
-4. Costelinha de Porco Assada na Brasa — a partir de R$ 35,00 — "Assada na brasa até desmanchar de tão macia"
-5. Frango Assado na Brasa — R$ 50,00 — "Na brasa, dourado e suculento"
+**Categorias (na ordem original):**
+1. Hambúrgueres
+2. Combos
+3. Batatinhas
+4. Bebidas
 
-**Acompanhamentos** (usando tamanhos P=500g / M=1kg do sistema existente)
-6. Arroz Soltinho — 500g R$ 10,00 / 1kg R$ 15,00
-7. Feijão Tropeiro — 500g R$ 15,00 / 1kg R$ 20,00
+→ A categoria extra "adicionais" e o produto "Misto" (que não faziam parte do original) serão removidos.
 
-**Bebidas**
-8. Cerveja Lata — a partir de R$ 4,50
-9. Coca-Cola 2 Litros — R$ 16,00
-10. Água c/ ou sem gás 500ml — R$ 3,00
+**Produtos (15 itens, exatamente como antes):**
 
-### Imagens
-10 imagens geradas com estilo fotografia gastronômica rústica (tábua de madeira, brasa, iluminação quente), enviadas via `lovable-assets` e salvas no `image_url` de cada produto. Também gero logo e banner pra cabeçalho.
+*Hambúrgueres:*
+- Burguer Simples — R$ 15,00
+- Smash Burguer — R$ 17,00 ⭐
+- X-Bacon — R$ 18,00
+- X-Calabresa — R$ 18,00
+- Duplo Cheddar — R$ 22,00 ⭐
 
-### Técnico
-- Migration cria registro em `restaurants`, `categories` e `products` (todas as tabelas já existem)
-- Não mexo em nenhum outro restaurante (Isas Lanches etc. ficam intactos)
-- Não mexo em código de UI — uso o template público existente em `/$slug`
+*Combos:*
+- Combo Duplo Cheddar — R$ 30,00 ⭐
+- Combo Família — R$ 75,00 (4 hambúrgueres + 20 mini coxinhas + batata cheddar/bacon + refri 1L)
+- Combo Burguer Mac — R$ 20,00 (Burguer Mac + refri 269ml)
+
+*Batatinhas:*
+- Batata Simples — R$ 10,00
+- Batata Turbinada — R$ 15,00 ⭐ (cheddar + bacon)
+- Batata com Costela Desfiada — R$ 20,00
+
+*Bebidas:*
+- Coca-Cola 350ml — R$ 6,00
+- Coca-Cola Zero 350ml — R$ 6,00
+- Fanta 350ml — R$ 6,00
+- Kuat 350ml — R$ 6,00
+
+⭐ = marcado como destaque (igual antes)
+
+**Imagens:** vou gerar novamente as 15 fotos no mesmo estilo original (food photography, fundo de madeira escura, luz quente) já que as URLs antigas se perderam quando os produtos foram apagados.
+
+### Detalhes técnicos
+- Inserts diretos em `categories` e `products` (restaurant_id `72b11ac1-65c6-4bd4-a30c-10fd5ac904df`).
+- Geração de 15 imagens via `imagegen` em paralelo, upload via `lovable-assets`, gravando `image_url` em cada produto.
+- Delete da categoria "adicionais" e do produto "Misto".
+- Nenhuma mudança em código de frontend ou em outros restaurantes.
+
+Confirma que posso restaurar exatamente assim? Se quiser manter o "Misto R$9" que está lá hoje, me avisa antes de aprovar.
