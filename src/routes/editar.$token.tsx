@@ -9,6 +9,9 @@ import { OwnerVisualScreen } from "@/components/owner/visual-screen";
 import { OwnerInfoScreen } from "@/components/owner/info-screen";
 import { OwnerOrdersScreen } from "@/components/owner/orders-screen";
 import { OwnerDeliveryPaymentScreen } from "@/components/owner/delivery-payment-screen";
+import { OwnerHistoryScreen } from "@/components/owner/history-screen";
+import { getLatestSnapshot, restoreSnapshot } from "@/lib/snapshots";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Utensils,
   Palette,
@@ -23,6 +26,8 @@ import {
   Check,
   ReceiptText,
   Truck,
+  History,
+  Undo2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,7 +36,7 @@ export const Route = createFileRoute("/editar/$token")({
   component: OwnerEditor,
 });
 
-type Screen = "home" | "orders" | "menu" | "promo" | "visual" | "info" | "delivery";
+type Screen = "home" | "orders" | "menu" | "promo" | "visual" | "info" | "delivery" | "history";
 
 function OwnerEditor() {
   const { token } = useParams({ from: "/editar/$token" });
@@ -122,6 +127,13 @@ function OwnerShell({ restaurant }: { restaurant: Restaurant }) {
         onBack={() => setScreen("home")}
       />
     );
+  if (screen === "history")
+    return (
+      <OwnerHistoryScreen
+        restaurantId={restaurant.id}
+        onBack={() => setScreen("home")}
+      />
+    );
 
   return <OwnerHome restaurant={restaurant} onOpen={setScreen} />;
 }
@@ -133,11 +145,37 @@ function OwnerHome({
   restaurant: Restaurant;
   onOpen: (s: Screen) => void;
 }) {
+  const qc = useQueryClient();
   const publicUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/${restaurant.slug}`
       : `/${restaurant.slug}`;
   const [copied, setCopied] = useState(false);
+  const [undoing, setUndoing] = useState(false);
+
+  const undoLast = async () => {
+    const latest = await getLatestSnapshot(restaurant.id);
+    if (!latest) {
+      toast.info("Nada para desfazer ainda.");
+      return;
+    }
+    if (
+      !confirm(
+        `Desfazer a última alteração?\n\n"${latest.label}"\n\nVamos voltar para o estado anterior. Você pode refazer depois pelo Histórico.`,
+      )
+    )
+      return;
+    setUndoing(true);
+    try {
+      await restoreSnapshot(latest.id, restaurant.id);
+      qc.invalidateQueries();
+      toast.success("Última alteração desfeita!");
+    } catch (e: any) {
+      toast.error(e.message ?? "Não consegui desfazer");
+    } finally {
+      setUndoing(false);
+    }
+  };
 
   const share = async () => {
     try {
@@ -215,6 +253,14 @@ function OwnerHome({
       bg: "bg-emerald-100",
       fg: "text-emerald-700",
     },
+    {
+      key: "history",
+      title: "Histórico de alterações",
+      desc: "Voltar para uma versão anterior do cardápio",
+      icon: <History className="w-6 h-6" />,
+      bg: "bg-zinc-200",
+      fg: "text-zinc-700",
+    },
   ];
 
   return (
@@ -244,6 +290,17 @@ function OwnerHome({
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-6">
+        <div className="mb-4">
+          <button
+            onClick={undoLast}
+            disabled={undoing}
+            className="w-full flex items-center justify-center gap-2 h-12 rounded-2xl bg-white border-2 border-zinc-900 text-zinc-900 font-black text-sm active:scale-[0.99] disabled:opacity-60 transition"
+          >
+            <Undo2 className="w-4 h-4" />
+            {undoing ? "Desfazendo…" : "Desfazer última alteração"}
+          </button>
+        </div>
+
         <h2 className="text-sm font-black uppercase tracking-wider text-zinc-500 mb-3 px-1">
           O que você quer editar?
         </h2>
