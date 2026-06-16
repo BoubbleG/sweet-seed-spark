@@ -162,7 +162,7 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
       style={{ fontFamily: t.font, backgroundColor: t.background, color: t.text }}
     >
       {restaurant.custom_css && (
-        <style dangerouslySetInnerHTML={{ __html: restaurant.custom_css }} />
+        <style dangerouslySetInnerHTML={{ __html: sanitizeCustomCss(restaurant.custom_css) }} />
       )}
 
       {isPreview && (
