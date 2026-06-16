@@ -68,7 +68,7 @@ function ModelosPage() {
   }, []);
 
   async function copyLink(slug: string) {
-    const url = `${PUBLISHED_URL}/${slug}`;
+    const url = `${PUBLISHED_URL}/modelos/${slug}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopiedSlug(slug);
@@ -138,7 +138,7 @@ function ModelosPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {restaurants.map((rest) => {
-              const url = `${PUBLISHED_URL}/${rest.slug}`;
+              const url = `${PUBLISHED_URL}/modelos/${rest.slug}`;
               const isCopied = copiedSlug === rest.slug;
               return (
                 <div
@@ -172,7 +172,7 @@ function ModelosPage() {
               accent: "from-zinc-700 to-zinc-900",
             };
             const Icon = meta.icon;
-            const url = `${PUBLISHED_URL}/${rest.slug}`;
+            const url = `${PUBLISHED_URL}/modelos/${rest.slug}`;
             const isCopied = copiedSlug === rest.slug;
             return (
               <motion.div
