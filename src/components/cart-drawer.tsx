@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/hooks/use-cart";
 import { formatCurrency, generateWhatsAppMessage } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,20 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Trash2, Plus, Minus, X, Clock, ShoppingCart, Lock,
   User, Phone, MapPin, Home, Navigation, Smartphone, Banknote, CreditCard,
-  ArrowLeft, ArrowRight, Check, MessageSquare, Bike, Store, Ticket,
+  ArrowLeft, ArrowRight, Check, MessageSquare, Bike, Store, Ticket, Sparkles,
 } from "lucide-react";
 import { Restaurant } from "@/types";
 import { AnimatePresence, motion } from "framer-motion";
 import { buildMenuTheme } from "@/lib/theme";
 import { createOrder } from "@/lib/orders";
 import { toast } from "sonner";
+import {
+  readLocalProfile,
+  findRemoteProfile,
+  saveCustomerProfile,
+  clearLocalProfile,
+  deleteRemoteProfile,
+} from "@/lib/customer-profile";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -53,17 +60,69 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
     { key: "Vale-refeição", label: "Vale-refeição", icon: <Ticket className="w-8 h-8" />, enabled: pm.meal_voucher === true },
   ].filter((p) => p.enabled);
   const defaultPayment = paymentOptions[0]?.key ?? "PIX";
-  const [customer, setCustomer] = useState({
-    name: "",
-    phone: "",
-    address: "",
-    neighborhood: "",
-    reference: "",
-    paymentMethod: defaultPayment,
-    changeFor: "",
-    generalNotes: ""
+  const [customer, setCustomer] = useState(() => {
+    const local = readLocalProfile(restaurant.id) ?? {};
+    return {
+      name: local.name ?? "",
+      phone: local.phone ?? "",
+      address: local.address ?? "",
+      neighborhood: local.neighborhood ?? "",
+      reference: local.reference ?? "",
+      paymentMethod: local.paymentMethod || defaultPayment,
+      changeFor: "",
+      generalNotes: "",
+    };
   });
   const [errors, setErrors] = useState<Record<string, boolean>>({});
+  const [welcomeBack, setWelcomeBack] = useState<string | null>(null);
+  const [lookupPhone, setLookupPhone] = useState<string>("");
+
+  // Procura perfil pelo telefone quando o cliente acaba de digitar
+  useEffect(() => {
+    if (isPreview) return;
+    const digits = customer.phone.replace(/\D/g, "");
+    if (digits.length < 10 || digits === lookupPhone) return;
+    setLookupPhone(digits);
+    let cancelled = false;
+    (async () => {
+      const remote = await findRemoteProfile(restaurant.id, digits);
+      if (cancelled || !remote) return;
+      setCustomer((prev) => ({
+        ...prev,
+        name: prev.name || remote.name || "",
+        address: prev.address || remote.address || "",
+        neighborhood: prev.neighborhood || remote.neighborhood || "",
+        reference: prev.reference || remote.reference || "",
+        paymentMethod: remote.paymentMethod || prev.paymentMethod,
+      }));
+      if (remote.name) {
+        setWelcomeBack(remote.name);
+        setTimeout(() => setWelcomeBack(null), 5000);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [customer.phone, restaurant.id, isPreview, lookupPhone]);
+
+  const forgetMe = async () => {
+    if (!confirm("Apagar seus dados salvos deste cardápio?")) return;
+    clearLocalProfile(restaurant.id);
+    const digits = customer.phone.replace(/\D/g, "");
+    if (digits.length >= 10) await deleteRemoteProfile(restaurant.id, digits);
+    setCustomer({
+      name: "",
+      phone: "",
+      address: "",
+      neighborhood: "",
+      reference: "",
+      paymentMethod: defaultPayment,
+      changeFor: "",
+      generalNotes: "",
+    });
+    setWelcomeBack(null);
+    toast.success("Seus dados foram apagados deste cardápio.");
+  };
 
   const subtotal = getTotal();
   const minFree = restaurant.min_order_for_free_delivery || 0;
@@ -116,6 +175,16 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
       toast.error("Não conseguimos salvar o pedido. Tente novamente.");
       return;
     }
+
+    // Salva o perfil do cliente para o próximo pedido
+    await saveCustomerProfile(restaurant.id, {
+      name: customer.name,
+      phone: customer.phone,
+      address: customer.address,
+      neighborhood: customer.neighborhood,
+      reference: customer.reference,
+      paymentMethod: customer.paymentMethod,
+    });
 
     const orderTag = encodeURIComponent(
       `*Pedido #${String(order.order_number).padStart(4, "0")}*\n\n`,
