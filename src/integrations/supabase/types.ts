@@ -375,6 +375,41 @@ export type Database = {
           },
         ]
       }
+      restaurant_pin_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          last_used_at: string
+          restaurant_id: string
+          session_token: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          last_used_at?: string
+          restaurant_id: string
+          session_token: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_used_at?: string
+          restaurant_id?: string
+          session_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_pin_sessions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_snapshots: {
         Row: {
           created_at: string
@@ -437,6 +472,9 @@ export type Database = {
           name: string
           opening_hours: string | null
           payment_methods: Json
+          pin_failed_attempts: number
+          pin_hash: string | null
+          pin_locked_until: string | null
           primary_color: string | null
           product_card_layout: string | null
           secondary_color: string | null
@@ -476,6 +514,9 @@ export type Database = {
           name: string
           opening_hours?: string | null
           payment_methods?: Json
+          pin_failed_attempts?: number
+          pin_hash?: string | null
+          pin_locked_until?: string | null
           primary_color?: string | null
           product_card_layout?: string | null
           secondary_color?: string | null
@@ -515,6 +556,9 @@ export type Database = {
           name?: string
           opening_hours?: string | null
           payment_methods?: Json
+          pin_failed_attempts?: number
+          pin_hash?: string | null
+          pin_locked_until?: string | null
           primary_color?: string | null
           product_card_layout?: string | null
           secondary_color?: string | null
@@ -530,11 +574,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_clear_restaurant_pin: {
+        Args: { _password_hash: string; _restaurant_id: string }
+        Returns: undefined
+      }
       admin_ensure_edit_token: {
         Args: { _password_hash: string; _restaurant_id: string }
         Returns: string
@@ -543,6 +612,15 @@ export type Database = {
         Args: { _password_hash: string }
         Returns: {
           edit_token: string
+          restaurant_id: string
+        }[]
+      }
+      admin_list_pin_status: {
+        Args: { _password_hash: string }
+        Returns: {
+          has_pin: boolean
+          is_locked: boolean
+          locked_until: string
           restaurant_id: string
         }[]
       }
@@ -555,6 +633,11 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_set_restaurant_pin: {
+        Args: { _password_hash: string; _pin: string; _restaurant_id: string }
+        Returns: undefined
+      }
+      cleanup_expired_pin_sessions: { Args: never; Returns: undefined }
       find_restaurant_by_edit_token: {
         Args: { _token: string }
         Returns: {
@@ -583,6 +666,9 @@ export type Database = {
           name: string
           opening_hours: string | null
           payment_methods: Json
+          pin_failed_attempts: number
+          pin_hash: string | null
+          pin_locked_until: string | null
           primary_color: string | null
           product_card_layout: string | null
           secondary_color: string | null
@@ -603,6 +689,64 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      find_restaurant_by_pin_session: {
+        Args: { _token: string }
+        Returns: {
+          accepts_delivery: boolean
+          accepts_pickup: boolean
+          address: string | null
+          average_delivery_time: string | null
+          background_color: string | null
+          banner_url: string | null
+          border_radius: string | null
+          business_type: string
+          button_color: string | null
+          card_style: string | null
+          category_layout: string | null
+          city: string | null
+          created_at: string | null
+          custom_css: string | null
+          delivery_fee: number | null
+          description: string | null
+          font_family: string | null
+          header_style: string | null
+          id: string
+          instagram: string | null
+          logo_url: string | null
+          min_order_for_free_delivery: number | null
+          name: string
+          opening_hours: string | null
+          payment_methods: Json
+          pin_failed_attempts: number
+          pin_hash: string | null
+          pin_locked_until: string | null
+          primary_color: string | null
+          product_card_layout: string | null
+          secondary_color: string | null
+          show_categories: boolean | null
+          show_delivery_status: boolean | null
+          show_search: boolean | null
+          slug: string
+          status: string | null
+          text_color: string | null
+          updated_at: string | null
+          visual_style: string | null
+          whatsapp: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "restaurants"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       restore_restaurant_snapshot: {
         Args: { _snapshot_id: string }
         Returns: undefined
@@ -611,9 +755,16 @@ export type Database = {
         Args: { _password_hash: string }
         Returns: boolean
       }
+      verify_restaurant_pin: {
+        Args: { _pin: string; _slug: string }
+        Returns: {
+          expires_at: string
+          session_token: string
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -740,6 +891,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

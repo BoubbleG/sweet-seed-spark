@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut, Eye, LayoutDashboard, Share2, TrendingUp, Trash2, Link2, Check, KeyRound, RefreshCw, Pencil } from "lucide-react";
+import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut, Eye, LayoutDashboard, Share2, TrendingUp, Trash2, Link2, Check, KeyRound, RefreshCw, Pencil, Lock, Shield, ShieldCheck, ShieldAlert } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Restaurant } from "@/types";
 import { RestaurantDialog } from "@/components/admin/restaurant-dialog";
@@ -59,6 +59,9 @@ function AdminDashboard() {
   const [activeView, setActiveTab] = useState<'list' | 'menu' | 'visual' | 'preview'>(search.view || 'list');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copiedEditId, setCopiedEditId] = useState<string | null>(null);
+  const [copiedPinLinkId, setCopiedPinLinkId] = useState<string | null>(null);
+  const [pinStatusMap, setPinStatusMap] = useState<Record<string, { has_pin: boolean; is_locked: boolean }>>({});
+  const [pinDialog, setPinDialog] = useState<{ rest: Restaurant; mode: 'set' | 'reset' } | null>(null);
 
   async function copyShareLink(slug: string, id: string) {
     const url = `${window.location.origin}/${slug}`;
@@ -136,6 +139,15 @@ function AdminDashboard() {
           }
         }
         rows = rows.map((r) => ({ ...r, edit_token: tokenMap.get(r.id) }));
+        // Load PIN status for every restaurant
+        const { data: pinRows } = await sb.rpc("admin_list_pin_status", {
+          _password_hash: sessionHash,
+        });
+        const map: Record<string, { has_pin: boolean; is_locked: boolean }> = {};
+        for (const p of (pinRows ?? []) as Array<{ restaurant_id: string; has_pin: boolean; is_locked: boolean }>) {
+          map[p.restaurant_id] = { has_pin: p.has_pin, is_locked: p.is_locked };
+        }
+        setPinStatusMap(map);
       }
       setRestaurants(rows);
     } catch (error) {
@@ -143,6 +155,20 @@ function AdminDashboard() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  async function copyPinLink(slug: string, id: string) {
+    const url = `${window.location.origin}/${slug}/admin`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = url; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    setCopiedPinLinkId(id);
+    toast.success("Link do painel copiado!");
+    setTimeout(() => setCopiedPinLinkId(null), 2000);
   }
 
   useEffect(() => {
@@ -400,6 +426,42 @@ function AdminDashboard() {
                             <RefreshCw className="w-3.5 h-3.5" />
                           </Button>
                         </div>
+                        {/* Painel do dono com PIN (novo, recomendado) */}
+                        <div className={`mb-2 flex items-center gap-2 p-2 pl-3 rounded-2xl border ${pinStatusMap[rest.id]?.has_pin ? 'bg-emerald-50 border-emerald-100' : 'bg-zinc-50 border-zinc-200'}`}>
+                          {pinStatusMap[rest.id]?.is_locked ? (
+                            <ShieldAlert className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                          ) : pinStatusMap[rest.id]?.has_pin ? (
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          ) : (
+                            <Shield className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          )}
+                          <span className={`text-[11px] font-medium truncate flex-1 min-w-0 ${pinStatusMap[rest.id]?.has_pin ? 'text-emerald-700' : 'text-zinc-500'}`}>
+                            {pinStatusMap[rest.id]?.is_locked
+                              ? 'Painel BLOQUEADO (15 min)'
+                              : pinStatusMap[rest.id]?.has_pin
+                                ? `/${rest.slug}/admin · PIN ativo`
+                                : `/${rest.slug}/admin · sem PIN`}
+                          </span>
+                          {pinStatusMap[rest.id]?.has_pin && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className={`h-7 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest shrink-0 ${copiedPinLinkId === rest.id ? 'bg-emerald-500 text-white hover:bg-emerald-500' : 'bg-white text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200'}`}
+                              onClick={() => copyPinLink(rest.slug, rest.id)}
+                            >
+                              {copiedPinLinkId === rest.id ? <><Check className="w-3 h-3 mr-1" />Copiado</> : 'Copiar link'}
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title={pinStatusMap[rest.id]?.has_pin ? 'Redefinir PIN' : 'Definir PIN'}
+                            className="h-7 w-7 p-0 rounded-xl shrink-0 text-zinc-700 hover:bg-zinc-200"
+                            onClick={() => setPinDialog({ rest, mode: pinStatusMap[rest.id]?.has_pin ? 'reset' : 'set' })}
+                          >
+                            <KeyRound className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
                         <div className="flex gap-2">
                           <Button 
                             variant="secondary" 
@@ -534,6 +596,138 @@ function AdminDashboard() {
         }} 
         restaurant={editingRestaurant} 
       />
+      <PinDialog
+        state={pinDialog}
+        sessionHash={sessionHash}
+        onClose={(refresh) => {
+          setPinDialog(null);
+          if (refresh) loadData();
+        }}
+      />
+    </div>
+  );
+}
+
+function PinDialog({
+  state,
+  sessionHash,
+  onClose,
+}: {
+  state: { rest: Restaurant; mode: 'set' | 'reset' } | null;
+  sessionHash: string | null;
+  onClose: (refresh?: boolean) => void;
+}) {
+  const [pin, setPin] = useState("");
+  const [pin2, setPin2] = useState("");
+  const [working, setWorking] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (state) { setPin(""); setPin2(""); setErr(null); }
+  }, [state]);
+
+  if (!state) return null;
+
+  async function save() {
+    if (!sessionHash) { toast.error("Sessão expirada"); return; }
+    if (!/^[0-9]{4,8}$/.test(pin)) { setErr("PIN deve ter 4 a 8 dígitos"); return; }
+    if (pin !== pin2) { setErr("Os PINs não coincidem"); return; }
+    setWorking(true); setErr(null);
+    const { error } = await sb.rpc("admin_set_restaurant_pin", {
+      _password_hash: sessionHash,
+      _restaurant_id: state!.rest.id,
+      _pin: pin,
+    });
+    setWorking(false);
+    if (error) { setErr(error.message); return; }
+    toast.success(`PIN definido. Compartilhe: /${state!.rest.slug}/admin`);
+    onClose(true);
+  }
+
+  async function clearPin() {
+    if (!sessionHash) return;
+    if (!confirm("Remover o PIN deixa o painel sem acesso até você definir um novo. Continuar?")) return;
+    setWorking(true);
+    const { error } = await sb.rpc("admin_clear_restaurant_pin", {
+      _password_hash: sessionHash,
+      _restaurant_id: state!.rest.id,
+    });
+    setWorking(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("PIN removido");
+    onClose(true);
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-zinc-900/60 backdrop-blur flex items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-zinc-900 text-white flex items-center justify-center">
+            <Lock className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-black text-zinc-900">
+              {state.mode === 'reset' ? 'Redefinir PIN' : 'Definir PIN'}
+            </h3>
+            <p className="text-xs text-zinc-500 truncate max-w-[220px]">{state.rest.name}</p>
+          </div>
+        </div>
+
+        <p className="text-xs text-zinc-500 mb-4">
+          O PIN é o que o dono vai digitar em <strong>/{state.rest.slug}/admin</strong> para entrar.
+        </p>
+
+        <div className="space-y-3">
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={8}
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+            placeholder="Novo PIN (4–8 dígitos)"
+            className="w-full h-12 px-4 rounded-xl border-2 border-zinc-200 focus:border-zinc-900 outline-none text-center text-lg font-black tracking-[0.4em]"
+          />
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={8}
+            value={pin2}
+            onChange={(e) => setPin2(e.target.value.replace(/\D/g, ""))}
+            placeholder="Confirme o PIN"
+            className="w-full h-12 px-4 rounded-xl border-2 border-zinc-200 focus:border-zinc-900 outline-none text-center text-lg font-black tracking-[0.4em]"
+          />
+          {err && <p className="text-xs text-rose-600 font-bold">{err}</p>}
+        </div>
+
+        <div className="flex gap-2 mt-5">
+          <button
+            onClick={() => onClose()}
+            disabled={working}
+            className="flex-1 h-11 rounded-xl bg-zinc-100 text-zinc-700 font-bold text-sm hover:bg-zinc-200"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={save}
+            disabled={working}
+            className="flex-1 h-11 rounded-xl bg-zinc-900 text-white font-black text-sm hover:bg-zinc-800 disabled:opacity-50"
+          >
+            {working ? '...' : 'Salvar PIN'}
+          </button>
+        </div>
+
+        {state.mode === 'reset' && (
+          <button
+            onClick={clearPin}
+            disabled={working}
+            className="w-full mt-3 h-10 rounded-xl text-rose-600 font-bold text-xs hover:bg-rose-50"
+          >
+            Remover PIN deste restaurante
+          </button>
+        )}
+      </div>
     </div>
   );
 }
