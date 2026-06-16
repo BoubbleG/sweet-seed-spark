@@ -82,6 +82,56 @@ export type Database = {
           },
         ]
       }
+      customer_profiles: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          last_order_at: string
+          name: string | null
+          neighborhood: string | null
+          payment_method: string | null
+          phone: string
+          reference: string | null
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          last_order_at?: string
+          name?: string | null
+          neighborhood?: string | null
+          payment_method?: string | null
+          phone: string
+          reference?: string | null
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          last_order_at?: string
+          name?: string | null
+          neighborhood?: string | null
+          payment_method?: string | null
+          phone?: string
+          reference?: string | null
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_profiles_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
@@ -325,6 +375,41 @@ export type Database = {
           },
         ]
       }
+      restaurant_snapshots: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          restaurant_id: string
+          scope: string
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          restaurant_id: string
+          scope?: string
+          snapshot: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          restaurant_id?: string
+          scope?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_snapshots_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurants: {
         Row: {
           accepts_delivery: boolean
@@ -517,6 +602,10 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      restore_restaurant_snapshot: {
+        Args: { _snapshot_id: string }
+        Returns: undefined
       }
       verify_admin_password: {
         Args: { _password_hash: string }
