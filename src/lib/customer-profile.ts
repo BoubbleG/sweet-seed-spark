@@ -52,20 +52,19 @@ export async function findRemoteProfile(
 ): Promise<Partial<CustomerProfile> | null> {
   const p = normalizePhone(phone);
   if (p.length < 10) return null;
-  const { data, error } = await supabase
-    .from("customer_profiles")
-    .select("name, phone, address, neighborhood, reference, payment_method")
-    .eq("restaurant_id", restaurantId)
-    .eq("phone", p)
-    .maybeSingle();
-  if (error || !data) return null;
+  const { data, error } = await supabase.rpc("find_customer_profile", {
+    _restaurant_id: restaurantId,
+    _phone: p,
+  });
+  const row = Array.isArray(data) ? data[0] : data;
+  if (error || !row) return null;
   return {
-    name: data.name ?? "",
-    phone: data.phone ?? "",
-    address: data.address ?? "",
-    neighborhood: data.neighborhood ?? "",
-    reference: data.reference ?? "",
-    paymentMethod: data.payment_method ?? "",
+    name: row.name ?? "",
+    phone: row.phone ?? "",
+    address: row.address ?? "",
+    neighborhood: row.neighborhood ?? "",
+    reference: row.reference ?? "",
+    paymentMethod: row.payment_method ?? "",
   };
 }
 
@@ -77,19 +76,15 @@ export async function saveCustomerProfile(
   if (phone.length < 10) return;
   writeLocalProfile(restaurantId, profile);
   try {
-    await supabase.from("customer_profiles").upsert(
-      {
-        restaurant_id: restaurantId,
-        phone,
-        name: profile.name || null,
-        address: profile.address || null,
-        neighborhood: profile.neighborhood || null,
-        reference: profile.reference || null,
-        payment_method: profile.paymentMethod || null,
-        last_order_at: new Date().toISOString(),
-      },
-      { onConflict: "restaurant_id,phone" },
-    );
+    await supabase.rpc("upsert_customer_profile", {
+      _restaurant_id: restaurantId,
+      _phone: phone,
+      _name: profile.name || "",
+      _address: profile.address || "",
+      _neighborhood: profile.neighborhood || "",
+      _reference: profile.reference || "",
+      _payment_method: profile.paymentMethod || "",
+    });
   } catch (e) {
     console.warn("saveCustomerProfile remoto falhou", e);
   }
@@ -98,9 +93,25 @@ export async function saveCustomerProfile(
 export async function deleteRemoteProfile(restaurantId: string, phone: string) {
   const p = normalizePhone(phone);
   if (p.length < 10) return;
-  await supabase
-    .from("customer_profiles")
-    .delete()
-    .eq("restaurant_id", restaurantId)
-    .eq("phone", p);
+  // Requer sessão PIN do restaurante; ignora erros silenciosamente.
+  try {
+    let token: string | null = null;
+    if (typeof window !== "undefined") {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith("pin_session:")) {
+          token = localStorage.getItem(k);
+          if (token) break;
+        }
+      }
+    }
+    if (!token) return;
+    await supabase.rpc("delete_customer_profile", {
+      _session_token: token,
+      _restaurant_id: restaurantId,
+      _phone: p,
+    });
+  } catch {
+    /* ignore */
+  }
 }

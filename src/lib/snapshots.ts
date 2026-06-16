@@ -10,6 +10,31 @@ export interface SnapshotRow {
   created_at: string;
 }
 
+/**
+ * Recupera um token de sessão válido para o dono do restaurante:
+ * - PIN session armazenada em localStorage (`pin_session:{slug}`)
+ * - Token de edição presente na URL `/editar/{token}`
+ * Snapshots/permissões são validadas server-side via esse token.
+ */
+function getActiveOwnerToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const path = window.location.pathname || "";
+    const m = path.match(/^\/editar\/([^/?#]+)/);
+    if (m && m[1]) return decodeURIComponent(m[1]);
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith("pin_session:")) {
+        const v = localStorage.getItem(k);
+        if (v) return v;
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
 async function captureFullState(restaurantId: string) {
   const [rest, cats, prods] = await Promise.all([
     supabase.from("restaurants").select("*").eq("id", restaurantId).single(),
@@ -33,55 +58,50 @@ export async function recordSnapshot(
   scope: SnapshotScope = "full",
 ) {
   try {
+    const token = getActiveOwnerToken();
+    if (!token) return;
     const snapshot = await captureFullState(restaurantId);
     if (!snapshot.restaurant) return;
-    await supabase.from("restaurant_snapshots").insert({
-      restaurant_id: restaurantId,
-      label,
-      scope,
-      snapshot: snapshot as any,
+    await supabase.rpc("record_restaurant_snapshot", {
+      _session_token: token,
+      _restaurant_id: restaurantId,
+      _label: label,
+      _scope: scope,
+      _snapshot: snapshot as any,
     });
-    // limpa snapshots antigos (mantém últimos 100)
-    const { data } = await supabase
-      .from("restaurant_snapshots")
-      .select("id, created_at")
-      .eq("restaurant_id", restaurantId)
-      .order("created_at", { ascending: false });
-    if (data && data.length > 100) {
-      const idsToDrop = data.slice(100).map((s) => s.id);
-      await supabase.from("restaurant_snapshots").delete().in("id", idsToDrop);
-    }
   } catch (e) {
     console.warn("snapshot falhou", e);
   }
 }
 
 export async function listSnapshots(restaurantId: string): Promise<SnapshotRow[]> {
-  const { data, error } = await supabase
-    .from("restaurant_snapshots")
-    .select("id, restaurant_id, label, scope, created_at")
-    .eq("restaurant_id", restaurantId)
-    .order("created_at", { ascending: false })
-    .limit(100);
+  const token = getActiveOwnerToken();
+  if (!token) return [];
+  const { data, error } = await supabase.rpc("list_restaurant_snapshots", {
+    _session_token: token,
+    _restaurant_id: restaurantId,
+  });
   if (error) throw error;
   return (data ?? []) as SnapshotRow[];
 }
 
 export async function restoreSnapshot(snapshotId: string, restaurantId: string) {
-  // antes de restaurar, salva o estado atual para que dê para desfazer a restauração
   await recordSnapshot(restaurantId, "Antes de restaurar versão", "full");
-  const { error } = await supabase.rpc("restore_restaurant_snapshot", {
+  const token = getActiveOwnerToken();
+  if (!token) throw new Error("Sessão expirada. Entre novamente.");
+  const { error } = await supabase.rpc("restore_restaurant_snapshot_secure", {
+    _session_token: token,
     _snapshot_id: snapshotId,
   });
   if (error) throw error;
 }
 
 export async function getLatestSnapshot(restaurantId: string): Promise<SnapshotRow | null> {
-  const { data } = await supabase
-    .from("restaurant_snapshots")
-    .select("id, restaurant_id, label, scope, created_at")
-    .eq("restaurant_id", restaurantId)
-    .order("created_at", { ascending: false })
-    .limit(1);
+  const token = getActiveOwnerToken();
+  if (!token) return null;
+  const { data } = await supabase.rpc("get_latest_restaurant_snapshot", {
+    _session_token: token,
+    _restaurant_id: restaurantId,
+  });
   return (data?.[0] as SnapshotRow) ?? null;
 }
