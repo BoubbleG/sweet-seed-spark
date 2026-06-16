@@ -1,52 +1,47 @@
-## Restaurar o Point do Gordinho
+## Mais segurança + acesso individual por restaurante
 
-Olhei o histórico e confirmei: o cardápio original tinha **4 categorias** e **15 produtos**, mas hoje só restam **3 categorias** corretas + 1 categoria estranha ("adicionais") e **apenas 1 produto** ("Misto R$9", que nunca existiu no original).
+Hoje qualquer pessoa com o link `/editar/<token>` entra direto no painel do restaurante — basta vazar o link uma vez. E você acessa o painel admin com uma única "senha mestre". Vou reforçar as duas pontas sem complicar o fluxo do cliente.
 
-Os dados do restaurante em si (nome, logo, banner, cores preto/laranja, WhatsApp, endereço) **continuam intactos** — só o cardápio foi apagado.
+### 1) Acesso dos clientes: token + PIN, em URL bonita
 
-### O que vou restaurar
+- Nova URL por restaurante: **`/{slug}/admin`** (ex: `point-do-gordinho/admin`, `isas-lanches/admin`). Cada cliente recebe a sua.
+- Ao abrir, aparece uma tela simples pedindo um **PIN de 4–6 dígitos** que você define pra ele.
+- O PIN é armazenado com hash (bcrypt) no banco — você nunca vê o PIN dos outros, e ninguém consegue extrair do banco.
+- Depois de validar, o cliente recebe uma sessão (cookie httpOnly, 30 dias) e entra direto no painel — não precisa digitar de novo no celular.
+- **3 tentativas erradas → bloqueia o restaurante por 15 minutos** (evita força bruta).
+- Você cria/redefine o PIN de cada restaurante no painel admin (botão "Definir PIN" / "Redefinir PIN").
+- O link antigo `/editar/<token>` continua funcionando **só pra você** (admin master) — clientes não usam mais.
 
-**Categorias (na ordem original):**
-1. Hambúrgueres
-2. Combos
-3. Batatinhas
-4. Bebidas
+### 2) Seu painel admin: login real com e-mail/senha + Google
 
-→ A categoria extra "adicionais" e o produto "Misto" (que não faziam parte do original) serão removidos.
+- Substitui a "senha mestre" atual por **login de verdade** (e-mail/senha) com opção de entrar com **Google** em 1 clique.
+- Só contas marcadas como `admin` (na tabela `user_roles`) entram em `/admin`. Você é o primeiro admin.
+- Recuperação de senha por e-mail.
+- Proteção contra senhas vazadas ativada (HIBP).
 
-**Produtos (15 itens, exatamente como antes):**
+### 3) Endurecer o backend (RLS)
 
-*Hambúrgueres:*
-- Burguer Simples — R$ 15,00
-- Smash Burguer — R$ 17,00 ⭐
-- X-Bacon — R$ 18,00
-- X-Calabresa — R$ 18,00
-- Duplo Cheddar — R$ 22,00 ⭐
+- Hoje várias tabelas têm regras permissivas pra suportar o fluxo via token. Vou fechar:
+  - `restaurants`, `categories`, `products`, `orders`: leitura pública só do que aparece no cardápio público; escrita só via funções de servidor que validam **sessão de PIN do dono** ou **role admin**.
+  - `restaurant_edit_tokens`: passa a ser acessível apenas por admin.
+  - `customer_profiles`, `order_items`: leitura/escrita só do dono do restaurante dono dos pedidos.
+- Tudo que o painel do cliente faz hoje (editar produto, mudar visual, ver pedidos) passa por server functions que checam a sessão antes de tocar no banco.
 
-*Combos:*
-- Combo Duplo Cheddar — R$ 30,00 ⭐
-- Combo Família — R$ 75,00 (4 hambúrgueres + 20 mini coxinhas + batata cheddar/bacon + refri 1L)
-- Combo Burguer Mac — R$ 20,00 (Burguer Mac + refri 269ml)
+### O que muda na prática
 
-*Batatinhas:*
-- Batata Simples — R$ 10,00
-- Batata Turbinada — R$ 15,00 ⭐ (cheddar + bacon)
-- Batata com Costela Desfiada — R$ 20,00
-
-*Bebidas:*
-- Coca-Cola 350ml — R$ 6,00
-- Coca-Cola Zero 350ml — R$ 6,00
-- Fanta 350ml — R$ 6,00
-- Kuat 350ml — R$ 6,00
-
-⭐ = marcado como destaque (igual antes)
-
-**Imagens:** vou gerar novamente as 15 fotos no mesmo estilo original (food photography, fundo de madeira escura, luz quente) já que as URLs antigas se perderam quando os produtos foram apagados.
+- **Pra você:** entra em `/admin` com seu e-mail (ou Google). Vê a lista de restaurantes, define um PIN pra cada um, e envia ao cliente: *"Seu painel: site.com/point-do-gordinho/admin — PIN: 4729"*.
+- **Pra cada cliente:** abre o link único dele, digita o PIN uma vez no celular, e fica conectado.
+- **Pra invasores:** sem PIN não entra; com PIN errado é bloqueado; tabelas no banco rejeitam qualquer acesso direto sem sessão válida.
 
 ### Detalhes técnicos
-- Inserts diretos em `categories` e `products` (restaurant_id `72b11ac1-65c6-4bd4-a30c-10fd5ac904df`).
-- Geração de 15 imagens via `imagegen` em paralelo, upload via `lovable-assets`, gravando `image_url` em cada produto.
-- Delete da categoria "adicionais" e do produto "Misto".
-- Nenhuma mudança em código de frontend ou em outros restaurantes.
+- Migration: nova coluna `pin_hash`, `pin_failed_attempts`, `pin_locked_until` em `restaurants`; nova tabela `restaurant_sessions` (token de sessão httpOnly); nova `app_role` enum + `user_roles` + função `has_role`; revisão das policies de todas as tabelas.
+- Auth: ativar email/password + Google via `configure_social_auth`, ativar HIBP via `configure_auth`.
+- Server functions (`createServerFn`) para: `setRestaurantPin` (admin), `verifyPinAndIssueSession` (público), `requireRestaurantSession` (middleware nas escritas).
+- Rotas novas: `/{slug}/admin` (TanStack `$slug.admin.tsx`), `/auth` (login admin), `/_admin/*` (área protegida do admin master). Rota `/editar/$token` mantida só com gate de admin.
+- Migração suave: scripts gera PIN inicial aleatório pros restaurantes existentes e exibe pra você no painel.
 
-Confirma que posso restaurar exatamente assim? Se quiser manter o "Misto R$9" que está lá hoje, me avisa antes de aprovar.
+### O que **não** vai mudar
+- O cardápio público (`/point-do-gordinho` etc.) continua aberto, sem login — só o que está hoje.
+- O design e os componentes do painel do dono ficam iguais — só muda a porta de entrada.
+
+Posso seguir?
