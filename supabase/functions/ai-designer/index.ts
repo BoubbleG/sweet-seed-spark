@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,7 +12,36 @@ serve(async (req) => {
   }
 
   try {
-    const { image, extractedDesign } = await req.json()
+    const { image, extractedDesign, adminPasswordHash, sessionToken, restaurantId } = await req.json()
+
+    // === AUTORIZAÇÃO obrigatória ===
+    // Aceita: (1) hash da senha master do painel /admin
+    //         (2) token de sessão PIN do dono do restaurante
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const sb = createClient(supabaseUrl, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+
+    let authorized = false
+    if (adminPasswordHash) {
+      const { data } = await sb.rpc('verify_admin_password', { _password_hash: adminPasswordHash })
+      if (data === true) authorized = true
+    }
+    if (!authorized && sessionToken && restaurantId) {
+      const { data } = await sb.rpc('is_restaurant_session_valid', {
+        _token: sessionToken,
+        _restaurant_id: restaurantId,
+      })
+      if (data === true) authorized = true
+    }
+    if (!authorized) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     const apiKey = Deno.env.get('LOVABLE_API_KEY')
 
     let designSuggestion: any = {

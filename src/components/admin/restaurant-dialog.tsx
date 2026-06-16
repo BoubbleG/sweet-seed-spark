@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Sparkles, Wand2, Upload, ChevronRight, Store, Palette, Globe, Pipette } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { extractDetailedDesignFromImage } from "@/lib/color-extractor";
+import { getAiDesignerAuth } from "@/lib/ai-designer-auth";
 
 interface RestaurantDialogProps {
   restaurant?: Restaurant | null;
@@ -90,10 +91,12 @@ export function RestaurantDialog({ restaurant, open, onOpenChange }: RestaurantD
       });
       const base64Image = await base64Promise;
 
+      const auth = getAiDesignerAuth();
       const { data, error } = await supabase.functions.invoke('ai-designer', {
         body: { 
           image: base64Image,
-          extractedDesign: designDetails
+          extractedDesign: designDetails,
+          ...auth,
         }
       });
 

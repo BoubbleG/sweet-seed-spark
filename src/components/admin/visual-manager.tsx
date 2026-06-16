@@ -13,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Palette, Layout, Type, Upload, Trash2, Zap, Settings, Paintbrush, Monitor, Code, ChevronRight, Sparkles, Wand2, Pipette } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { extractDetailedDesignFromImage } from "@/lib/color-extractor";
+import { getAiDesignerAuth } from "@/lib/ai-designer-auth";
 
 interface VisualManagerProps {
   restaurant: Restaurant;
@@ -100,11 +101,14 @@ export function VisualManager({ restaurant }: VisualManagerProps) {
       });
       const base64Image = await base64Promise;
 
+      const auth = getAiDesignerAuth();
       const { data, error } = await supabase.functions.invoke('ai-designer', {
         body: { 
           image: base64Image,
           extractedDesign: designDetails,
-          currentStyle: formData.visual_style
+          currentStyle: formData.visual_style,
+          ...auth,
+          restaurantId: restaurant.id,
         }
       });
 

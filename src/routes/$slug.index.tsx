@@ -11,6 +11,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { CartDrawer } from "@/components/cart-drawer";
 import { motion } from "framer-motion";
 import { MixSelectorDialog } from "@/components/mix-selector-dialog";
+import { sanitizeCustomCss } from "@/lib/sanitize-css";
 
 
 
@@ -162,7 +163,7 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
       style={{ fontFamily: t.font, backgroundColor: t.background, color: t.text }}
     >
       {restaurant.custom_css && (
-        <style dangerouslySetInnerHTML={{ __html: restaurant.custom_css }} />
+        <style dangerouslySetInnerHTML={{ __html: sanitizeCustomCss(restaurant.custom_css) }} />
       )}
 
       {isPreview && (

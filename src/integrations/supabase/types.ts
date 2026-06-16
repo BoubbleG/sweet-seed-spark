@@ -641,6 +641,25 @@ export type Database = {
         Returns: undefined
       }
       cleanup_expired_pin_sessions: { Args: never; Returns: undefined }
+      delete_customer_profile: {
+        Args: { _phone: string; _restaurant_id: string; _session_token: string }
+        Returns: undefined
+      }
+      delete_restaurant_order: {
+        Args: { _order_id: string; _session_token: string }
+        Returns: undefined
+      }
+      find_customer_profile: {
+        Args: { _phone: string; _restaurant_id: string }
+        Returns: {
+          address: string
+          name: string
+          neighborhood: string
+          payment_method: string
+          phone: string
+          reference: string
+        }[]
+      }
       find_restaurant_by_edit_token: {
         Args: { _token: string }
         Returns: {
@@ -745,6 +764,16 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_latest_restaurant_snapshot: {
+        Args: { _restaurant_id: string; _session_token: string }
+        Returns: {
+          created_at: string
+          id: string
+          label: string
+          restaurant_id: string
+          scope: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -752,8 +781,52 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_pin_session_valid: {
+        Args: { _restaurant_id: string; _token: string }
+        Returns: boolean
+      }
+      is_restaurant_session_valid: {
+        Args: { _restaurant_id: string; _token: string }
+        Returns: boolean
+      }
+      list_restaurant_snapshots: {
+        Args: { _restaurant_id: string; _session_token: string }
+        Returns: {
+          created_at: string
+          id: string
+          label: string
+          restaurant_id: string
+          scope: string
+        }[]
+      }
+      record_restaurant_snapshot: {
+        Args: {
+          _label: string
+          _restaurant_id: string
+          _scope: string
+          _session_token: string
+          _snapshot: Json
+        }
+        Returns: string
+      }
       restore_restaurant_snapshot: {
         Args: { _snapshot_id: string }
+        Returns: undefined
+      }
+      restore_restaurant_snapshot_secure: {
+        Args: { _session_token: string; _snapshot_id: string }
+        Returns: undefined
+      }
+      upsert_customer_profile: {
+        Args: {
+          _address: string
+          _name: string
+          _neighborhood: string
+          _payment_method: string
+          _phone: string
+          _reference: string
+          _restaurant_id: string
+        }
         Returns: undefined
       }
       verify_admin_password: {
