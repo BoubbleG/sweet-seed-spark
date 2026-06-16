@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ModelosIndexRouteImport } from './routes/modelos.index'
 import { Route as ModelosSlugRouteImport } from './routes/modelos.$slug'
 import { Route as EditarTokenRouteImport } from './routes/editar.$token'
+import { Route as SlugAdminRouteImport } from './routes/$slug.admin'
 
 const ModelosRoute = ModelosRouteImport.update({
   id: '/modelos',
@@ -58,22 +59,29 @@ const EditarTokenRoute = EditarTokenRouteImport.update({
   path: '/editar/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SlugAdminRoute = SlugAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => SlugRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/$slug': typeof SlugRoute
+  '/$slug': typeof SlugRouteWithChildren
   '/admin': typeof AdminRoute
   '/modelo': typeof ModeloRoute
   '/modelos': typeof ModelosRouteWithChildren
+  '/$slug/admin': typeof SlugAdminRoute
   '/editar/$token': typeof EditarTokenRoute
   '/modelos/$slug': typeof ModelosSlugRoute
   '/modelos/': typeof ModelosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/$slug': typeof SlugRoute
+  '/$slug': typeof SlugRouteWithChildren
   '/admin': typeof AdminRoute
   '/modelo': typeof ModeloRoute
+  '/$slug/admin': typeof SlugAdminRoute
   '/editar/$token': typeof EditarTokenRoute
   '/modelos/$slug': typeof ModelosSlugRoute
   '/modelos': typeof ModelosIndexRoute
@@ -81,10 +89,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/$slug': typeof SlugRoute
+  '/$slug': typeof SlugRouteWithChildren
   '/admin': typeof AdminRoute
   '/modelo': typeof ModeloRoute
   '/modelos': typeof ModelosRouteWithChildren
+  '/$slug/admin': typeof SlugAdminRoute
   '/editar/$token': typeof EditarTokenRoute
   '/modelos/$slug': typeof ModelosSlugRoute
   '/modelos/': typeof ModelosIndexRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/modelo'
     | '/modelos'
+    | '/$slug/admin'
     | '/editar/$token'
     | '/modelos/$slug'
     | '/modelos/'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/$slug'
     | '/admin'
     | '/modelo'
+    | '/$slug/admin'
     | '/editar/$token'
     | '/modelos/$slug'
     | '/modelos'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/modelo'
     | '/modelos'
+    | '/$slug/admin'
     | '/editar/$token'
     | '/modelos/$slug'
     | '/modelos/'
@@ -123,7 +135,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  SlugRoute: typeof SlugRoute
+  SlugRoute: typeof SlugRouteWithChildren
   AdminRoute: typeof AdminRoute
   ModeloRoute: typeof ModeloRoute
   ModelosRoute: typeof ModelosRouteWithChildren
@@ -188,8 +200,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EditarTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$slug/admin': {
+      id: '/$slug/admin'
+      path: '/admin'
+      fullPath: '/$slug/admin'
+      preLoaderRoute: typeof SlugAdminRouteImport
+      parentRoute: typeof SlugRoute
+    }
   }
 }
+
+interface SlugRouteChildren {
+  SlugAdminRoute: typeof SlugAdminRoute
+}
+
+const SlugRouteChildren: SlugRouteChildren = {
+  SlugAdminRoute: SlugAdminRoute,
+}
+
+const SlugRouteWithChildren = SlugRoute._addFileChildren(SlugRouteChildren)
 
 interface ModelosRouteChildren {
   ModelosSlugRoute: typeof ModelosSlugRoute
@@ -206,7 +235,7 @@ const ModelosRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  SlugRoute: SlugRoute,
+  SlugRoute: SlugRouteWithChildren,
   AdminRoute: AdminRoute,
   ModeloRoute: ModeloRoute,
   ModelosRoute: ModelosRouteWithChildren,
