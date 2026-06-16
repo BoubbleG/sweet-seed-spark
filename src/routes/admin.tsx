@@ -426,6 +426,42 @@ function AdminDashboard() {
                             <RefreshCw className="w-3.5 h-3.5" />
                           </Button>
                         </div>
+                        {/* Painel do dono com PIN (novo, recomendado) */}
+                        <div className={`mb-2 flex items-center gap-2 p-2 pl-3 rounded-2xl border ${pinStatusMap[rest.id]?.has_pin ? 'bg-emerald-50 border-emerald-100' : 'bg-zinc-50 border-zinc-200'}`}>
+                          {pinStatusMap[rest.id]?.is_locked ? (
+                            <ShieldAlert className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                          ) : pinStatusMap[rest.id]?.has_pin ? (
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          ) : (
+                            <Shield className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          )}
+                          <span className={`text-[11px] font-medium truncate flex-1 min-w-0 ${pinStatusMap[rest.id]?.has_pin ? 'text-emerald-700' : 'text-zinc-500'}`}>
+                            {pinStatusMap[rest.id]?.is_locked
+                              ? 'Painel BLOQUEADO (15 min)'
+                              : pinStatusMap[rest.id]?.has_pin
+                                ? `/${rest.slug}/admin · PIN ativo`
+                                : `/${rest.slug}/admin · sem PIN`}
+                          </span>
+                          {pinStatusMap[rest.id]?.has_pin && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className={`h-7 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest shrink-0 ${copiedPinLinkId === rest.id ? 'bg-emerald-500 text-white hover:bg-emerald-500' : 'bg-white text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200'}`}
+                              onClick={() => copyPinLink(rest.slug, rest.id)}
+                            >
+                              {copiedPinLinkId === rest.id ? <><Check className="w-3 h-3 mr-1" />Copiado</> : 'Copiar link'}
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title={pinStatusMap[rest.id]?.has_pin ? 'Redefinir PIN' : 'Definir PIN'}
+                            className="h-7 w-7 p-0 rounded-xl shrink-0 text-zinc-700 hover:bg-zinc-200"
+                            onClick={() => setPinDialog({ rest, mode: pinStatusMap[rest.id]?.has_pin ? 'reset' : 'set' })}
+                          >
+                            <KeyRound className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
                         <div className="flex gap-2">
                           <Button 
                             variant="secondary" 
