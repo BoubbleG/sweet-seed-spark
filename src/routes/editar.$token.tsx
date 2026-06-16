@@ -82,7 +82,7 @@ function OwnerEditor() {
   return <OwnerShell restaurant={restaurant} />;
 }
 
-function OwnerShell({ restaurant }: { restaurant: Restaurant }) {
+export function OwnerShell({ restaurant }: { restaurant: Restaurant }) {
   const [screen, setScreen] = useState<Screen>("home");
 
   if (screen === "orders")
