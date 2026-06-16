@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { RestaurantPublicMenu } from "./$slug";
+import { RestaurantPublicMenu } from "./$slug.index";
 
 export const Route = createFileRoute("/modelo")({
   head: () => ({
