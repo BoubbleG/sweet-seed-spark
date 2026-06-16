@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut, Eye, LayoutDashboard, Share2, TrendingUp, Trash2, Link2, Check, KeyRound, RefreshCw, Pencil } from "lucide-react";
+import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut, Eye, LayoutDashboard, Share2, TrendingUp, Trash2, Link2, Check, KeyRound, RefreshCw, Pencil, Lock, Shield, ShieldCheck, ShieldAlert } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Restaurant } from "@/types";
 import { RestaurantDialog } from "@/components/admin/restaurant-dialog";
@@ -59,6 +59,9 @@ function AdminDashboard() {
   const [activeView, setActiveTab] = useState<'list' | 'menu' | 'visual' | 'preview'>(search.view || 'list');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copiedEditId, setCopiedEditId] = useState<string | null>(null);
+  const [copiedPinLinkId, setCopiedPinLinkId] = useState<string | null>(null);
+  const [pinStatusMap, setPinStatusMap] = useState<Record<string, { has_pin: boolean; is_locked: boolean }>>({});
+  const [pinDialog, setPinDialog] = useState<{ rest: Restaurant; mode: 'set' | 'reset' } | null>(null);
 
   async function copyShareLink(slug: string, id: string) {
     const url = `${window.location.origin}/${slug}`;
@@ -136,6 +139,15 @@ function AdminDashboard() {
           }
         }
         rows = rows.map((r) => ({ ...r, edit_token: tokenMap.get(r.id) }));
+        // Load PIN status for every restaurant
+        const { data: pinRows } = await sb.rpc("admin_list_pin_status", {
+          _password_hash: sessionHash,
+        });
+        const map: Record<string, { has_pin: boolean; is_locked: boolean }> = {};
+        for (const p of (pinRows ?? []) as Array<{ restaurant_id: string; has_pin: boolean; is_locked: boolean }>) {
+          map[p.restaurant_id] = { has_pin: p.has_pin, is_locked: p.is_locked };
+        }
+        setPinStatusMap(map);
       }
       setRestaurants(rows);
     } catch (error) {
@@ -143,6 +155,20 @@ function AdminDashboard() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  async function copyPinLink(slug: string, id: string) {
+    const url = `${window.location.origin}/${slug}/admin`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = url; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    setCopiedPinLinkId(id);
+    toast.success("Link do painel copiado!");
+    setTimeout(() => setCopiedPinLinkId(null), 2000);
   }
 
   useEffect(() => {
