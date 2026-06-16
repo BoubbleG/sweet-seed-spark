@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SectionShell, SectionCard, StickySaveBar, Field, Toggle } from "./shared";
 import { Phone, MapPin, Clock, Truck, AtSign, Store, CreditCard } from "lucide-react";
+import { recordSnapshot } from "@/lib/snapshots";
 
 export function OwnerInfoScreen({
   restaurant,
@@ -40,6 +41,7 @@ export function OwnerInfoScreen({
     }
     setSaving(true);
     setSaved(false);
+    await recordSnapshot(restaurant.id, "Alterou informações do restaurante", "info");
     const { error } = await supabase
       .from("restaurants")
       .update({

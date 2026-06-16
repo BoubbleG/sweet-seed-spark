@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { recordSnapshot } from "@/lib/snapshots";
 
 export function OwnerMenuScreen({
   restaurantId,
@@ -63,6 +64,7 @@ export function OwnerMenuScreen({
 
   const addCategory = useMutation({
     mutationFn: async (name: string) => {
+      await recordSnapshot(restaurantId, `Antes de criar categoria "${name.trim()}"`, "menu");
       const { error } = await supabase.from("categories").insert([
         {
           restaurant_id: restaurantId,
@@ -84,6 +86,7 @@ export function OwnerMenuScreen({
   const deleteCategory = async (id: string, name: string) => {
     if (!confirm(`Apagar a categoria "${name}"? Os pratos dela também serão apagados.`))
       return;
+    await recordSnapshot(restaurantId, `Antes de apagar categoria "${name}"`, "menu");
     const { error } = await supabase.from("categories").delete().eq("id", id);
     if (error) toast.error(error.message);
     else {
@@ -95,6 +98,7 @@ export function OwnerMenuScreen({
 
   const deleteProduct = async (id: string, name: string) => {
     if (!confirm(`Apagar o prato "${name}"?`)) return;
+    await recordSnapshot(restaurantId, `Antes de apagar prato "${name}"`, "menu");
     const { error } = await supabase.from("products").delete().eq("id", id);
     if (error) toast.error(error.message);
     else {
@@ -105,6 +109,11 @@ export function OwnerMenuScreen({
 
   const toggleAvailable = async (p: Product) => {
     const next = !(p.is_available !== false);
+    await recordSnapshot(
+      restaurantId,
+      `${next ? "Ativou" : "Desativou"} prato "${p.name}"`,
+      "menu",
+    );
     const { error } = await supabase
       .from("products")
       .update({ is_available: next })
@@ -118,6 +127,7 @@ export function OwnerMenuScreen({
     const idx = categories.findIndex((c) => c.id === cat.id);
     const swapIdx = idx + dir;
     if (swapIdx < 0 || swapIdx >= categories.length) return;
+    await recordSnapshot(restaurantId, `Reordenou categoria "${cat.name}"`, "menu");
     const other = categories[swapIdx];
     await supabase
       .from("categories")
