@@ -11,6 +11,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { CartDrawer } from "@/components/cart-drawer";
 import { motion } from "framer-motion";
 import { MixSelectorDialog } from "@/components/mix-selector-dialog";
+import { sanitizeCustomCss } from "@/lib/sanitize-css";
 
 
 
