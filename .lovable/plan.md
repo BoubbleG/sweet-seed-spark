@@ -1,44 +1,39 @@
-## Problema
+## Novo cardápio: Frango Assado Ponto Com
 
-As fotos atuais dos pastéis da Isas Lanches ficaram parecendo croquetes/empanadas empanadas (massa grossa e farelenta), não pastéis brasileiros de verdade. As referências enviadas mostram o estilo correto:
+Vou criar um restaurante novo no sistema com tudo do panfleto e gerar imagem pra cada item.
 
-- Massa **fina, lisa e bolhada** (bolhas de óleo características da fritura)
-- Cor **dourado clara**, translúcida nas bordas
-- Formato **retangular achatado**, tipo "travesseirinho"
-- Bordas com **frisado/zigue-zague** marcando o fechamento
-- Recheio aparece apenas quando o pastel é **cortado/partido ao meio**
+### Restaurante
+- **Nome**: Frango Assado Ponto Com
+- **Slug**: `frango-assado-ponto-com` (URL: `/frango-assado-ponto-com`)
+- **Tipo**: Churrasco / carnes assadas
+- **Descrição**: "Carnes assadas com sabor de churrasco de verdade!"
+- **Visual**: tema escuro com madeira queimada, dourado e laranja-fogo (combina com o panfleto)
+- **WhatsApp**: (62) 99459-7546 (principal) — segundo (62) 99343-8937 vai na descrição
+- **Endereço**: "Em frente ao Supermercado Família — aos domingos no antigo Bambuzal, saída pra Nova Fátima"
+- **Logo + banner**: gero a partir do panfleto
 
-## O que será feito
+### Categorias e produtos (10 itens, todos com imagem gerada)
 
-Regerar as 10 imagens dos produtos do cardápio de pastéis substituindo o prompt para refletir o estilo real:
+**Carnes Assadas**
+1. Panceta Crocante — a partir de R$ 35,00 — "Suculenta por dentro, crocante por fora"
+2. Pernil Suíno — a partir de R$ 35,00 — "Macio, temperado e assado na brasa"
+3. Costela Gaúcha 2kg — R$ 90,00 — "Defumada lentamente para um sabor incomparável"
+4. Costelinha de Porco Assada na Brasa — a partir de R$ 35,00 — "Assada na brasa até desmanchar de tão macia"
+5. Frango Assado na Brasa — R$ 50,00 — "Na brasa, dourado e suculento"
 
-1. Queijo
-2. Pizza
-3. Carne
-4. Bauru
-5. Frango
-6. Calabresa
-7. Carne com Queijo
-8. Frango com Catupiry
-9. Calabresa com Queijo
-10. Especial da Casa
+**Acompanhamentos** (usando tamanhos P=500g / M=1kg do sistema existente)
+6. Arroz Soltinho — 500g R$ 10,00 / 1kg R$ 15,00
+7. Feijão Tropeiro — 500g R$ 15,00 / 1kg R$ 20,00
 
-Para cada imagem usar prompt padronizado descrevendo:
-- "Pastel brasileiro frito retangular, massa fina lisa e bolhada (com bolhas características da fritura em óleo), bordas frisadas em zigue-zague, cor dourada clara"
-- "Cortado ao meio mostrando o recheio de [X]" (para os que mostram recheio) ou "inteiro empilhado sobre tábua de madeira" (para variar a composição)
-- Fotografia gastronômica profissional, luz natural quente, fundo de tábua de madeira rústica
+**Bebidas**
+8. Cerveja Lata — a partir de R$ 4,50
+9. Coca-Cola 2 Litros — R$ 16,00
+10. Água c/ ou sem gás 500ml — R$ 3,00
 
-Usar modelo `standard` de geração de imagem (mesma qualidade da rodada anterior).
+### Imagens
+10 imagens geradas com estilo fotografia gastronômica rústica (tábua de madeira, brasa, iluminação quente), enviadas via `lovable-assets` e salvas no `image_url` de cada produto. Também gero logo e banner pra cabeçalho.
 
-## Passos técnicos
-
-1. Gerar as 10 novas imagens em paralelo em `/tmp/`
-2. Subir cada uma para a CDN via `lovable-assets create` (substituindo os arquivos `src/assets/isas-pastel-*.jpg.asset.json`)
-3. Atualizar `image_url` de cada produto no banco (`products` da categoria Pastéis da Isas Lanches) com as novas URLs
-4. **Não** alterar nomes, preços nem descrições — apenas as imagens
-
-## O que NÃO será feito
-
-- Não mexer em outros restaurantes nem em outras categorias
-- Não alterar a lista de pastéis (já está correta da última rodada)
-- Não mexer em layout/visual do cardápio
+### Técnico
+- Migration cria registro em `restaurants`, `categories` e `products` (todas as tabelas já existem)
+- Não mexo em nenhum outro restaurante (Isas Lanches etc. ficam intactos)
+- Não mexo em código de UI — uso o template público existente em `/$slug`
