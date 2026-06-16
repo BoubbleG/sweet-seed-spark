@@ -193,6 +193,7 @@ function AdminDashboard() {
       }
       setIsFirstTime(false);
       setSessionHash(hash);
+      try { sessionStorage.setItem("admin_session_hash", hash); } catch {}
       setUnlocked(true);
       return;
     }
@@ -205,6 +206,7 @@ function AdminDashboard() {
     }
     if (ok) {
       setSessionHash(hash);
+      try { sessionStorage.setItem("admin_session_hash", hash); } catch {}
       setUnlocked(true);
     } else {
       setPwdError(true);
