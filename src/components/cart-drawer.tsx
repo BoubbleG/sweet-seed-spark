@@ -378,6 +378,19 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
                 </>
               ) : step === 2 ? (
                 <div className="space-y-5">
+                  {welcomeBack && (
+                    <div
+                      className="rounded-2xl p-3 flex items-center gap-2 text-sm font-bold animate-in fade-in"
+                      style={{
+                        backgroundColor: `${t.primary}15`,
+                        color: t.primary,
+                        border: `2px solid ${t.primary}40`,
+                      }}
+                    >
+                      <Sparkles className="w-4 h-4 shrink-0" />
+                      <span>Bem-vindo de volta, {welcomeBack.split(" ")[0]}! Seus dados foram preenchidos.</span>
+                    </div>
+                  )}
                   <BigField
                     icon={<User className="w-6 h-6" />}
                     label="Seu nome"
@@ -408,6 +421,16 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
                       style={{ backgroundColor: t.surface, color: t.text, border: `2px solid ${errors.phone ? '#f43f5e' : t.border}` }}
                     />
                   </BigField>
+                  {(customer.name || customer.address || customer.phone) && (
+                    <button
+                      type="button"
+                      onClick={forgetMe}
+                      className="text-xs underline mx-auto block"
+                      style={{ color: t.textMuted }}
+                    >
+                      Limpar meus dados salvos deste cardápio
+                    </button>
+                  )}
                 </div>
               ) : step === 3 ? (
                 <div className="space-y-5">
