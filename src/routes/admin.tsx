@@ -596,6 +596,138 @@ function AdminDashboard() {
         }} 
         restaurant={editingRestaurant} 
       />
+      <PinDialog
+        state={pinDialog}
+        sessionHash={sessionHash}
+        onClose={(refresh) => {
+          setPinDialog(null);
+          if (refresh) loadData();
+        }}
+      />
+    </div>
+  );
+}
+
+function PinDialog({
+  state,
+  sessionHash,
+  onClose,
+}: {
+  state: { rest: Restaurant; mode: 'set' | 'reset' } | null;
+  sessionHash: string | null;
+  onClose: (refresh?: boolean) => void;
+}) {
+  const [pin, setPin] = useState("");
+  const [pin2, setPin2] = useState("");
+  const [working, setWorking] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (state) { setPin(""); setPin2(""); setErr(null); }
+  }, [state]);
+
+  if (!state) return null;
+
+  async function save() {
+    if (!sessionHash) { toast.error("Sessão expirada"); return; }
+    if (!/^[0-9]{4,8}$/.test(pin)) { setErr("PIN deve ter 4 a 8 dígitos"); return; }
+    if (pin !== pin2) { setErr("Os PINs não coincidem"); return; }
+    setWorking(true); setErr(null);
+    const { error } = await sb.rpc("admin_set_restaurant_pin", {
+      _password_hash: sessionHash,
+      _restaurant_id: state!.rest.id,
+      _pin: pin,
+    });
+    setWorking(false);
+    if (error) { setErr(error.message); return; }
+    toast.success(`PIN definido. Compartilhe: /${state!.rest.slug}/admin`);
+    onClose(true);
+  }
+
+  async function clearPin() {
+    if (!sessionHash) return;
+    if (!confirm("Remover o PIN deixa o painel sem acesso até você definir um novo. Continuar?")) return;
+    setWorking(true);
+    const { error } = await sb.rpc("admin_clear_restaurant_pin", {
+      _password_hash: sessionHash,
+      _restaurant_id: state!.rest.id,
+    });
+    setWorking(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("PIN removido");
+    onClose(true);
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-zinc-900/60 backdrop-blur flex items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-zinc-900 text-white flex items-center justify-center">
+            <Lock className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-black text-zinc-900">
+              {state.mode === 'reset' ? 'Redefinir PIN' : 'Definir PIN'}
+            </h3>
+            <p className="text-xs text-zinc-500 truncate max-w-[220px]">{state.rest.name}</p>
+          </div>
+        </div>
+
+        <p className="text-xs text-zinc-500 mb-4">
+          O PIN é o que o dono vai digitar em <strong>/{state.rest.slug}/admin</strong> para entrar.
+        </p>
+
+        <div className="space-y-3">
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={8}
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+            placeholder="Novo PIN (4–8 dígitos)"
+            className="w-full h-12 px-4 rounded-xl border-2 border-zinc-200 focus:border-zinc-900 outline-none text-center text-lg font-black tracking-[0.4em]"
+          />
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={8}
+            value={pin2}
+            onChange={(e) => setPin2(e.target.value.replace(/\D/g, ""))}
+            placeholder="Confirme o PIN"
+            className="w-full h-12 px-4 rounded-xl border-2 border-zinc-200 focus:border-zinc-900 outline-none text-center text-lg font-black tracking-[0.4em]"
+          />
+          {err && <p className="text-xs text-rose-600 font-bold">{err}</p>}
+        </div>
+
+        <div className="flex gap-2 mt-5">
+          <button
+            onClick={() => onClose()}
+            disabled={working}
+            className="flex-1 h-11 rounded-xl bg-zinc-100 text-zinc-700 font-bold text-sm hover:bg-zinc-200"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={save}
+            disabled={working}
+            className="flex-1 h-11 rounded-xl bg-zinc-900 text-white font-black text-sm hover:bg-zinc-800 disabled:opacity-50"
+          >
+            {working ? '...' : 'Salvar PIN'}
+          </button>
+        </div>
+
+        {state.mode === 'reset' && (
+          <button
+            onClick={clearPin}
+            disabled={working}
+            className="w-full mt-3 h-10 rounded-xl text-rose-600 font-bold text-xs hover:bg-rose-50"
+          >
+            Remover PIN deste restaurante
+          </button>
+        )}
+      </div>
     </div>
   );
 }
