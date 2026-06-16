@@ -5,6 +5,7 @@ import { SectionShell } from "./shared";
 import { Tag, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
+import { recordSnapshot } from "@/lib/snapshots";
 
 export function OwnerPromoScreen({
   restaurantId,
@@ -74,6 +75,7 @@ function PromoRow({ product, onSaved }: { product: Product; onSaved: () => void 
     const p = next.price ?? price;
     const l = next.label ?? label;
     setSaving(true);
+    await recordSnapshot(product.restaurant_id, `Promoção de "${product.name}"`, "promo");
     const { error } = await supabase
       .from("products")
       .update({

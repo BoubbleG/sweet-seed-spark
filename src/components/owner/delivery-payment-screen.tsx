@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SectionShell, SectionCard, StickySaveBar, Field, Toggle } from "./shared";
 import { Truck, CreditCard } from "lucide-react";
+import { recordSnapshot } from "@/lib/snapshots";
 
 export function OwnerDeliveryPaymentScreen({
   restaurant,
@@ -40,6 +41,7 @@ export function OwnerDeliveryPaymentScreen({
     }
     setSaving(true);
     setSaved(false);
+    await recordSnapshot(restaurant.id, "Alterou entrega e pagamento", "delivery");
     const { error } = await supabase
       .from("restaurants")
       .update({

@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SectionShell, SectionCard, StickySaveBar } from "./shared";
 import { Image as ImageIcon, Upload, Trash2, Check } from "lucide-react";
+import { recordSnapshot } from "@/lib/snapshots";
 
 const COLORS = [
   { name: "Vermelho", value: "#ef4444" },
@@ -63,6 +64,7 @@ export function OwnerVisualScreen({
   const save = async () => {
     setSaving(true);
     setSaved(false);
+    await recordSnapshot(restaurant.id, "Alterou aparência (logo/capa/cor)", "visual");
     const { error } = await supabase
       .from("restaurants")
       .update({
