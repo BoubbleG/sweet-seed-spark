@@ -14,7 +14,7 @@ import { MixSelectorDialog } from "@/components/mix-selector-dialog";
 
 
 
-export const Route = createFileRoute("/$slug")({
+export const Route = createFileRoute("/$slug/")({
   head: ({ params }) => ({
     meta: [
       { title: `Cardápio Online - ${params.slug}` },
