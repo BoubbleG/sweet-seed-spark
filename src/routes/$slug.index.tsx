@@ -25,7 +25,7 @@ export const Route = createFileRoute("/$slug/")({
 });
 
 function RouteComponent() {
-  const params = useParams({ from: '/$slug' });
+  const params = useParams({ from: '/$slug/' });
   return <RestaurantPublicMenu slug={params?.slug} />;
 }
 
