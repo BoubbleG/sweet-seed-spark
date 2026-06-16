@@ -764,6 +764,16 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_latest_restaurant_snapshot: {
+        Args: { _restaurant_id: string; _session_token: string }
+        Returns: {
+          created_at: string
+          id: string
+          label: string
+          restaurant_id: string
+          scope: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -772,6 +782,10 @@ export type Database = {
         Returns: boolean
       }
       is_pin_session_valid: {
+        Args: { _restaurant_id: string; _token: string }
+        Returns: boolean
+      }
+      is_restaurant_session_valid: {
         Args: { _restaurant_id: string; _token: string }
         Returns: boolean
       }
