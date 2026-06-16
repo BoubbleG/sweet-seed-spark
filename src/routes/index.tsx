@@ -28,7 +28,7 @@ function LandingPage() {
   useEffect(() => {
     async function load() {
       const sb = createClient("https://mrjkizqyrmljtlvusgta.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yamtpenF5cm1sanRsdnVzZ3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NTY3NDAsImV4cCI6MjA5NjUzMjc0MH0.JTDSgPn20PipEOx6GIFtnXc-M2T2o3S4oM7t0saIwVY");
-      const { data } = await sb.from('restaurants').select('*');
+      const { data } = await sb.from('restaurants').select('*').eq('is_demo', false);
       if (data) setRestaurants(data as Restaurant[]);
     }
     load();

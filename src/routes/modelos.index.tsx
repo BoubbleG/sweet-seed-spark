@@ -19,25 +19,25 @@ export const Route = createFileRoute("/modelos/")({
 });
 
 const STYLE_META: Record<string, { tagline: string; icon: typeof Flame; vibe: string; accent: string }> = {
-  "point-do-gordinho": {
+  "modelo-point-do-gordinho": {
     tagline: "Hamburgueria descolada",
     icon: Flame,
     vibe: "Visual moderno com fotos grandes, ideal para fast-food e lanches.",
     accent: "from-orange-500 to-rose-500",
   },
-  "delicias-da-taty": {
+  "modelo-delicias-da-taty": {
     tagline: "Comida caseira",
     icon: UtensilsCrossed,
     vibe: "Layout aconchegante perfeito para marmitas, PFs e pratos do dia.",
     accent: "from-amber-500 to-orange-600",
   },
-  "cardapio-saudavel": {
+  "modelo-cardapio-saudavel": {
     tagline: "Saudável & Fit",
     icon: Leaf,
     vibe: "Estilo clean, fotos leves, ideal para bowls, saladas e sucos.",
     accent: "from-emerald-500 to-teal-500",
   },
-  "empadas-da-eva": {
+  "modelo-empadas-da-eva": {
     tagline: "Salgados artesanais",
     icon: Cookie,
     vibe: "Tema bordô elegante com dourado — perfeito para salgaderias, doceria e confeitaria.",
@@ -58,14 +58,17 @@ function ModelosPage() {
         "https://mrjkizqyrmljtlvusgta.supabase.co",
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yamtpenF5cm1sanRsdnVzZ3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NTY3NDAsImV4cCI6MjA5NjUzMjc0MH0.JTDSgPn20PipEOx6GIFtnXc-M2T2o3S4oM7t0saIwVY"
       );
-      const { data } = await sb.from("restaurants").select("*");
+      const { data } = await sb
+        .from("restaurants")
+        .select("*")
+        .eq("is_demo", true);
       if (data) setRestaurants(data as Restaurant[]);
     }
     load();
   }, []);
 
   async function copyLink(slug: string) {
-    const url = `${PUBLISHED_URL}/${slug}`;
+    const url = `${PUBLISHED_URL}/modelos/${slug}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopiedSlug(slug);
@@ -135,7 +138,7 @@ function ModelosPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {restaurants.map((rest) => {
-              const url = `${PUBLISHED_URL}/${rest.slug}`;
+              const url = `${PUBLISHED_URL}/modelos/${rest.slug}`;
               const isCopied = copiedSlug === rest.slug;
               return (
                 <div
@@ -169,7 +172,7 @@ function ModelosPage() {
               accent: "from-zinc-700 to-zinc-900",
             };
             const Icon = meta.icon;
-            const url = `${PUBLISHED_URL}/${rest.slug}`;
+            const url = `${PUBLISHED_URL}/modelos/${rest.slug}`;
             const isCopied = copiedSlug === rest.slug;
             return (
               <motion.div

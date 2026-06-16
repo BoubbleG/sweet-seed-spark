@@ -8,5 +8,5 @@ export const Route = createFileRoute("/modelo")({
       { name: "description", content: "Preview de demonstração de como seu cardápio digital pode ficar." },
     ],
   }),
-  component: () => <RestaurantPublicMenu slug="delicias-da-taty" isPreview />,
+  component: () => <RestaurantPublicMenu slug="modelo-delicias-da-taty" isPreview />,
 });

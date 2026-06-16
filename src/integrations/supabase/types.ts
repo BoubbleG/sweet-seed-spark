@@ -467,6 +467,7 @@ export type Database = {
           header_style: string | null
           id: string
           instagram: string | null
+          is_demo: boolean
           logo_url: string | null
           min_order_for_free_delivery: number | null
           name: string
@@ -509,6 +510,7 @@ export type Database = {
           header_style?: string | null
           id?: string
           instagram?: string | null
+          is_demo?: boolean
           logo_url?: string | null
           min_order_for_free_delivery?: number | null
           name: string
@@ -551,6 +553,7 @@ export type Database = {
           header_style?: string | null
           id?: string
           instagram?: string | null
+          is_demo?: boolean
           logo_url?: string | null
           min_order_for_free_delivery?: number | null
           name?: string
@@ -661,6 +664,7 @@ export type Database = {
           header_style: string | null
           id: string
           instagram: string | null
+          is_demo: boolean
           logo_url: string | null
           min_order_for_free_delivery: number | null
           name: string
@@ -712,6 +716,7 @@ export type Database = {
           header_style: string | null
           id: string
           instagram: string | null
+          is_demo: boolean
           logo_url: string | null
           min_order_for_free_delivery: number | null
           name: string
