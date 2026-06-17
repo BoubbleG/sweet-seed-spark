@@ -917,8 +917,8 @@ export type Database = {
           _totals: Json
         }
         Returns: {
-          id: string
-          order_number: number
+          order_id: string
+          order_no: number
         }[]
       }
       record_restaurant_snapshot: {

@@ -57,11 +57,12 @@ export async function createOrder(params: {
   }
 
   const row: any = Array.isArray(data) ? data[0] : data;
-  if (!row?.id) return null;
+  const newId = row?.order_id ?? row?.id;
+  if (!newId) return null;
 
   return {
-    id: row.id,
-    order_number: row.order_number,
+    id: newId,
+    order_number: row.order_no ?? row.order_number,
     restaurant_id: restaurantId,
     customer_name: customer.name,
     status: "novo",
