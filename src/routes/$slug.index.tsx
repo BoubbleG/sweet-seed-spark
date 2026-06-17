@@ -176,7 +176,26 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
     );
   }
 
-  const t = buildMenuTheme(restaurant);
+  const t = isDual
+    ? (mode === 'acai'
+        ? buildMenuTheme({
+            background_color: '#1E0B2E',
+            primary_color: '#A855F7',
+            button_color: '#8B5CF6',
+            text_color: '#F5F0FF',
+            font_family: restaurant.font_family,
+          })
+        : buildMenuTheme({
+            background_color: '#1A0F1F',
+            primary_color: '#FF6B1A',
+            button_color: '#FFC107',
+            text_color: '#FFF6E5',
+            font_family: restaurant.font_family,
+          }))
+    : buildMenuTheme(restaurant);
+  const visibleCategories = visibleCategoryIds
+    ? (menu?.categories || []).filter((c) => visibleCategoryIds.has(c.id))
+    : (menu?.categories || []);
   const cartCount = items.reduce((acc, i) => acc + i.quantity, 0);
   const deliveryLabel = restaurant.delivery_fee > 0
     ? `Entrega ${formatCurrency(restaurant.delivery_fee)}`
@@ -246,11 +265,52 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
         </div>
       )}
 
+      {/* Mode switcher: Lanches × Açaí */}
+      {isDual && (
+        <div className="px-5 sm:px-6 mt-5">
+          <div
+            role="tablist"
+            aria-label="Tipo de cardápio"
+            className="relative grid grid-cols-2 p-1.5 rounded-full shadow-lg backdrop-blur"
+            style={{ backgroundColor: t.surface, border: `1px solid ${t.border}` }}
+          >
+            {(['lanches', 'acai'] as const).map((m) => {
+              const active = mode === m;
+              const label = m === 'lanches' ? 'Lanches' : 'Açaí';
+              const Icon = m === 'lanches' ? Sandwich : IceCream;
+              const activeBg = m === 'lanches' ? '#FF6B1A' : '#A855F7';
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setMode(m)}
+                  className="relative z-10 h-12 rounded-full flex items-center justify-center gap-2 text-sm font-black tracking-wide transition-colors"
+                  style={{ color: active ? '#fff' : t.textMuted }}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="mode-pill"
+                      transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                      className="absolute inset-0 rounded-full shadow-md -z-10"
+                      style={{ backgroundColor: activeBg }}
+                    />
+                  )}
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Categories pills */}
-      {restaurant.show_categories !== false && menu?.categories && menu.categories.length > 0 && (
+      {restaurant.show_categories !== false && visibleCategories.length > 0 && (
         <nav aria-label="Categorias" className="mt-6">
           <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-5 sm:px-6 pb-1">
-            {menu.categories.map(cat => {
+            {visibleCategories.map(cat => {
               const isActive = activeCategory === cat.id;
               return (
                 <button
