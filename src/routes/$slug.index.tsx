@@ -689,23 +689,27 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
       />
 
       <AcaiBuilderDialog
-        open={acaiBuilderOpen}
-        onOpenChange={setAcaiBuilderOpen}
+        open={!!acaiBuilderProduct}
+        onOpenChange={(o) => { if (!o) setAcaiBuilderProduct(null); }}
+        productName={acaiBuilderProduct?.name || 'Copo de Açaí'}
+        price={Number(
+          acaiBuilderProduct?.is_on_promo && acaiBuilderProduct?.promo_price != null
+            ? acaiBuilderProduct.promo_price
+            : acaiBuilderProduct?.price ?? 15
+        )}
         onConfirm={({ mix1, mix2 }) => {
+          if (!acaiBuilderProduct) return;
           const parts: string[] = [];
           if (mix1.length) parts.push(`Mix 1: ${mix1.join(', ')}`);
           if (mix2.length) parts.push(`Mix 2: ${mix2.join(', ')}`);
           const notes = parts.length ? parts.join(' · ') : 'Sem complementos';
+          const finalPrice = Number(
+            acaiBuilderProduct.is_on_promo && acaiBuilderProduct.promo_price != null
+              ? acaiBuilderProduct.promo_price
+              : acaiBuilderProduct.price
+          );
           addItem(
-            {
-              id: 'acai-monte-seu-copo',
-              name: 'Copo de Açaí 400ml (montado)',
-              price: 15,
-              description: '',
-              image_url: null,
-              category_id: null,
-              restaurant_id: restaurant.id,
-            } as any,
+            { ...acaiBuilderProduct, price: finalPrice },
             { notes }
           );
         }}
