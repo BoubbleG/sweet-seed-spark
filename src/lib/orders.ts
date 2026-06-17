@@ -62,7 +62,7 @@ export async function createOrder(params: {
 
   return {
     id: newId,
-    order_number: row.order_number,
+    order_number: row.order_no ?? row.order_number,
     restaurant_id: restaurantId,
     customer_name: customer.name,
     status: "novo",
