@@ -619,6 +619,199 @@ export function OwnerProductSheet({
               </div>
             )}
           </div>
+
+          {/* Personalizações: grupos de opções */}
+          <div className="rounded-2xl border border-violet-200 bg-violet-50/40 p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-bold text-zinc-900 flex items-center gap-1.5">
+                  <ListPlus className="w-4 h-4 text-violet-600" />
+                  Personalizações
+                </p>
+                <p className="text-xs text-zinc-500">
+                  Adicionais, sabores, "monte seu pedido", ponto da carne…
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setGroups((gs) => [
+                    ...gs,
+                    { name: "", min_select: 0, max_select: 1, pricing_mode: "free", options: [] },
+                  ])
+                }
+                className="h-10 px-3 rounded-xl bg-violet-600 text-white text-xs font-black flex items-center gap-1.5 shrink-0"
+              >
+                <Plus className="w-4 h-4" /> Grupo
+              </button>
+            </div>
+
+            {loadingGroups && (
+              <p className="text-xs text-zinc-500 italic">Carregando…</p>
+            )}
+
+            {groups.length === 0 && !loadingGroups && (
+              <p className="text-xs text-zinc-500 italic">
+                Nenhum grupo. Toque em <b>Grupo</b> para adicionar (ex.: "Mix 1", "Adicionais").
+              </p>
+            )}
+
+            <div className="space-y-3">
+              {groups.map((g, gi) => (
+                <div key={gi} className="bg-white rounded-xl border border-zinc-200 p-3 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={g.name}
+                      onChange={(e) =>
+                        setGroups((gs) => gs.map((x, i) => (i === gi ? { ...x, name: e.target.value } : x)))
+                      }
+                      placeholder="Nome do grupo (ex.: Mix 1, Adicionais)"
+                      className="flex-1 h-11 px-3 rounded-lg border border-zinc-200 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setGroups((gs) => gs.filter((_, i) => i !== gi))}
+                      className="h-11 w-11 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center"
+                      aria-label="Remover grupo"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-zinc-600 mb-1">Mín</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={g.min_select}
+                        onChange={(e) =>
+                          setGroups((gs) =>
+                            gs.map((x, i) => (i === gi ? { ...x, min_select: Number(e.target.value) } : x))
+                          )
+                        }
+                        className="w-full h-10 px-2 rounded-lg border border-zinc-200 text-sm font-bold text-center"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-zinc-600 mb-1">Máx</label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={g.max_select}
+                        onChange={(e) =>
+                          setGroups((gs) =>
+                            gs.map((x, i) => (i === gi ? { ...x, max_select: Number(e.target.value) } : x))
+                          )
+                        }
+                        className="w-full h-10 px-2 rounded-lg border border-zinc-200 text-sm font-bold text-center"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-zinc-600 mb-1">Preço</label>
+                      <select
+                        value={g.pricing_mode}
+                        onChange={(e) =>
+                          setGroups((gs) =>
+                            gs.map((x, i) =>
+                              i === gi ? { ...x, pricing_mode: e.target.value as OptionPricingMode } : x
+                            )
+                          )
+                        }
+                        className="w-full h-10 px-2 rounded-lg border border-zinc-200 text-xs font-bold bg-white"
+                      >
+                        <option value="free">Grátis</option>
+                        <option value="per_option">Soma cada</option>
+                        <option value="most_expensive">Mais caro</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {g.options.map((o, oi) => (
+                      <div key={oi} className="flex items-center gap-2">
+                        <input
+                          value={o.name}
+                          onChange={(e) =>
+                            setGroups((gs) =>
+                              gs.map((x, i) =>
+                                i === gi
+                                  ? {
+                                      ...x,
+                                      options: x.options.map((y, j) =>
+                                        j === oi ? { ...y, name: e.target.value } : y
+                                      ),
+                                    }
+                                  : x
+                              )
+                            )
+                          }
+                          placeholder="Nome da opção"
+                          className="flex-1 h-10 px-3 rounded-lg border border-zinc-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500"
+                        />
+                        {g.pricing_mode !== "free" && (
+                          <div className="relative w-24">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-400 text-xs font-bold">
+                              R$
+                            </span>
+                            <input
+                              inputMode="decimal"
+                              value={o.extra_price}
+                              onChange={(e) =>
+                                setGroups((gs) =>
+                                  gs.map((x, i) =>
+                                    i === gi
+                                      ? {
+                                          ...x,
+                                          options: x.options.map((y, j) =>
+                                            j === oi ? { ...y, extra_price: e.target.value } : y
+                                          ),
+                                        }
+                                      : x
+                                  )
+                                )
+                              }
+                              placeholder="0,00"
+                              className="w-full h-10 pl-8 pr-2 rounded-lg border border-zinc-200 text-sm font-bold text-right"
+                            />
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setGroups((gs) =>
+                              gs.map((x, i) =>
+                                i === gi ? { ...x, options: x.options.filter((_, j) => j !== oi) } : x
+                              )
+                            )
+                          }
+                          className="h-10 w-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0"
+                          aria-label="Remover opção"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setGroups((gs) =>
+                          gs.map((x, i) =>
+                            i === gi
+                              ? { ...x, options: [...x.options, { name: "", extra_price: "0" }] }
+                              : x
+                          )
+                        )
+                      }
+                      className="w-full h-10 rounded-lg bg-zinc-100 text-zinc-700 text-xs font-bold flex items-center justify-center gap-1.5"
+                    >
+                      <Plus className="w-4 h-4" /> Adicionar opção
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="border-t border-zinc-200 p-4 bg-white">
