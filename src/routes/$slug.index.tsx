@@ -592,6 +592,10 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
                         </div>
                         <button
                           onClick={() => {
+                            if (prod.option_groups && prod.option_groups.length > 0) {
+                              setBuilderProduct(prod);
+                              return;
+                            }
                             if (isAcaiProduct(prod)) {
                               setAcaiBuilderProduct(prod);
                               return;
