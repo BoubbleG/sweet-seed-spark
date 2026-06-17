@@ -48,14 +48,40 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
   const menuRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
+  // Dual-mode (Lanches × Açaí) — só ativo no slug do Expresso
+  const isDual = slug === 'expresso-do-lanche-acai';
+  const [mode, setMode] = useState<'lanches' | 'acai'>('lanches');
+  useEffect(() => {
+    if (!isDual) return;
+    try {
+      const saved = sessionStorage.getItem('expresso-mode');
+      if (saved === 'acai' || saved === 'lanches') setMode(saved);
+    } catch {}
+  }, [isDual]);
+  useEffect(() => {
+    if (!isDual) return;
+    try { sessionStorage.setItem('expresso-mode', mode); } catch {}
+  }, [mode, isDual]);
+
+  const isAcaiCategory = (name: string) => /a[çc]a[ií]/i.test(name);
+  const visibleCategoryIds = useMemo(() => {
+    if (!isDual || !menu?.categories) return null;
+    const filtered = menu.categories.filter((c) =>
+      mode === 'acai' ? isAcaiCategory(c.name) : !isAcaiCategory(c.name)
+    );
+    return new Set(filtered.map((c) => c.id));
+  }, [isDual, menu?.categories, mode]);
+
   const filteredProducts = useMemo(() => {
     if (!menu?.products) return [];
-    if (!searchQuery) return menu.products;
-    return menu.products.filter(p => 
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    let base = menu.products;
+    if (visibleCategoryIds) base = base.filter((p) => p.category_id && visibleCategoryIds.has(p.category_id));
+    if (!searchQuery) return base;
+    return base.filter(p =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.description?.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [menu?.products, searchQuery]);
+  }, [menu?.products, searchQuery, visibleCategoryIds]);
 
   const promoProducts = useMemo(
     () =>
