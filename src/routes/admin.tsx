@@ -11,6 +11,7 @@ import { VisualManager } from "@/components/admin/visual-manager";
 import { motion, AnimatePresence } from "framer-motion";
 import { sha256Hex } from "@/lib/hash";
 import { toast } from "sonner";
+import { adminBypassPin } from "@/lib/admin-panel.functions";
 
 const SUPABASE_URL = "https://mrjkizqyrmljtlvusgta.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yamtpenF5cm1sanRsdnVzZ3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NTY3NDAsImV4cCI6MjA5NjUzMjc0MH0.JTDSgPn20PipEOx6GIFtnXc-M2T2o3S4oM7t0saIwVY";
