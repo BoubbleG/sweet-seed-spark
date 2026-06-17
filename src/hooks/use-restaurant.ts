@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Restaurant, Category, Product, ProductOptionGroup, ProductOption } from '@/types';
+import { RESTAURANT_COLUMNS } from '@/lib/restaurant-columns';
 
 export function useRestaurant(slug: string) {
   return useQuery({
@@ -8,7 +9,7 @@ export function useRestaurant(slug: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('restaurants')
-        .select('*')
+        .select(RESTAURANT_COLUMNS)
         .eq('slug', slug)
         .single();
 
