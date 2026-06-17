@@ -13,6 +13,11 @@ export interface CustomerInfo {
   orderType?: "delivery" | "pickup";
 }
 
+function pinToken(slug: string): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(`pin_session:${slug}`);
+}
+
 export async function createOrder(params: {
   restaurantId: string;
   items: CartItem[];
