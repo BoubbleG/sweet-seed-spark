@@ -40,7 +40,7 @@ function SlugAdmin() {
     refetchOnWindowFocus: false,
   });
 
-  const pinRequired = !!publicRestaurant?.pin_hash;
+  const pinRequired = !!(publicRestaurant as (Restaurant & { pin_hash?: string | null }) | null)?.pin_hash;
 
   const { data: restaurant, isLoading, isError, error } = useQuery({
     queryKey: ["restaurant-by-pin-session", slug, token],
