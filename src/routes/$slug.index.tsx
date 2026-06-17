@@ -6,10 +6,10 @@ import { formatCurrency } from "@/lib/utils";
 import { buildMenuTheme } from "@/lib/theme";
 import { ShoppingCart, Plus, Search, Menu as MenuIcon, Package, Home as HomeIcon } from "lucide-react";
 import type { ProductSize } from "@/types";
-import { Sparkles, Tag, Flame } from "lucide-react";
+import { Sparkles, Tag, Flame, Sandwich, IceCream } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { CartDrawer } from "@/components/cart-drawer";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { MixSelectorDialog } from "@/components/mix-selector-dialog";
 import { sanitizeCustomCss } from "@/lib/sanitize-css";
 
