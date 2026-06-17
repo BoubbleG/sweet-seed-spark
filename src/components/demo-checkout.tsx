@@ -8,7 +8,7 @@ import {
 
 /* ============ DATA ============ */
 
-type Item = { id: string; name: string; desc: string; price: number; img: string; tag?: string };
+type Item = { id: string; name: string; desc: string; price: number; img: string; tag?: string; notes?: string };
 const CATS = [
   { id: "burgers", label: "Hambúrgueres", icon: Flame },
   { id: "pizzas", label: "Pizzas", icon: UtensilsCrossed },
