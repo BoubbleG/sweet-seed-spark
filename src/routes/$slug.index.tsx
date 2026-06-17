@@ -6,10 +6,10 @@ import { formatCurrency } from "@/lib/utils";
 import { buildMenuTheme } from "@/lib/theme";
 import { ShoppingCart, Plus, Search, Menu as MenuIcon, Package, Home as HomeIcon } from "lucide-react";
 import type { ProductSize } from "@/types";
-import { Sparkles, Tag, Flame } from "lucide-react";
+import { Sparkles, Tag, Flame, Sandwich, IceCream } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { CartDrawer } from "@/components/cart-drawer";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { MixSelectorDialog } from "@/components/mix-selector-dialog";
 import { sanitizeCustomCss } from "@/lib/sanitize-css";
 
@@ -48,14 +48,40 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
   const menuRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
+  // Dual-mode (Lanches × Açaí) — só ativo no slug do Expresso
+  const isDual = slug === 'expresso-do-lanche-acai';
+  const [mode, setMode] = useState<'lanches' | 'acai'>('lanches');
+  useEffect(() => {
+    if (!isDual) return;
+    try {
+      const saved = sessionStorage.getItem('expresso-mode');
+      if (saved === 'acai' || saved === 'lanches') setMode(saved);
+    } catch {}
+  }, [isDual]);
+  useEffect(() => {
+    if (!isDual) return;
+    try { sessionStorage.setItem('expresso-mode', mode); } catch {}
+  }, [mode, isDual]);
+
+  const isAcaiCategory = (name: string) => /a[çc]a[ií]/i.test(name);
+  const visibleCategoryIds = useMemo(() => {
+    if (!isDual || !menu?.categories) return null;
+    const filtered = menu.categories.filter((c) =>
+      mode === 'acai' ? isAcaiCategory(c.name) : !isAcaiCategory(c.name)
+    );
+    return new Set(filtered.map((c) => c.id));
+  }, [isDual, menu?.categories, mode]);
+
   const filteredProducts = useMemo(() => {
     if (!menu?.products) return [];
-    if (!searchQuery) return menu.products;
-    return menu.products.filter(p => 
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    let base = menu.products;
+    if (visibleCategoryIds) base = base.filter((p) => p.category_id && visibleCategoryIds.has(p.category_id));
+    if (!searchQuery) return base;
+    return base.filter(p =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.description?.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [menu?.products, searchQuery]);
+  }, [menu?.products, searchQuery, visibleCategoryIds]);
 
   const promoProducts = useMemo(
     () =>
@@ -150,7 +176,26 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
     );
   }
 
-  const t = buildMenuTheme(restaurant);
+  const t = isDual
+    ? (mode === 'acai'
+        ? buildMenuTheme({
+            background_color: '#1E0B2E',
+            primary_color: '#A855F7',
+            button_color: '#8B5CF6',
+            text_color: '#F5F0FF',
+            font_family: restaurant.font_family,
+          })
+        : buildMenuTheme({
+            background_color: '#1A0F1F',
+            primary_color: '#FF6B1A',
+            button_color: '#FFC107',
+            text_color: '#FFF6E5',
+            font_family: restaurant.font_family,
+          }))
+    : buildMenuTheme(restaurant);
+  const visibleCategories = visibleCategoryIds
+    ? (menu?.categories || []).filter((c) => visibleCategoryIds.has(c.id))
+    : (menu?.categories || []);
   const cartCount = items.reduce((acc, i) => acc + i.quantity, 0);
   const deliveryLabel = restaurant.delivery_fee > 0
     ? `Entrega ${formatCurrency(restaurant.delivery_fee)}`
@@ -220,11 +265,52 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
         </div>
       )}
 
+      {/* Mode switcher: Lanches × Açaí */}
+      {isDual && (
+        <div className="px-5 sm:px-6 mt-5">
+          <div
+            role="tablist"
+            aria-label="Tipo de cardápio"
+            className="relative grid grid-cols-2 p-1.5 rounded-full shadow-lg backdrop-blur"
+            style={{ backgroundColor: t.surface, border: `1px solid ${t.border}` }}
+          >
+            {(['lanches', 'acai'] as const).map((m) => {
+              const active = mode === m;
+              const label = m === 'lanches' ? 'Lanches' : 'Açaí';
+              const Icon = m === 'lanches' ? Sandwich : IceCream;
+              const activeBg = m === 'lanches' ? '#FF6B1A' : '#A855F7';
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setMode(m)}
+                  className="relative z-10 h-12 rounded-full flex items-center justify-center gap-2 text-sm font-black tracking-wide transition-colors"
+                  style={{ color: active ? '#fff' : t.textMuted }}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="mode-pill"
+                      transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                      className="absolute inset-0 rounded-full shadow-md -z-10"
+                      style={{ backgroundColor: activeBg }}
+                    />
+                  )}
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Categories pills */}
-      {restaurant.show_categories !== false && menu?.categories && menu.categories.length > 0 && (
+      {restaurant.show_categories !== false && visibleCategories.length > 0 && (
         <nav aria-label="Categorias" className="mt-6">
           <div className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-5 sm:px-6 pb-1">
-            {menu.categories.map(cat => {
+            {visibleCategories.map(cat => {
               const isActive = activeCategory === cat.id;
               return (
                 <button
@@ -274,7 +360,16 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
       )}
 
       {/* Menu */}
-      <main ref={menuRef} className="px-5 sm:px-6 mt-8 space-y-10">
+      <main ref={menuRef} className="px-5 sm:px-6 mt-8">
+      <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={isDual ? mode : 'single'}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.25 }}
+        className="space-y-10"
+      >
         {!searchQuery && promoProducts.length > 0 && (
           <section aria-label="Promoções" className="-mx-5 sm:-mx-6">
             <div
@@ -375,7 +470,7 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
           </section>
         )}
 
-        {menu?.categories.map(cat => {
+        {visibleCategories.map(cat => {
           const prods = filteredProducts.filter(p => p.category_id === cat.id);
           if (prods.length === 0) return null;
           return (
@@ -514,6 +609,8 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
             <p className="text-sm font-medium">Nenhum item encontrado para "{searchQuery}".</p>
           </div>
         )}
+      </motion.div>
+      </AnimatePresence>
       </main>
 
       {/* Bottom tab bar */}
