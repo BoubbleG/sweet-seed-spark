@@ -12,6 +12,7 @@ import { CartDrawer } from "@/components/cart-drawer";
 import { motion, AnimatePresence } from "framer-motion";
 import { MixSelectorDialog } from "@/components/mix-selector-dialog";
 import { AcaiBuilderDialog } from "@/components/acai-builder-dialog";
+import { ProductBuilderDialog } from "@/components/product-builder-dialog";
 import { sanitizeCustomCss } from "@/lib/sanitize-css";
 
 
@@ -46,6 +47,7 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
     price: number;
   }>({ open: false, product: null, size: null, price: 0 });
   const [acaiBuilderProduct, setAcaiBuilderProduct] = useState<any | null>(null);
+  const [builderProduct, setBuilderProduct] = useState<any | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -590,6 +592,10 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
                         </div>
                         <button
                           onClick={() => {
+                            if (prod.option_groups && prod.option_groups.length > 0) {
+                              setBuilderProduct(prod);
+                              return;
+                            }
                             if (isAcaiProduct(prod)) {
                               setAcaiBuilderProduct(prod);
                               return;
@@ -722,6 +728,25 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
           addItem(
             { ...acaiBuilderProduct, price: finalPrice },
             { notes }
+          );
+        }}
+      />
+
+      <ProductBuilderDialog
+        open={!!builderProduct}
+        onOpenChange={(o) => { if (!o) setBuilderProduct(null); }}
+        product={builderProduct}
+        basePrice={Number(
+          builderProduct?.is_on_promo && builderProduct?.promo_price != null
+            ? builderProduct.promo_price
+            : builderProduct?.price ?? 0
+        )}
+        accent={t.primary}
+        onConfirm={({ notes, finalPrice, quantity }) => {
+          if (!builderProduct) return;
+          addItem(
+            { ...builderProduct, price: finalPrice },
+            { notes, quantity }
           );
         }}
       />

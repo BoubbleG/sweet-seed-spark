@@ -247,6 +247,91 @@ export type Database = {
           },
         ]
       }
+      product_option_groups: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          max_select: number
+          min_select: number
+          name: string
+          pricing_mode: Database["public"]["Enums"]["option_pricing_mode"]
+          product_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          max_select?: number
+          min_select?: number
+          name: string
+          pricing_mode?: Database["public"]["Enums"]["option_pricing_mode"]
+          product_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          max_select?: number
+          min_select?: number
+          name?: string
+          pricing_mode?: Database["public"]["Enums"]["option_pricing_mode"]
+          product_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_option_groups_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_options: {
+        Row: {
+          created_at: string
+          display_order: number
+          extra_price: number
+          group_id: string
+          id: string
+          is_available: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          extra_price?: number
+          group_id: string
+          id?: string
+          is_available?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          extra_price?: number
+          group_id?: string
+          id?: string
+          is_available?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_options_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "product_option_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category_id: string
@@ -851,6 +936,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      option_pricing_mode: "free" | "per_option" | "most_expensive"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -979,6 +1065,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      option_pricing_mode: ["free", "per_option", "most_expensive"],
     },
   },
 } as const

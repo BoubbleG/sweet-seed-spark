@@ -79,6 +79,29 @@ export interface Product {
   price_m?: number | null;
   price_g?: number | null;
   sides_note?: string | null;
+  option_groups?: ProductOptionGroup[];
+}
+
+export type OptionPricingMode = 'free' | 'per_option' | 'most_expensive';
+
+export interface ProductOption {
+  id: string;
+  group_id: string;
+  name: string;
+  extra_price: number;
+  is_available: boolean;
+  display_order: number;
+}
+
+export interface ProductOptionGroup {
+  id: string;
+  product_id: string;
+  name: string;
+  min_select: number;
+  max_select: number;
+  pricing_mode: OptionPricingMode;
+  display_order: number;
+  options: ProductOption[];
 }
 
 export type ProductSize = "P" | "M" | "G";

@@ -7,9 +7,23 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Category, Product } from "@/types";
+import { Category, Product, OptionPricingMode } from "@/types";
 import { toast } from "sonner";
-import { Sparkles, X, ImagePlus, Loader2, Trash2 } from "lucide-react";
+import { Sparkles, X, ImagePlus, Loader2, Trash2, Plus, ListPlus } from "lucide-react";
+
+type DraftOption = {
+  id?: string;
+  name: string;
+  extra_price: string; // string para input controlado
+};
+type DraftGroup = {
+  id?: string;
+  name: string;
+  min_select: number;
+  max_select: number;
+  pricing_mode: OptionPricingMode;
+  options: DraftOption[];
+};
 
 export function OwnerProductSheet({
   open,
@@ -28,6 +42,8 @@ export function OwnerProductSheet({
 }) {
   const qc = useQueryClient();
   const [uploading, setUploading] = useState(false);
+  const [groups, setGroups] = useState<DraftGroup[]>([]);
+  const [loadingGroups, setLoadingGroups] = useState(false);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -84,6 +100,134 @@ export function OwnerProductSheet({
     }
   }, [open, product, defaultCategoryId, categories]);
 
+  // Carrega grupos de opções existentes do produto
+  useEffect(() => {
+    if (!open) { setGroups([]); return; }
+    if (!product?.id) { setGroups([]); return; }
+    let cancel = false;
+    (async () => {
+      setLoadingGroups(true);
+      const { data: gs, error } = await supabase
+        .from("product_option_groups" as any)
+        .select("*")
+        .eq("product_id", product.id)
+        .order("display_order", { ascending: true });
+      if (error) { setLoadingGroups(false); return; }
+      const groupIds = (gs || []).map((g: any) => g.id);
+      let opts: any[] = [];
+      if (groupIds.length) {
+        const { data: os } = await supabase
+          .from("product_options" as any)
+          .select("*")
+          .in("group_id", groupIds)
+          .order("display_order", { ascending: true });
+        opts = os || [];
+      }
+      if (cancel) return;
+      setGroups((gs || []).map((g: any) => ({
+        id: g.id,
+        name: g.name,
+        min_select: g.min_select,
+        max_select: g.max_select,
+        pricing_mode: g.pricing_mode,
+        options: opts.filter((o) => o.group_id === g.id).map((o) => ({
+          id: o.id,
+          name: o.name,
+          extra_price: String(o.extra_price ?? "0"),
+        })),
+      })));
+      setLoadingGroups(false);
+    })();
+    return () => { cancel = true; };
+  }, [open, product?.id]);
+
+  // Persiste grupos+opções para um produto (cria/atualiza/apaga conforme o estado)
+  async function syncOptionGroups(productId: string) {
+    // Carrega ids existentes pra calcular o que apagar
+    const { data: existing } = await supabase
+      .from("product_option_groups" as any)
+      .select("id")
+      .eq("product_id", productId);
+    const existingIds = new Set((existing || []).map((g: any) => g.id));
+    const keepIds = new Set(groups.map((g) => g.id).filter(Boolean) as string[]);
+    const toDelete = [...existingIds].filter((id) => !keepIds.has(id as string));
+    if (toDelete.length > 0) {
+      const { error } = await supabase
+        .from("product_option_groups" as any)
+        .delete()
+        .in("id", toDelete);
+      if (error) throw error;
+    }
+
+    for (let i = 0; i < groups.length; i++) {
+      const g = groups[i];
+      const groupPayload = {
+        product_id: productId,
+        name: g.name.trim() || "Opções",
+        min_select: Math.max(0, Number(g.min_select) || 0),
+        max_select: Math.max(1, Number(g.max_select) || 1),
+        pricing_mode: g.pricing_mode,
+        display_order: i,
+      };
+      let groupId = g.id;
+      if (groupId) {
+        const { error } = await supabase
+          .from("product_option_groups" as any)
+          .update(groupPayload)
+          .eq("id", groupId);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from("product_option_groups" as any)
+          .insert([groupPayload])
+          .select("id")
+          .single();
+        if (error) throw error;
+        groupId = (data as any)?.id;
+      }
+      if (!groupId) continue;
+
+      // Sincroniza opções: apaga as removidas, atualiza as mantidas, insere as novas
+      const { data: existingOpts } = await supabase
+        .from("product_options" as any)
+        .select("id")
+        .eq("group_id", groupId);
+      const existingOptIds = new Set((existingOpts || []).map((o: any) => o.id));
+      const keepOptIds = new Set(g.options.map((o) => o.id).filter(Boolean) as string[]);
+      const optsToDelete = [...existingOptIds].filter((id) => !keepOptIds.has(id as string));
+      if (optsToDelete.length > 0) {
+        const { error } = await supabase
+          .from("product_options" as any)
+          .delete()
+          .in("id", optsToDelete);
+        if (error) throw error;
+      }
+      for (let j = 0; j < g.options.length; j++) {
+        const o = g.options[j];
+        const optPayload = {
+          group_id: groupId,
+          name: o.name.trim(),
+          extra_price: Number(String(o.extra_price).replace(",", ".")) || 0,
+          is_available: true,
+          display_order: j,
+        };
+        if (!optPayload.name) continue;
+        if (o.id) {
+          const { error } = await supabase
+            .from("product_options" as any)
+            .update(optPayload)
+            .eq("id", o.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("product_options" as any)
+            .insert([optPayload]);
+          if (error) throw error;
+        }
+      }
+    }
+  }
+
   const save = useMutation({
     mutationFn: async () => {
       if (!form.name.trim()) throw new Error("Dê um nome ao prato");
@@ -116,9 +260,15 @@ export function OwnerProductSheet({
           .update(payload)
           .eq("id", product.id);
         if (error) throw error;
+        await syncOptionGroups(product.id);
       } else {
-        const { error } = await supabase.from("products").insert([payload]);
+        const { data: created, error } = await supabase
+          .from("products")
+          .insert([payload])
+          .select("id")
+          .single();
         if (error) throw error;
+        if (created?.id) await syncOptionGroups(created.id);
       }
     },
     onSuccess: () => {
@@ -468,6 +618,199 @@ export function OwnerProductSheet({
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Personalizações: grupos de opções */}
+          <div className="rounded-2xl border border-violet-200 bg-violet-50/40 p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-bold text-zinc-900 flex items-center gap-1.5">
+                  <ListPlus className="w-4 h-4 text-violet-600" />
+                  Personalizações
+                </p>
+                <p className="text-xs text-zinc-500">
+                  Adicionais, sabores, "monte seu pedido", ponto da carne…
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setGroups((gs) => [
+                    ...gs,
+                    { name: "", min_select: 0, max_select: 1, pricing_mode: "free", options: [] },
+                  ])
+                }
+                className="h-10 px-3 rounded-xl bg-violet-600 text-white text-xs font-black flex items-center gap-1.5 shrink-0"
+              >
+                <Plus className="w-4 h-4" /> Grupo
+              </button>
+            </div>
+
+            {loadingGroups && (
+              <p className="text-xs text-zinc-500 italic">Carregando…</p>
+            )}
+
+            {groups.length === 0 && !loadingGroups && (
+              <p className="text-xs text-zinc-500 italic">
+                Nenhum grupo. Toque em <b>Grupo</b> para adicionar (ex.: "Mix 1", "Adicionais").
+              </p>
+            )}
+
+            <div className="space-y-3">
+              {groups.map((g, gi) => (
+                <div key={gi} className="bg-white rounded-xl border border-zinc-200 p-3 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={g.name}
+                      onChange={(e) =>
+                        setGroups((gs) => gs.map((x, i) => (i === gi ? { ...x, name: e.target.value } : x)))
+                      }
+                      placeholder="Nome do grupo (ex.: Mix 1, Adicionais)"
+                      className="flex-1 h-11 px-3 rounded-lg border border-zinc-200 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setGroups((gs) => gs.filter((_, i) => i !== gi))}
+                      className="h-11 w-11 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center"
+                      aria-label="Remover grupo"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-zinc-600 mb-1">Mín</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={g.min_select}
+                        onChange={(e) =>
+                          setGroups((gs) =>
+                            gs.map((x, i) => (i === gi ? { ...x, min_select: Number(e.target.value) } : x))
+                          )
+                        }
+                        className="w-full h-10 px-2 rounded-lg border border-zinc-200 text-sm font-bold text-center"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-zinc-600 mb-1">Máx</label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={g.max_select}
+                        onChange={(e) =>
+                          setGroups((gs) =>
+                            gs.map((x, i) => (i === gi ? { ...x, max_select: Number(e.target.value) } : x))
+                          )
+                        }
+                        className="w-full h-10 px-2 rounded-lg border border-zinc-200 text-sm font-bold text-center"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-zinc-600 mb-1">Preço</label>
+                      <select
+                        value={g.pricing_mode}
+                        onChange={(e) =>
+                          setGroups((gs) =>
+                            gs.map((x, i) =>
+                              i === gi ? { ...x, pricing_mode: e.target.value as OptionPricingMode } : x
+                            )
+                          )
+                        }
+                        className="w-full h-10 px-2 rounded-lg border border-zinc-200 text-xs font-bold bg-white"
+                      >
+                        <option value="free">Grátis</option>
+                        <option value="per_option">Soma cada</option>
+                        <option value="most_expensive">Mais caro</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {g.options.map((o, oi) => (
+                      <div key={oi} className="flex items-center gap-2">
+                        <input
+                          value={o.name}
+                          onChange={(e) =>
+                            setGroups((gs) =>
+                              gs.map((x, i) =>
+                                i === gi
+                                  ? {
+                                      ...x,
+                                      options: x.options.map((y, j) =>
+                                        j === oi ? { ...y, name: e.target.value } : y
+                                      ),
+                                    }
+                                  : x
+                              )
+                            )
+                          }
+                          placeholder="Nome da opção"
+                          className="flex-1 h-10 px-3 rounded-lg border border-zinc-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500"
+                        />
+                        {g.pricing_mode !== "free" && (
+                          <div className="relative w-24">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-400 text-xs font-bold">
+                              R$
+                            </span>
+                            <input
+                              inputMode="decimal"
+                              value={o.extra_price}
+                              onChange={(e) =>
+                                setGroups((gs) =>
+                                  gs.map((x, i) =>
+                                    i === gi
+                                      ? {
+                                          ...x,
+                                          options: x.options.map((y, j) =>
+                                            j === oi ? { ...y, extra_price: e.target.value } : y
+                                          ),
+                                        }
+                                      : x
+                                  )
+                                )
+                              }
+                              placeholder="0,00"
+                              className="w-full h-10 pl-8 pr-2 rounded-lg border border-zinc-200 text-sm font-bold text-right"
+                            />
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setGroups((gs) =>
+                              gs.map((x, i) =>
+                                i === gi ? { ...x, options: x.options.filter((_, j) => j !== oi) } : x
+                              )
+                            )
+                          }
+                          className="h-10 w-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0"
+                          aria-label="Remover opção"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setGroups((gs) =>
+                          gs.map((x, i) =>
+                            i === gi
+                              ? { ...x, options: [...x.options, { name: "", extra_price: "0" }] }
+                              : x
+                          )
+                        )
+                      }
+                      className="w-full h-10 rounded-lg bg-zinc-100 text-zinc-700 text-xs font-bold flex items-center justify-center gap-1.5"
+                    >
+                      <Plus className="w-4 h-4" /> Adicionar opção
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
