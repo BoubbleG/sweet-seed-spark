@@ -69,37 +69,49 @@ export async function createOrder(params: {
   return order as Order;
 }
 
-export async function fetchOrders(restaurantId: string): Promise<Order[]> {
-  const { data, error } = await supabase
-    .from("orders")
-    .select("*, items:order_items(*)")
-    .eq("restaurant_id", restaurantId)
-    .order("created_at", { ascending: false })
-    .limit(200);
+export async function fetchOrders(restaurantId: string, slug: string): Promise<Order[]> {
+  const _token = pinToken(slug);
+  if (!_token) return [];
+  const { data, error } = await supabase.rpc("owner_list_orders", {
+    _token,
+    _restaurant_id: restaurantId,
+  } as any);
   if (error) {
     console.error(error);
     return [];
   }
-  return (data ?? []) as unknown as Order[];
+  return ((data as any) ?? []) as Order[];
 }
 
-export async function fetchOrderItems(orderId: string): Promise<OrderItem[]> {
-  const { data } = await supabase
-    .from("order_items")
-    .select("*")
-    .eq("order_id", orderId);
-  return (data ?? []) as OrderItem[];
+export async function fetchOrderItems(orderId: string, orders: Order[]): Promise<OrderItem[]> {
+  const o = orders.find((x) => x.id === orderId);
+  return (o?.items ?? []) as OrderItem[];
 }
 
-export async function updateOrderStatus(orderId: string, status: Order["status"]) {
-  await supabase.from("orders").update({ status }).eq("id", orderId);
+export async function updateOrderStatus(
+  restaurantId: string,
+  slug: string,
+  orderId: string,
+  status: Order["status"],
+) {
+  const _token = pinToken(slug);
+  if (!_token) return;
+  await supabase.rpc("owner_update_order_status", {
+    _token,
+    _restaurant_id: restaurantId,
+    _order_id: orderId,
+    _status: status,
+  } as any);
 }
 
-export async function markPrinted(orderId: string) {
-  await supabase
-    .from("orders")
-    .update({ printed_at: new Date().toISOString() })
-    .eq("id", orderId);
+export async function markPrinted(restaurantId: string, slug: string, orderId: string) {
+  const _token = pinToken(slug);
+  if (!_token) return;
+  await supabase.rpc("owner_mark_order_printed", {
+    _token,
+    _restaurant_id: restaurantId,
+    _order_id: orderId,
+  } as any);
 }
 
 // Simple beep using Web Audio API — no asset needed
