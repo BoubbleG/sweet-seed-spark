@@ -48,6 +48,19 @@ function AdminDashboard() {
     (async () => {
       const { data } = await sb.rpc("admin_password_exists");
       setIsFirstTime(!data);
+      // Tenta restaurar sessão persistida no navegador
+      try {
+        const stored = localStorage.getItem("admin_session_hash");
+        if (stored && data) {
+          const { data: ok } = await sb.rpc("verify_admin_password", { _password_hash: stored });
+          if (ok) {
+            setSessionHash(stored);
+            setUnlocked(true);
+          } else {
+            localStorage.removeItem("admin_session_hash");
+          }
+        }
+      } catch {}
       setAuthChecking(false);
     })();
   }, []);
@@ -209,7 +222,7 @@ function AdminDashboard() {
       }
       setIsFirstTime(false);
       setSessionHash(hash);
-      try { sessionStorage.setItem("admin_session_hash", hash); } catch {}
+      try { localStorage.setItem("admin_session_hash", hash); } catch {}
       setUnlocked(true);
       return;
     }
@@ -222,7 +235,7 @@ function AdminDashboard() {
     }
     if (ok) {
       setSessionHash(hash);
-      try { sessionStorage.setItem("admin_session_hash", hash); } catch {}
+      try { localStorage.setItem("admin_session_hash", hash); } catch {}
       setUnlocked(true);
     } else {
       setPwdError(true);
@@ -334,7 +347,13 @@ function AdminDashboard() {
           
           <div className="pt-8 border-t border-zinc-100 mt-6 space-y-2">
             <SidebarItem icon={<Settings className="w-5 h-5" />} label="Configurações" />
-            <SidebarItem icon={<LogOut className="w-5 h-5 text-rose-500" />} label="Desconectar" onClick={() => navigate({ to: '/' })} />
+            <SidebarItem icon={<LogOut className="w-5 h-5 text-rose-500" />} label="Desconectar" onClick={() => {
+              try { localStorage.removeItem("admin_session_hash"); } catch {}
+              try { sessionStorage.removeItem("admin_session_hash"); } catch {}
+              setSessionHash(null);
+              setUnlocked(false);
+              navigate({ to: '/' });
+            }} />
           </div>
         </nav>
 

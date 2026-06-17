@@ -9,7 +9,9 @@ export function getAiDesignerAuth(): {
 } {
   if (typeof window === "undefined") return {};
   const adminPasswordHash =
-    sessionStorage.getItem("admin_session_hash") || undefined;
+    localStorage.getItem("admin_session_hash") ||
+    sessionStorage.getItem("admin_session_hash") ||
+    undefined;
   if (adminPasswordHash) return { adminPasswordHash };
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
