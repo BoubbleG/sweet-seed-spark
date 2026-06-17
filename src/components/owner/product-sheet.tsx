@@ -173,9 +173,15 @@ export function OwnerProductSheet({
           .update(payload)
           .eq("id", product.id);
         if (error) throw error;
+        await syncOptionGroups(product.id);
       } else {
-        const { error } = await supabase.from("products").insert([payload]);
+        const { data: created, error } = await supabase
+          .from("products")
+          .insert([payload])
+          .select("id")
+          .single();
         if (error) throw error;
+        if (created?.id) await syncOptionGroups(created.id);
       }
     },
     onSuccess: () => {
