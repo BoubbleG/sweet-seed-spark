@@ -45,7 +45,7 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
     size: ProductSize | null;
     price: number;
   }>({ open: false, product: null, size: null, price: 0 });
-  const [acaiBuilderOpen, setAcaiBuilderOpen] = useState(false);
+  const [acaiBuilderProduct, setAcaiBuilderProduct] = useState<any | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -73,6 +73,11 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
     );
     return new Set(filtered.map((c) => c.id));
   }, [isDual, menu?.categories, mode]);
+  const acaiCategoryIds = useMemo(() => {
+    if (!isDual || !menu?.categories) return new Set<string>();
+    return new Set(menu.categories.filter((c) => isAcaiCategory(c.name)).map((c) => c.id));
+  }, [isDual, menu?.categories]);
+  const isAcaiProduct = (p: any) => !!(p?.category_id && acaiCategoryIds.has(p.category_id));
 
   const filteredProducts = useMemo(() => {
     if (!menu?.products) return [];
@@ -372,40 +377,6 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
         transition={{ duration: 0.25 }}
         className="space-y-10"
       >
-        {isDual && mode === 'acai' && !searchQuery && (
-          <section aria-label="Monte seu açaí">
-            <button
-              type="button"
-              onClick={() => setAcaiBuilderOpen(true)}
-              className="w-full text-left rounded-3xl p-5 sm:p-6 shadow-xl active:scale-[0.99] transition-transform relative overflow-hidden"
-              style={{
-                background: 'linear-gradient(135deg, #6D28D9 0%, #A855F7 60%, #EC4899 100%)',
-                color: '#fff',
-              }}
-            >
-              <div className="pointer-events-none absolute -top-12 -right-10 w-44 h-44 rounded-full bg-white/20 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-12 -left-10 w-44 h-44 rounded-full bg-white/10 blur-3xl" />
-              <div className="relative flex items-center gap-4">
-                <div className="w-14 h-14 shrink-0 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
-                  <IceCream className="w-7 h-7" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[10px] font-black uppercase tracking-wider opacity-90">Personalizado</div>
-                  <h3 className="text-lg sm:text-xl font-black leading-tight">Monte seu Copo de Açaí</h3>
-                  <p className="text-xs opacity-90 mt-0.5">400 ml · escolha à vontade nos dois mix</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <div className="text-[10px] font-bold uppercase opacity-80">Apenas</div>
-                  <div className="text-2xl font-black leading-none">R$ 15</div>
-                </div>
-              </div>
-              <div className="relative mt-4 inline-flex items-center h-10 px-4 rounded-full bg-white text-purple-700 font-black text-sm">
-                Montar agora →
-              </div>
-            </button>
-          </section>
-        )}
-
         {!searchQuery && promoProducts.length > 0 && (
           <section aria-label="Promoções" className="-mx-5 sm:-mx-6">
             <div
@@ -618,10 +589,16 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
                           )}
                         </div>
                         <button
-                          onClick={() => addItem({
-                            ...prod,
-                            price: prod.is_on_promo && prod.promo_price != null ? Number(prod.promo_price) : prod.price,
-                          })}
+                          onClick={() => {
+                            if (isAcaiProduct(prod)) {
+                              setAcaiBuilderProduct(prod);
+                              return;
+                            }
+                            addItem({
+                              ...prod,
+                              price: prod.is_on_promo && prod.promo_price != null ? Number(prod.promo_price) : prod.price,
+                            });
+                          }}
                           type="button"
                           aria-label={`Adicionar ${prod.name}`}
                           className="w-11 h-11 shrink-0 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform"
@@ -723,23 +700,27 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
       />
 
       <AcaiBuilderDialog
-        open={acaiBuilderOpen}
-        onOpenChange={setAcaiBuilderOpen}
+        open={!!acaiBuilderProduct}
+        onOpenChange={(o) => { if (!o) setAcaiBuilderProduct(null); }}
+        productName={acaiBuilderProduct?.name || 'Copo de Açaí'}
+        price={Number(
+          acaiBuilderProduct?.is_on_promo && acaiBuilderProduct?.promo_price != null
+            ? acaiBuilderProduct.promo_price
+            : acaiBuilderProduct?.price ?? 15
+        )}
         onConfirm={({ mix1, mix2 }) => {
+          if (!acaiBuilderProduct) return;
           const parts: string[] = [];
           if (mix1.length) parts.push(`Mix 1: ${mix1.join(', ')}`);
           if (mix2.length) parts.push(`Mix 2: ${mix2.join(', ')}`);
           const notes = parts.length ? parts.join(' · ') : 'Sem complementos';
+          const finalPrice = Number(
+            acaiBuilderProduct.is_on_promo && acaiBuilderProduct.promo_price != null
+              ? acaiBuilderProduct.promo_price
+              : acaiBuilderProduct.price
+          );
           addItem(
-            {
-              id: 'acai-monte-seu-copo',
-              name: 'Copo de Açaí 400ml (montado)',
-              price: 15,
-              description: '',
-              image_url: null,
-              category_id: null,
-              restaurant_id: restaurant.id,
-            } as any,
+            { ...acaiBuilderProduct, price: finalPrice },
             { notes }
           );
         }}

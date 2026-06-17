@@ -10,11 +10,15 @@ export function AcaiBuilderDialog({
   onOpenChange,
   onConfirm,
   accent = "#A855F7",
+  productName = "Copo de Açaí",
+  price = 15,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   onConfirm: (selections: { mix1: string[]; mix2: string[] }) => void;
   accent?: string;
+  productName?: string;
+  price?: number;
 }) {
   const [mix1, setMix1] = useState<string[]>([]);
   const [mix2, setMix2] = useState<string[]>([]);
@@ -90,9 +94,9 @@ export function AcaiBuilderDialog({
           >
             <IceCream className="w-6 h-6" />
           </div>
-          <DialogTitle className="text-xl font-black">Monte seu Copo de Açaí</DialogTitle>
+          <DialogTitle className="text-xl font-black">Monte seu {productName}</DialogTitle>
           <DialogDescription>
-            R$ 15,00 · 400 ml — escolha à vontade nos dois mix.
+            R$ {price.toFixed(2).replace('.', ',')} — escolha à vontade nos dois mix.
           </DialogDescription>
         </DialogHeader>
 
@@ -115,7 +119,7 @@ export function AcaiBuilderDialog({
             className="flex-[1.5] h-12 rounded-2xl font-black text-white shadow-md active:scale-[0.99]"
             style={{ backgroundColor: accent }}
           >
-            Adicionar — R$ 15,00
+            Adicionar — R$ {price.toFixed(2).replace('.', ',')}
           </button>
         </div>
       </DialogContent>
