@@ -45,7 +45,7 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
     size: ProductSize | null;
     price: number;
   }>({ open: false, product: null, size: null, price: 0 });
-  const [acaiBuilderOpen, setAcaiBuilderOpen] = useState(false);
+  const [acaiBuilderProduct, setAcaiBuilderProduct] = useState<any | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -372,40 +372,6 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
         transition={{ duration: 0.25 }}
         className="space-y-10"
       >
-        {isDual && mode === 'acai' && !searchQuery && (
-          <section aria-label="Monte seu açaí">
-            <button
-              type="button"
-              onClick={() => setAcaiBuilderOpen(true)}
-              className="w-full text-left rounded-3xl p-5 sm:p-6 shadow-xl active:scale-[0.99] transition-transform relative overflow-hidden"
-              style={{
-                background: 'linear-gradient(135deg, #6D28D9 0%, #A855F7 60%, #EC4899 100%)',
-                color: '#fff',
-              }}
-            >
-              <div className="pointer-events-none absolute -top-12 -right-10 w-44 h-44 rounded-full bg-white/20 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-12 -left-10 w-44 h-44 rounded-full bg-white/10 blur-3xl" />
-              <div className="relative flex items-center gap-4">
-                <div className="w-14 h-14 shrink-0 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
-                  <IceCream className="w-7 h-7" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[10px] font-black uppercase tracking-wider opacity-90">Personalizado</div>
-                  <h3 className="text-lg sm:text-xl font-black leading-tight">Monte seu Copo de Açaí</h3>
-                  <p className="text-xs opacity-90 mt-0.5">400 ml · escolha à vontade nos dois mix</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <div className="text-[10px] font-bold uppercase opacity-80">Apenas</div>
-                  <div className="text-2xl font-black leading-none">R$ 15</div>
-                </div>
-              </div>
-              <div className="relative mt-4 inline-flex items-center h-10 px-4 rounded-full bg-white text-purple-700 font-black text-sm">
-                Montar agora →
-              </div>
-            </button>
-          </section>
-        )}
-
         {!searchQuery && promoProducts.length > 0 && (
           <section aria-label="Promoções" className="-mx-5 sm:-mx-6">
             <div
