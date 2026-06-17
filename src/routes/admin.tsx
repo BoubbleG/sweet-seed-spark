@@ -173,6 +173,20 @@ function AdminDashboard() {
     setTimeout(() => setCopiedPinLinkId(null), 2000);
   }
 
+  async function openOwnerPanel(rest: Restaurant) {
+    if (!sessionHash) { toast.error("Sessão expirada. Entre novamente."); return; }
+    setOpeningPanelId(rest.id);
+    try {
+      const result = await adminBypassPin({ data: { passwordHash: sessionHash, restaurantId: rest.id } });
+      localStorage.setItem(`pin_session:${rest.slug}`, result.token);
+      window.open(`/${rest.slug}/admin`, '_blank', 'noopener,noreferrer');
+    } catch (err: any) {
+      toast.error(err?.message ?? "Erro ao abrir painel");
+    } finally {
+      setOpeningPanelId(null);
+    }
+  }
+
   useEffect(() => {
     if (unlocked && sessionHash) loadData();
   }, [unlocked, sessionHash]);
