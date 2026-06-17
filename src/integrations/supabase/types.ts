@@ -649,6 +649,7 @@ export type Database = {
         Args: { _order_id: string; _session_token: string }
         Returns: undefined
       }
+      extend_pin_session: { Args: { _token: string }; Returns: string }
       find_customer_profile: {
         Args: { _phone: string; _restaurant_id: string }
         Returns: {
