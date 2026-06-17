@@ -73,6 +73,11 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
     );
     return new Set(filtered.map((c) => c.id));
   }, [isDual, menu?.categories, mode]);
+  const acaiCategoryIds = useMemo(() => {
+    if (!isDual || !menu?.categories) return new Set<string>();
+    return new Set(menu.categories.filter((c) => isAcaiCategory(c.name)).map((c) => c.id));
+  }, [isDual, menu?.categories]);
+  const isAcaiProduct = (p: any) => !!(p?.category_id && acaiCategoryIds.has(p.category_id));
 
   const filteredProducts = useMemo(() => {
     if (!menu?.products) return [];
@@ -584,10 +589,16 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
                           )}
                         </div>
                         <button
-                          onClick={() => addItem({
-                            ...prod,
-                            price: prod.is_on_promo && prod.promo_price != null ? Number(prod.promo_price) : prod.price,
-                          })}
+                          onClick={() => {
+                            if (isAcaiProduct(prod)) {
+                              setAcaiBuilderProduct(prod);
+                              return;
+                            }
+                            addItem({
+                              ...prod,
+                              price: prod.is_on_promo && prod.promo_price != null ? Number(prod.promo_price) : prod.price,
+                            });
+                          }}
                           type="button"
                           aria-label={`Adicionar ${prod.name}`}
                           className="w-11 h-11 shrink-0 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform"
