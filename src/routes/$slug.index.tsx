@@ -719,7 +719,7 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
           const parts: string[] = [];
           if (mix1.length) parts.push(`Mix 1: ${mix1.join(', ')}`);
           if (mix2.length) parts.push(`Mix 2: ${mix2.join(', ')}`);
-          const notes = parts.length ? parts.join(' · ') : 'Sem complementos';
+          const notes = parts.length ? parts.join('\n') : 'Sem complementos';
           const finalPrice = Number(
             acaiBuilderProduct.is_on_promo && acaiBuilderProduct.promo_price != null
               ? acaiBuilderProduct.promo_price
