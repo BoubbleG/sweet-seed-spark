@@ -360,7 +360,16 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
       )}
 
       {/* Menu */}
-      <main ref={menuRef} className="px-5 sm:px-6 mt-8 space-y-10">
+      <main ref={menuRef} className="px-5 sm:px-6 mt-8">
+      <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={isDual ? mode : 'single'}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.25 }}
+        className="space-y-10"
+      >
         {!searchQuery && promoProducts.length > 0 && (
           <section aria-label="Promoções" className="-mx-5 sm:-mx-6">
             <div
@@ -461,7 +470,7 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
           </section>
         )}
 
-        {menu?.categories.map(cat => {
+        {visibleCategories.map(cat => {
           const prods = filteredProducts.filter(p => p.category_id === cat.id);
           if (prods.length === 0) return null;
           return (
@@ -600,6 +609,8 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
             <p className="text-sm font-medium">Nenhum item encontrado para "{searchQuery}".</p>
           </div>
         )}
+      </motion.div>
+      </AnimatePresence>
       </main>
 
       {/* Bottom tab bar */}
