@@ -42,6 +42,8 @@ export function OwnerProductSheet({
 }) {
   const qc = useQueryClient();
   const [uploading, setUploading] = useState(false);
+  const [groups, setGroups] = useState<DraftGroup[]>([]);
+  const [loadingGroups, setLoadingGroups] = useState(false);
   const [form, setForm] = useState({
     name: "",
     description: "",
