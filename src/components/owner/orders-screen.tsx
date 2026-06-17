@@ -240,6 +240,7 @@ export function OwnerOrdersScreen({
             <OrderCard
               key={o.id}
               order={o}
+              restaurant={restaurant}
               isNew={newlyArrived.current.has(o.id) && o.status === "novo"}
               onPrint={() => triggerPrint(o)}
               onChanged={load}
