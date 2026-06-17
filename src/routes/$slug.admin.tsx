@@ -23,7 +23,7 @@ function SlugAdmin() {
     return localStorage.getItem(storageKey(slug));
   });
 
-  const { data: restaurant, isLoading, isError } = useQuery({
+  const { data: restaurant, isLoading, isError, error } = useQuery({
     queryKey: ["restaurant-by-pin-session", slug, token],
     queryFn: async () => {
       if (!token) return null;
@@ -31,20 +31,31 @@ function SlugAdmin() {
         .rpc("find_restaurant_by_pin_session", { _token: token });
       if (error) throw error;
       const row = Array.isArray(data) ? data[0] : data;
-      if (!row || (row as Restaurant).slug !== slug) return null;
+      if (!row || (row as Restaurant).slug !== slug) {
+        // Token explicitly does not match this restaurant / expired on server.
+        throw new Error("PIN_SESSION_INVALID");
+      }
+      // Sliding session: extend by 30 days on each successful load.
+      supabase.rpc("extend_pin_session", { _token: token }).then(() => {}, () => {});
       return row as Restaurant;
     },
     enabled: !!token,
     retry: false,
+    staleTime: Infinity,
+    gcTime: 1000 * 60 * 60 * 24,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
   });
 
-  // If session token is invalid/expired/wrong slug, drop it
+  // Only drop the token when the server explicitly told us it is invalid.
+  // Transient network errors keep the session so the admin stays logged in.
   useEffect(() => {
-    if (token && !isLoading && !restaurant && !isError) {
+    if (token && isError && (error as Error | undefined)?.message === "PIN_SESSION_INVALID") {
       localStorage.removeItem(storageKey(slug));
       setToken(null);
     }
-  }, [token, isLoading, restaurant, isError, slug]);
+  }, [token, isError, error, slug]);
 
   if (token && isLoading) {
     return (
@@ -54,7 +65,7 @@ function SlugAdmin() {
     );
   }
 
-  if (!restaurant) {
+  if (!token || !restaurant) {
     return (
       <PinGate
         slug={slug}
