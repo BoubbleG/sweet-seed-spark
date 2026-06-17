@@ -7,9 +7,23 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Category, Product } from "@/types";
+import { Category, Product, OptionPricingMode } from "@/types";
 import { toast } from "sonner";
-import { Sparkles, X, ImagePlus, Loader2, Trash2 } from "lucide-react";
+import { Sparkles, X, ImagePlus, Loader2, Trash2, Plus, ListPlus } from "lucide-react";
+
+type DraftOption = {
+  id?: string;
+  name: string;
+  extra_price: string; // string para input controlado
+};
+type DraftGroup = {
+  id?: string;
+  name: string;
+  min_select: number;
+  max_select: number;
+  pricing_mode: OptionPricingMode;
+  options: DraftOption[];
+};
 
 export function OwnerProductSheet({
   open,
