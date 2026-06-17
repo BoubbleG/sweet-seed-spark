@@ -731,6 +731,25 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
           );
         }}
       />
+
+      <ProductBuilderDialog
+        open={!!builderProduct}
+        onOpenChange={(o) => { if (!o) setBuilderProduct(null); }}
+        product={builderProduct}
+        basePrice={Number(
+          builderProduct?.is_on_promo && builderProduct?.promo_price != null
+            ? builderProduct.promo_price
+            : builderProduct?.price ?? 0
+        )}
+        accent={t.primary}
+        onConfirm={({ notes, finalPrice, quantity }) => {
+          if (!builderProduct) return;
+          addItem(
+            { ...builderProduct, price: finalPrice },
+            { notes, quantity }
+          );
+        }}
+      />
     </div>
   );
 }
