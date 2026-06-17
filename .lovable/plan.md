@@ -1,46 +1,46 @@
-# Regenerar imagens realistas — Point do Gordinho
+## Problema
 
-## Objetivo
-Substituir as 15 imagens atuais dos produtos por fotos hiper-realistas, fiéis a cada descrição, no estilo "montado por um humano de verdade" (estilo food photography profissional, não AI genérico).
+Hoje, ao entrar em `/{slug}/admin` com o PIN, criamos uma sessão de 30 dias e salvamos o token no `localStorage`. Na teoria não precisaria entrar de novo, mas o código tem um bug que faz você ser deslogado sem motivo:
 
-## Produtos (15) e prompts derivados das descrições
+Em `src/routes/$slug.admin.tsx` existe este `useEffect`:
 
-**Hambúrgueres** (close-up, foco nos ingredientes visíveis no corte lateral, pão brioche dourado, luz natural, fundo escuro de madeira de hamburgueria):
-1. Burguer Simples — brioche, 1 carne bovina, batata palha, cebola caramelizada, mussarela derretida, molho da casa
-2. Smash Burguer — brioche, 1 carne smash, bacon, cebola caramelizada, mussarela, cheddar especial escorrendo
-3. Duplo Cheddar — brioche, 2 carnes, bacon, cebola caramelizada, mussarela + cheddar derretido pelas laterais
-4. X-Bacon — brioche, carne, bacon, ovo com gema mole, cebola caramelizada, mussarela, molho
-5. X-Calabresa — brioche, carne, rodelas de calabresa, ovo, cebola caramelizada, mussarela, molho
+```ts
+if (token && !isLoading && !restaurant && !isError) {
+  localStorage.removeItem(storageKey(slug));
+  setToken(null);
+}
+```
 
-**Batatinhas** (cestinha/tábua de madeira):
-6. Batata Simples — batata frita dourada + ramekin de molho da casa
-7. Batata Turbinada — batata frita coberta com cheddar derretido, bacon em cubos crocante, molho
-8. Batata com Costela Desfiada — batata frita coberta com costela bovina desfiada suculenta
+Ele apaga o token sempre que o resultado não chega imediatamente "carregado com sucesso" — ou seja, em qualquer falha transitória de rede, ou enquanto o React Query ainda está no estado inicial, o token é descartado. Resultado: você precisa digitar o PIN repetidamente.
 
-**Combos** (composição completa na bandeja):
-9. Combo Burguer Mac — 1 burguer + lata de refrigerante 269ml
-10. Combo Duplo Cheddar — duplo cheddar + porção batata frita + lata 350ml
-11. Combo Família — 4 hambúrgueres, 20 mini coxinhas, porção batata cheddar+bacon, refri 1L
+Além disso, o token expira 30 dias depois do login e nunca é renovado, então quem usa o painel todo dia perde a sessão no dia 31.
 
-**Bebidas** (lata 350ml realista sobre balcão, gotas de condensação):
-12. Coca-Cola 350ml
-13. Coca-Cola Zero 350ml
-14. Fanta Laranja 350ml
-15. Kuat Guaraná 350ml
+## O que vou fazer
 
-> Para latas de marca: gerar como "lata genérica de refrigerante cola/laranja/guaraná" sem logos protegidos, evitando rejeição por copyright.
+Tudo só no frontend + uma pequena função no backend para renovar a sessão. Nada quebra outras telas.
 
-## Execução
+### 1. Manter o login lembrado de verdade
 
-1. Para cada produto, gerar imagem com `imagegen--generate_image` (model `standard`, 1024x1024, .jpg) salvando em `/tmp/gordin/<slug>.jpg`. Prompt em inglês detalhado + "ultra realistic food photography, shot on DSLR 50mm, natural soft light, shallow depth of field, no text, no logos".
-2. Fazer upload via `lovable-assets create` → gerar novo `.asset.json` em `src/assets/products/<slug>.jpg.asset.json`.
-3. Migração SQL única: `UPDATE products SET image_url = '<nova_url>' WHERE id = '<id>'` para os 15 ids.
-4. Os assets antigos ficam órfãos (não deletar — ainda referenciados em deploys anteriores).
+Em `src/routes/$slug.admin.tsx`:
 
-## Observações
+- **Só apagar o token quando o servidor disser claramente que ele é inválido/expirado.** Falhas de rede, timeouts ou estados intermediários do React Query mantêm a sessão.
+- Adicionar `staleTime: Infinity` e `gcTime` longo na query de validação, para não revalidar o token a cada navegação.
+- Validar o token só uma vez ao montar; nas navegações seguintes dentro do painel, reutilizar o resultado em cache.
 
-- Apenas o restaurante `point-do-gordinho` é afetado. O clone `modelo-point-do-gordinho` (demo) **não** será alterado — continua com as imagens antigas.
-- 15 imagens em qualidade `standard` consome créditos significativos. Se preferir economizar, posso usar `fast` (qualidade menor mas ainda realista) ou `premium` só para os 5 hambúrgueres (carros-chefe) e `standard` no resto.
+### 2. Sessão deslizante (renovação automática)
 
-## Pergunta antes de implementar
-Qual tier de qualidade? `fast` (mais barato), `standard` (recomendado, equilíbrio) ou `premium` (melhor, mais caro)?
+Adicionar uma RPC `extend_pin_session(_token text)` que, se o token ainda é válido, empurra `expires_at = now() + 30 days`. O painel chama essa RPC silenciosamente quando você abre o admin, então enquanto você usar pelo menos uma vez a cada 30 dias, nunca mais precisa digitar PIN naquele dispositivo.
+
+### 3. Botão "Sair" continua igual
+
+Apenas o botão "Sair" no topo verde, ou um PIN inválido / expirado retornado pelo servidor, limpam a sessão. Nada mais.
+
+### Arquivos afetados
+
+- `src/routes/$slug.admin.tsx` — lógica do gate (não toca no UI de PIN nem no painel).
+- Nova migração com a função `extend_pin_session`.
+
+### O que NÃO muda
+
+- Tela de PIN, painel do admin (`OwnerShell`), painel master `/admin`, login do master, RLS, nada disso é tocado.
+- O PIN continua sendo o mesmo, a segurança não muda — apenas a sessão fica mais resiliente e se renova sozinha enquanto usada.
