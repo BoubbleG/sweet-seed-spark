@@ -1,59 +1,47 @@
-## Novo cardápio: Nandoburg — Hamburgueria Artesanal
+## Novo restaurante: Shalom Burger
 
-### 1. Restaurante
-- **Slug:** `nandoburg`
-- **Nome:** Nandoburg
-- **Tipo:** Hamburgueria Artesanal
-- **WhatsApp:** 98 97021-9483
-- **Endereço:** Av. Tancredo Neves, Nº 52
-- **Logo:** upload do PNG enviado para Lovable Assets, depois referenciado em `restaurants.logo_url`
-- **Tema (cores do flyer):**
-  - `primary_color` (fundo) → amarelo `#FFB800`
-  - `secondary_color` → preto `#0A0A0A`
-  - `button_color` → preto `#0A0A0A`
-  - `background_color` → branco neve / amarelo claro
-  - `text_color` → preto
-  - `font_family` → fonte display "bold/condensada" (Anton/Bebas) já disponível
-  - frase rodapé: "Não somos os melhores, nós somos diferentes"
+Vou criar um novo cardápio digital com slug `shalom-burger`, replicando o **estilo visual do Point do Gordinho** (fundo preto, cards glass, fonte Outfit, layout em lista), mas com a identidade laranja/preto da Shalom Burger.
 
-### 2. Categorias
-- **Hambúrgueres** (display_order 1)
-- **Bebidas** (display_order 2)
+### Identidade visual
+- **Slug:** `/shalom-burger`
+- **Cores:** primary `#F59E0B` (laranja/dourado da logo), secondary `#FFFFFF`, background `#0A0A0A`, texto branco
+- **Fonte:** Outfit · **Cards:** glass · **Layout:** list · **Categorias:** pills
+- **Logo:** recortada da imagem enviada (o "SHALOM BURGER LANCHES" circular) e enviada via lovable-assets
+- **Rodapé:** "Shalom Burger — Sabor que abençoa 🔥"
 
-### 3. Produtos (extraídos do flyer)
+### Categorias (5)
+1. Burguers Simples
+2. Burguers Duplos
+3. Jantar
+4. Porções
+5. Bebidas & Sobremesas
 
-**Hambúrgueres**
-| Nome | Preço | Descrição |
-|---|---|---|
-| Esmesh | R$ 12,00 | Pão, carne, queijo, presunto, molho |
-| Tradicional | R$ 16,00 | Pão, carne, ovo, queijo, presunto, tomate, alface, maionese caseira |
-| X-Bacon | R$ 20,00 | Pão, 1 carne, ovo, bacon, queijo, presunto, tomate, alface, molho |
-| X-Calabresa | R$ 20,00 | Pão, 1 carne, calabresa, ovo, queijo, presunto, tomate, alface, molho |
-| X-Tudo | R$ 24,00 | Pão, 1 carne, ovo, bacon, calabresa, queijo, presunto, tomate, alface, molho |
-| X-Duplo | R$ 28,00 | Pão, 2 carnes, ovo, queijo, presunto, tomate, alface, molho |
-| X-Triplo | R$ 34,00 | Pão, 3 carnes, ovo, bacon, calabresa, queijo, presunto, tomate, alface, molho |
-| X-Da Casa | R$ 38,00 | Pão, 4 carnes, 2 ovos, bacon, queijo, presunto, tomate, alface, maionese caseira e cheddar |
-| Especial | R$ 42,00 | Pão, 5 carnes, 3 ovos, calabresa, queijo, presunto, alface, tomate, molho |
-| Nandoburg | R$ 50,00 | Pão, 6 carnes, 4 ovos, calabresa, bacon, tomate, molho verde e cheddar |
+### Produtos (23) — extraídos do cardápio
 
-**Bebidas**
-| Nome | Preço |
-|---|---|
-| Suco | R$ 5,00 |
-| Refrigerante 1L | R$ 10,00 |
-| Lata 350ml | R$ 5,00 |
+**Burguers Simples** (pão brioche, carne 100g, queijo cheddar + extras)
+- Simples R$10 · Creme Cheese R$13 · Bacon R$15 · Gorgonzola R$15 · Queijo Reino R$17 · Bacon & Gorgonzola R$20 · Burger & Cebola Caramelizada R$12 · Queijo Reino & Bacon R$20
 
-### 4. Imagens
-- Cada produto recebe uma URL pública do Unsplash escolhida de acordo com o tipo (hambúrguer simples, duplo, com bacon, calabresa, etc.).
-- **Antes** de gravar no banco, faço `HEAD` em todas as URLs candidatas — só as que retornarem HTTP 200 entram no insert. Se alguma falhar, substituo por outra e re-testo.
-- Validação final: query no banco listando produtos onde `image_url IS NULL` (deve dar zero) + HEAD em todas as URLs aplicadas.
+**Burguers Duplos** (pão brioche, 2 carnes 100g, cheddar + extras)
+- Duplo Simples R$15 · Duplo Creme Cheese R$18 · Duplo Bacon R$20 · Duplo Gorgonzola R$20 · Duplo Queijo Reino R$22 · Burger Duplo Caramelizado R$17 · Duplo Bacon & Gorgonzola R$25 · Duplo Queijo Reino & Bacon R$25
 
-### 5. Execução
-1. Migration: inserir `restaurants`, `categories`, `products` (todos GRANTs públicos já existentes).
-2. Upload do logo via `lovable-assets` e gravar URL CDN em `restaurants.logo_url`.
-3. Após cargas, abrir `/nandoburg` no preview para conferir.
+**Jantar**
+- Macaxeira com Bisteca/Charque/Carne sol R$17 · Cachorro-Quente R$10 · X-Tudo 3 carnes R$20
 
-### Arquivos / mudanças
-- 1 migration de dados (insert do restaurante + categorias + produtos)
-- 1 pointer `.asset.json` para a logo
-- Nenhuma alteração de código frontend (o template do cardápio público já lida com tudo via `slug`)
+**Porções**
+- Batata P 300g R$10 · Batata M 400g R$15 · Batata Completa 600g (frita, ovo, bacon, calabresa) R$30
+
+**Bebidas & Sobremesas**
+- Fatia de bolo R$8 · Refrigerante Lata R$5 · Refrigerante 1 Litro R$10
+
+### Imagens dos produtos
+- Cada produto recebe uma imagem do Unsplash escolhida por tipo (burger simples, burger duplo, hot dog, batata frita, refri, bolo, etc.)
+- **Validação obrigatória:** rodo `curl -I` em cada URL candidata ANTES de inserir; só uso as que retornam HTTP 200
+- Depois do INSERT, faço SELECT + nova validação HEAD em todas as URLs salvas — se alguma falhar, substituo na hora
+- Garantia final: `image_url IS NULL` = 0 e 100% das URLs respondem 200
+
+### Execução
+1. Recortar logo da imagem enviada → upload via `lovable-assets`
+2. Validar todas as URLs Unsplash candidatas
+3. 1 migration: INSERT restaurant + categories + 23 products (com GRANTs públicos já existentes na tabela)
+4. Verificação final via SELECT e HEAD em todas as imagens
+5. Preview em `/shalom-burger`
