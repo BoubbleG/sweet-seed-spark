@@ -1,4 +1,4 @@
-import { Order } from "@/types";
+import { Order, Restaurant } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { updateOrderStatus } from "@/lib/orders";
 import { Printer, MapPin, Phone, MessageSquare, Clock } from "lucide-react";
@@ -35,11 +35,13 @@ const STATUS_META: Record<
 
 export function OrderCard({
   order,
+  restaurant,
   isNew,
   onPrint,
   onChanged,
 }: {
   order: Order;
+  restaurant: Restaurant;
   isNew: boolean;
   onPrint: () => void;
   onChanged: () => void;
@@ -50,14 +52,14 @@ export function OrderCard({
 
   const advance = async () => {
     if (!meta.next) return;
-    await updateOrderStatus(order.id, meta.next);
+    await updateOrderStatus(restaurant.id, restaurant.slug, order.id, meta.next);
     toast.success(`Pedido #${order.order_number} → ${STATUS_META[meta.next].label}`);
     onChanged();
   };
 
   const cancel = async () => {
     if (!confirm(`Cancelar pedido #${order.order_number}?`)) return;
-    await updateOrderStatus(order.id, "cancelado");
+    await updateOrderStatus(restaurant.id, restaurant.slug, order.id, "cancelado");
     toast.success("Pedido cancelado");
     onChanged();
   };

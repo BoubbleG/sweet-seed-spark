@@ -57,7 +57,7 @@ export function OwnerOrdersScreen({
   }, [autoPrint]);
 
   const load = async () => {
-    const data = await fetchOrders(restaurant.id);
+    const data = await fetchOrders(restaurant.id, restaurant.slug);
     data.forEach((o) => seenIds.current.add(o.id));
     initialLoaded.current = true;
     setOrders(data);
@@ -65,38 +65,25 @@ export function OwnerOrdersScreen({
 
   useEffect(() => {
     load();
-    const channel = supabase
-      .channel(`orders-${restaurant.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "orders",
-          filter: `restaurant_id=eq.${restaurant.id}`,
-        },
-        async (payload) => {
-          if (payload.eventType === "INSERT") {
-            const o = payload.new as Order;
-            if (!seenIds.current.has(o.id)) {
-              seenIds.current.add(o.id);
-              newlyArrived.current.add(o.id);
-              playNewOrderSound();
-              const full = (await fetchOrders(restaurant.id)).find(
-                (x) => x.id === o.id,
-              );
-              if (full && autoPrint && !full.printed_at) {
-                triggerPrint(full);
-              }
-            }
+    // Realtime broadcasts were removed for security; poll instead.
+    const interval = setInterval(async () => {
+      const data = await fetchOrders(restaurant.id, restaurant.slug);
+      let arrivedToPrint: Order | null = null;
+      for (const o of data) {
+        if (!seenIds.current.has(o.id)) {
+          seenIds.current.add(o.id);
+          if (initialLoaded.current) {
+            newlyArrived.current.add(o.id);
+            playNewOrderSound();
+            if (autoPrint && !o.printed_at && !arrivedToPrint) arrivedToPrint = o;
           }
-          load();
-        },
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
+        }
+      }
+      initialLoaded.current = true;
+      setOrders(data);
+      if (arrivedToPrint) triggerPrint(arrivedToPrint);
+    }, 6000);
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurant.id, autoPrint]);
 
@@ -104,7 +91,7 @@ export function OwnerOrdersScreen({
     if (isPrinterConnected()) {
       try {
         await printOrderBluetooth(restaurant, order);
-        await markPrinted(order.id);
+        await markPrinted(restaurant.id, restaurant.slug, order.id);
         toast.success(`Pedido #${order.order_number} impresso`);
         return;
       } catch (e: any) {
@@ -116,7 +103,7 @@ export function OwnerOrdersScreen({
     // Allow React to render the receipt before window.print()
     await new Promise((r) => setTimeout(r, 100));
     window.print();
-    await markPrinted(order.id);
+    await markPrinted(restaurant.id, restaurant.slug, order.id);
     setTimeout(() => setPrinting(null), 400);
   };
 
