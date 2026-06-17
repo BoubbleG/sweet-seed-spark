@@ -892,6 +892,23 @@ export type Database = {
           scope: string
         }[]
       }
+      owner_list_orders: {
+        Args: { _restaurant_id: string; _token: string }
+        Returns: Json
+      }
+      owner_mark_order_printed: {
+        Args: { _order_id: string; _restaurant_id: string; _token: string }
+        Returns: undefined
+      }
+      owner_update_order_status: {
+        Args: {
+          _order_id: string
+          _restaurant_id: string
+          _status: string
+          _token: string
+        }
+        Returns: undefined
+      }
       record_restaurant_snapshot: {
         Args: {
           _label: string
@@ -902,6 +919,7 @@ export type Database = {
         }
         Returns: string
       }
+      restaurant_pin_required: { Args: { _slug: string }; Returns: boolean }
       restore_restaurant_snapshot: {
         Args: { _snapshot_id: string }
         Returns: undefined
