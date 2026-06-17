@@ -37,6 +37,7 @@ export function ProductBuilderDialog({
     selections: Array<{ group: ProductOptionGroup; optionIds: string[] }>;
     notes: string;
     finalPrice: number;
+    quantity: number;
   }) => void;
 }) {
   const groups = useMemo(
@@ -108,7 +109,7 @@ export function ProductBuilderDialog({
       parts.push(`${group.name}: ${names.join(", ")}`);
     }
     const notes = parts.join(" · ");
-    onConfirm({ selections, notes, finalPrice });
+    onConfirm({ selections, notes, finalPrice, quantity: qty });
     onOpenChange(false);
   };
 
@@ -238,12 +239,7 @@ export function ProductBuilderDialog({
           <button
             type="button"
             disabled={!canConfirm}
-            onClick={() => {
-              if (!canConfirm || !product) return;
-              // Aplica quantidade fazendo N chamadas — mantém compatibilidade com use-cart
-              for (let i = 0; i < qty; i++) handleConfirm();
-              // handleConfirm já fecha o diálogo na primeira chamada; ok.
-            }}
+            onClick={handleConfirm}
             className="flex-1 h-12 rounded-2xl font-black text-white shadow-md disabled:opacity-50"
             style={{ backgroundColor: accent }}
           >
