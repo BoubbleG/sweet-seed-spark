@@ -1,51 +1,61 @@
-## Plano: Cardápio "Mix Doces e Salgados"
+## Novo cardápio
 
-### 1. Criar restaurante no banco
-Migration inserindo um novo restaurante:
-- `slug`: `mix-doces-salgados`
-- `name`: "Mix Doces e Salgados"
-- `whatsapp`: `5549991714470`
-- Cores (inspiradas no logo + flyers): laranja `#F39A3D` (primary), rosa `#E84A8A` (secondary/button), fundo creme `#FFF7EC`, texto marrom `#3A1F12`
-- `font_family`: "Outfit" para corpo + headings em estilo manuscrito (Dancing Script) via CSS custom
+### 1. Restaurante
+Migration inserindo novo restaurante:
+- `name`: "Cardápio"
+- `slug`: `cardapio`
+- `whatsapp`: `5514988284135`
+- `description`: "Para aquecer o frio! 🔥 Cuscuz, caldos na cumbuca e sobremesas."
+- Cores quentes/aconchegantes (inverno): primary laranja-âmbar `#D9541E`, secondary vermelho-telha `#A23116`, fundo creme `#FFF6E9`, texto marrom escuro `#2A1A10`
+- Fontes: heading "Fraunces" (serif elegante), corpo "Outfit"
 - `accepts_delivery: true`, `accepts_pickup: true`
-- Métodos de pagamento: pix, dinheiro, cartão crédito, transferência (representada como cartão)
-- `description`: "Bolos artesanais, docinhos, salgados e kits festa por encomenda"
-- Logo: usar `src/assets/mix-doces-salgados-logo.jpeg.asset.json` (upload do anexo 1)
-- Banner: gerado com tema doce/festa
+- Pagamentos: pix, dinheiro, cartão
 
-### 2. Categorias
-Em ordem:
-1. Kits Festa
-2. Bolos Especiais
-3. Salgados Fritos
-4. Salgados Assados e Especiais
-5. Docinhos Tradicionais
-6. Doces Finos
+### 2. Categorias (ordem)
+1. Cuscuz
+2. Caldos na Cumbuca
+3. Sobremesas
 
-### 3. Produtos (todos os itens listados pelo usuário)
-- **4 Kits Festa** (10/20/30/40 pessoas) com descrição completa (bolo, recheios, salgados, docinhos, bebidas)
-- **10 Bolos Especiais** com massa/recheio/cobertura, preço por kg, marcados com `sides_note`: "Pedido mínimo 2 kg • Encomenda com antecedência"
-- **6 Salgados Fritos** a R$1,00 + 1 especial (Pastel bolha de carne R$1,60)
-- **6 Salgados Assados/Especiais** (5 a R$1,60 + Cachorro-quente R$4,00)
-- **8 Docinhos Tradicionais** a R$1,50
-- **5 Doces Finos** (R$2,00 a R$3,00)
+### 3. Produtos
+**Cuscuz** (2)
+- Cuscuz Pequeno — R$ 15,00
+- Cuscuz Grande — R$ 30,00
 
-### 4. Imagens dos produtos
-Gerar imagem 100% realista para cada produto (~40) via `lovable-assets` com agent `generate_image` (modelo `standard`), salvas em `src/assets/mix/`. Cada imagem reflete fielmente a descrição (massa, recheio, cobertura, decoração).
+**Caldos na Cumbuca** (10, todos R$ 25,00, descrição "Servido na cumbuca, acompanha torradas")
+- Cabotiá com bacon
+- Carne seca com abóbora
+- Canja de galinha
+- Vaca atolada
+- Canja de legumes
+- Mandioca com costela
+- Mandioquinha com carne
+- Caldo verde
+- Feijão
+- Ervilha com bacon
 
-Para os kits festa: composição de mesa montada (bolo + bandejas de salgados + docinhos + garrafas de refrigerante) de acordo com a quantidade.
+**Sobremesas** (3)
+- Bombom de morango com Ninho — R$ 15,00
+- Mousse de maracujá — R$ 10,00
+- Mousse de limão — R$ 10,00
 
-### 5. Upload do logo
-`lovable-assets create --file /mnt/user-uploads/WhatsApp_Image_2026-06-15_at_22.45.18_2.jpeg --filename mix-logo.jpeg` → `src/assets/mix-doces-salgados-logo.jpeg.asset.json`
+### 4. Imagens (geradas com `imagegen`, modelo `standard`, realistas, salvas em `src/assets/cardapio/`)
+- **Logo** (`logo.png`, transparente): emblema circular com cumbuca de barro fumegante + colher de pau, tipografia serifada "Cardápio" com subtítulo "Para aquecer o frio"
+- **Banner** (`banner.jpg`, 1920×800): mesa rústica de madeira com cumbucas de caldo fumegantes, cuscuz e torradas, luz quente de inverno
+- **2 cuscuz** (porção pequena em prato fundo, porção grande em travessa)
+- **10 caldos**: cada um numa cumbuca de barro com torradas ao lado, refletindo o ingrediente principal (cabotiá+bacon, carne seca+abóbora, canja amarela, vaca atolada com mandioca+costela bovina, canja de legumes coloridos, mandioca+costela, mandioquinha amarela+carne, caldo verde com couve+calabresa, feijão marrom cremoso, ervilha verde+bacon)
+- **3 sobremesas**: bombom morango+Ninho em taça, mousse maracujá com sementes, mousse limão com raspas
 
-### 6. Aviso na descrição do restaurante
-Incluir nota: "Bolos por encomenda • Mínimo 2kg • 50% na hora do pedido • Aceita dinheiro, Pix, transferência e cartão"
+Total: ~16 imagens (logo + banner + 15 produtos).
 
-### 7. PIN do admin
-Definir PIN inicial `4470` (pode ser alterado depois no painel master).
+### 5. WhatsApp e frase
+- WhatsApp `5514988284135` no campo padrão.
+- Frase "Para aquecer o frio!" usada como tagline/subtítulo do hero e na descrição.
+
+### 6. PIN
+Sem PIN (conforme regra atual — só configuro PIN quando solicitado).
 
 ### Resultado
-Cardápio acessível em `/mix-doces-salgados` com identidade visual quente (laranja/rosa/marrom), todos os produtos, preços e fotos realistas.
+Cardápio acessível em `/cardapio`, identidade visual quente de inverno, todos os itens com foto realista, logo e banner customizados.
 
 ### Observação
-A geração de ~40 imagens realistas consome bastante tempo/créditos. Posso reduzir para apenas Bolos + Kits + Doces Finos (≈19 imagens) e usar fotos genéricas/emoji para salgados/docinhos repetitivos se preferir — me avise antes de aprovar.
+São ~16 imagens em qualidade `standard` — consome tempo e créditos. Se quiser, posso reduzir para apenas logo + banner + 3 representativas (um cuscuz, uma cumbuca genérica, uma sobremesa) e usar fotos genéricas/emoji para os demais. Me avise se preferir essa versão enxuta antes de aprovar.
