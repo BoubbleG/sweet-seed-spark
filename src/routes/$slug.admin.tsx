@@ -23,6 +23,25 @@ function SlugAdmin() {
     return localStorage.getItem(storageKey(slug));
   });
 
+  // Look up the restaurant publicly first. If it has no PIN configured,
+  // the owner panel is open — no gate at all.
+  const { data: publicRestaurant, isLoading: publicLoading } = useQuery({
+    queryKey: ["restaurant-public", slug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("restaurants")
+        .select("*")
+        .eq("slug", slug)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as Restaurant | null) ?? null;
+    },
+    staleTime: 1000 * 60,
+    refetchOnWindowFocus: false,
+  });
+
+  const pinRequired = !!(publicRestaurant as (Restaurant & { pin_hash?: string | null }) | null)?.pin_hash;
+
   const { data: restaurant, isLoading, isError, error } = useQuery({
     queryKey: ["restaurant-by-pin-session", slug, token],
     queryFn: async () => {
@@ -39,7 +58,7 @@ function SlugAdmin() {
       supabase.rpc("extend_pin_session", { _token: token }).then(() => {}, () => {});
       return row as Restaurant;
     },
-    enabled: !!token,
+    enabled: !!token && pinRequired,
     retry: false,
     staleTime: Infinity,
     gcTime: 1000 * 60 * 60 * 24,
@@ -57,12 +76,17 @@ function SlugAdmin() {
     }
   }, [token, isError, error, slug]);
 
-  if (token && isLoading) {
+  if (publicLoading || (pinRequired && token && isLoading)) {
     return (
       <div className="min-h-dvh bg-zinc-50 flex items-center justify-center">
         <div className="animate-pulse text-sm text-zinc-500">Carregando…</div>
       </div>
     );
+  }
+
+  // No PIN configured → open access directly to the owner panel.
+  if (!pinRequired && publicRestaurant) {
+    return <OwnerShell restaurant={publicRestaurant} />;
   }
 
   if (!token || !restaurant) {
