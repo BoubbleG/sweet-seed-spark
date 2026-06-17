@@ -1,46 +1,51 @@
-## Problema
+## Plano: Cardápio "Mix Doces e Salgados"
 
-Hoje, ao entrar em `/{slug}/admin` com o PIN, criamos uma sessão de 30 dias e salvamos o token no `localStorage`. Na teoria não precisaria entrar de novo, mas o código tem um bug que faz você ser deslogado sem motivo:
+### 1. Criar restaurante no banco
+Migration inserindo um novo restaurante:
+- `slug`: `mix-doces-salgados`
+- `name`: "Mix Doces e Salgados"
+- `whatsapp`: `5549991714470`
+- Cores (inspiradas no logo + flyers): laranja `#F39A3D` (primary), rosa `#E84A8A` (secondary/button), fundo creme `#FFF7EC`, texto marrom `#3A1F12`
+- `font_family`: "Outfit" para corpo + headings em estilo manuscrito (Dancing Script) via CSS custom
+- `accepts_delivery: true`, `accepts_pickup: true`
+- Métodos de pagamento: pix, dinheiro, cartão crédito, transferência (representada como cartão)
+- `description`: "Bolos artesanais, docinhos, salgados e kits festa por encomenda"
+- Logo: usar `src/assets/mix-doces-salgados-logo.jpeg.asset.json` (upload do anexo 1)
+- Banner: gerado com tema doce/festa
 
-Em `src/routes/$slug.admin.tsx` existe este `useEffect`:
+### 2. Categorias
+Em ordem:
+1. Kits Festa
+2. Bolos Especiais
+3. Salgados Fritos
+4. Salgados Assados e Especiais
+5. Docinhos Tradicionais
+6. Doces Finos
 
-```ts
-if (token && !isLoading && !restaurant && !isError) {
-  localStorage.removeItem(storageKey(slug));
-  setToken(null);
-}
-```
+### 3. Produtos (todos os itens listados pelo usuário)
+- **4 Kits Festa** (10/20/30/40 pessoas) com descrição completa (bolo, recheios, salgados, docinhos, bebidas)
+- **10 Bolos Especiais** com massa/recheio/cobertura, preço por kg, marcados com `sides_note`: "Pedido mínimo 2 kg • Encomenda com antecedência"
+- **6 Salgados Fritos** a R$1,00 + 1 especial (Pastel bolha de carne R$1,60)
+- **6 Salgados Assados/Especiais** (5 a R$1,60 + Cachorro-quente R$4,00)
+- **8 Docinhos Tradicionais** a R$1,50
+- **5 Doces Finos** (R$2,00 a R$3,00)
 
-Ele apaga o token sempre que o resultado não chega imediatamente "carregado com sucesso" — ou seja, em qualquer falha transitória de rede, ou enquanto o React Query ainda está no estado inicial, o token é descartado. Resultado: você precisa digitar o PIN repetidamente.
+### 4. Imagens dos produtos
+Gerar imagem 100% realista para cada produto (~40) via `lovable-assets` com agent `generate_image` (modelo `standard`), salvas em `src/assets/mix/`. Cada imagem reflete fielmente a descrição (massa, recheio, cobertura, decoração).
 
-Além disso, o token expira 30 dias depois do login e nunca é renovado, então quem usa o painel todo dia perde a sessão no dia 31.
+Para os kits festa: composição de mesa montada (bolo + bandejas de salgados + docinhos + garrafas de refrigerante) de acordo com a quantidade.
 
-## O que vou fazer
+### 5. Upload do logo
+`lovable-assets create --file /mnt/user-uploads/WhatsApp_Image_2026-06-15_at_22.45.18_2.jpeg --filename mix-logo.jpeg` → `src/assets/mix-doces-salgados-logo.jpeg.asset.json`
 
-Tudo só no frontend + uma pequena função no backend para renovar a sessão. Nada quebra outras telas.
+### 6. Aviso na descrição do restaurante
+Incluir nota: "Bolos por encomenda • Mínimo 2kg • 50% na hora do pedido • Aceita dinheiro, Pix, transferência e cartão"
 
-### 1. Manter o login lembrado de verdade
+### 7. PIN do admin
+Definir PIN inicial `4470` (pode ser alterado depois no painel master).
 
-Em `src/routes/$slug.admin.tsx`:
+### Resultado
+Cardápio acessível em `/mix-doces-salgados` com identidade visual quente (laranja/rosa/marrom), todos os produtos, preços e fotos realistas.
 
-- **Só apagar o token quando o servidor disser claramente que ele é inválido/expirado.** Falhas de rede, timeouts ou estados intermediários do React Query mantêm a sessão.
-- Adicionar `staleTime: Infinity` e `gcTime` longo na query de validação, para não revalidar o token a cada navegação.
-- Validar o token só uma vez ao montar; nas navegações seguintes dentro do painel, reutilizar o resultado em cache.
-
-### 2. Sessão deslizante (renovação automática)
-
-Adicionar uma RPC `extend_pin_session(_token text)` que, se o token ainda é válido, empurra `expires_at = now() + 30 days`. O painel chama essa RPC silenciosamente quando você abre o admin, então enquanto você usar pelo menos uma vez a cada 30 dias, nunca mais precisa digitar PIN naquele dispositivo.
-
-### 3. Botão "Sair" continua igual
-
-Apenas o botão "Sair" no topo verde, ou um PIN inválido / expirado retornado pelo servidor, limpam a sessão. Nada mais.
-
-### Arquivos afetados
-
-- `src/routes/$slug.admin.tsx` — lógica do gate (não toca no UI de PIN nem no painel).
-- Nova migração com a função `extend_pin_session`.
-
-### O que NÃO muda
-
-- Tela de PIN, painel do admin (`OwnerShell`), painel master `/admin`, login do master, RLS, nada disso é tocado.
-- O PIN continua sendo o mesmo, a segurança não muda — apenas a sessão fica mais resiliente e se renova sozinha enquanto usada.
+### Observação
+A geração de ~40 imagens realistas consome bastante tempo/créditos. Posso reduzir para apenas Bolos + Kits + Doces Finos (≈19 imagens) e usar fotos genéricas/emoji para salgados/docinhos repetitivos se preferir — me avise antes de aprovar.
