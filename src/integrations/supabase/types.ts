@@ -607,6 +607,13 @@ export type Database = {
         Args: { _password_hash: string; _restaurant_id: string }
         Returns: undefined
       }
+      admin_create_pin_session: {
+        Args: { _password_hash: string; _restaurant_id: string }
+        Returns: {
+          expires_at: string
+          session_token: string
+        }[]
+      }
       admin_ensure_edit_token: {
         Args: { _password_hash: string; _restaurant_id: string }
         Returns: string

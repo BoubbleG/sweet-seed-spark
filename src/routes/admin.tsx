@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut, Eye, LayoutDashboard, Share2, TrendingUp, Trash2, Link2, Check, KeyRound, RefreshCw, Pencil, Lock, Shield, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Plus, Store, Utensils, List, Palette, ChevronRight, Settings, LogOut, Eye, LayoutDashboard, Share2, TrendingUp, Trash2, Link2, Check, KeyRound, RefreshCw, Pencil, Lock, Shield, ShieldCheck, ShieldAlert, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Restaurant } from "@/types";
 import { RestaurantDialog } from "@/components/admin/restaurant-dialog";
@@ -11,6 +11,7 @@ import { VisualManager } from "@/components/admin/visual-manager";
 import { motion, AnimatePresence } from "framer-motion";
 import { sha256Hex } from "@/lib/hash";
 import { toast } from "sonner";
+import { adminBypassPin } from "@/lib/admin-panel.functions";
 
 const SUPABASE_URL = "https://mrjkizqyrmljtlvusgta.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yamtpenF5cm1sanRsdnVzZ3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NTY3NDAsImV4cCI6MjA5NjUzMjc0MH0.JTDSgPn20PipEOx6GIFtnXc-M2T2o3S4oM7t0saIwVY";
@@ -62,6 +63,7 @@ function AdminDashboard() {
   const [copiedPinLinkId, setCopiedPinLinkId] = useState<string | null>(null);
   const [pinStatusMap, setPinStatusMap] = useState<Record<string, { has_pin: boolean; is_locked: boolean }>>({});
   const [pinDialog, setPinDialog] = useState<{ rest: Restaurant; mode: 'set' | 'reset' } | null>(null);
+  const [openingPanelId, setOpeningPanelId] = useState<string | null>(null);
 
   async function copyShareLink(slug: string, id: string) {
     const url = `${window.location.origin}/${slug}`;
@@ -169,6 +171,20 @@ function AdminDashboard() {
     setCopiedPinLinkId(id);
     toast.success("Link do painel copiado!");
     setTimeout(() => setCopiedPinLinkId(null), 2000);
+  }
+
+  async function openOwnerPanel(rest: Restaurant) {
+    if (!sessionHash) { toast.error("Sessão expirada. Entre novamente."); return; }
+    setOpeningPanelId(rest.id);
+    try {
+      const result = await adminBypassPin({ data: { passwordHash: sessionHash, restaurantId: rest.id } });
+      localStorage.setItem(`pin_session:${rest.slug}`, result.token);
+      window.open(`/${rest.slug}/admin`, '_blank', 'noopener,noreferrer');
+    } catch (err: any) {
+      toast.error(err?.message ?? "Erro ao abrir painel");
+    } finally {
+      setOpeningPanelId(null);
+    }
   }
 
   useEffect(() => {
@@ -454,17 +470,16 @@ function AdminDashboard() {
                               {copiedPinLinkId === rest.id ? <><Check className="w-3 h-3 mr-1" />Copiado</> : 'Copiar link'}
                             </Button>
                           )}
-                          {pinStatusMap[rest.id]?.has_pin && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              title="Abrir painel do dono em nova aba"
-                              className="h-7 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest shrink-0 bg-emerald-600 text-white hover:bg-emerald-700 border border-emerald-600"
-                              onClick={() => window.open(`/${rest.slug}/admin`, '_blank', 'noopener,noreferrer')}
-                            >
-                              Abrir
-                            </Button>
-                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title="Abrir painel do dono em nova aba"
+                            className="h-7 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest shrink-0 bg-emerald-600 text-white hover:bg-emerald-700 border border-emerald-600"
+                            onClick={() => openOwnerPanel(rest)}
+                            disabled={openingPanelId === rest.id}
+                          >
+                            {openingPanelId === rest.id ? 'Abrindo…' : 'Abrir'}
+                          </Button>
                           <Button
                             size="sm"
                             variant="ghost"
