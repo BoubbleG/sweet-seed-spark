@@ -141,6 +141,93 @@ export function OwnerProductSheet({
     return () => { cancel = true; };
   }, [open, product?.id]);
 
+  // Persiste grupos+opções para um produto (cria/atualiza/apaga conforme o estado)
+  async function syncOptionGroups(productId: string) {
+    // Carrega ids existentes pra calcular o que apagar
+    const { data: existing } = await supabase
+      .from("product_option_groups" as any)
+      .select("id")
+      .eq("product_id", productId);
+    const existingIds = new Set((existing || []).map((g: any) => g.id));
+    const keepIds = new Set(groups.map((g) => g.id).filter(Boolean) as string[]);
+    const toDelete = [...existingIds].filter((id) => !keepIds.has(id as string));
+    if (toDelete.length > 0) {
+      const { error } = await supabase
+        .from("product_option_groups" as any)
+        .delete()
+        .in("id", toDelete);
+      if (error) throw error;
+    }
+
+    for (let i = 0; i < groups.length; i++) {
+      const g = groups[i];
+      const groupPayload = {
+        product_id: productId,
+        name: g.name.trim() || "Opções",
+        min_select: Math.max(0, Number(g.min_select) || 0),
+        max_select: Math.max(1, Number(g.max_select) || 1),
+        pricing_mode: g.pricing_mode,
+        display_order: i,
+      };
+      let groupId = g.id;
+      if (groupId) {
+        const { error } = await supabase
+          .from("product_option_groups" as any)
+          .update(groupPayload)
+          .eq("id", groupId);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from("product_option_groups" as any)
+          .insert([groupPayload])
+          .select("id")
+          .single();
+        if (error) throw error;
+        groupId = (data as any)?.id;
+      }
+      if (!groupId) continue;
+
+      // Sincroniza opções: apaga as removidas, atualiza as mantidas, insere as novas
+      const { data: existingOpts } = await supabase
+        .from("product_options" as any)
+        .select("id")
+        .eq("group_id", groupId);
+      const existingOptIds = new Set((existingOpts || []).map((o: any) => o.id));
+      const keepOptIds = new Set(g.options.map((o) => o.id).filter(Boolean) as string[]);
+      const optsToDelete = [...existingOptIds].filter((id) => !keepOptIds.has(id as string));
+      if (optsToDelete.length > 0) {
+        const { error } = await supabase
+          .from("product_options" as any)
+          .delete()
+          .in("id", optsToDelete);
+        if (error) throw error;
+      }
+      for (let j = 0; j < g.options.length; j++) {
+        const o = g.options[j];
+        const optPayload = {
+          group_id: groupId,
+          name: o.name.trim(),
+          extra_price: Number(String(o.extra_price).replace(",", ".")) || 0,
+          is_available: true,
+          display_order: j,
+        };
+        if (!optPayload.name) continue;
+        if (o.id) {
+          const { error } = await supabase
+            .from("product_options" as any)
+            .update(optPayload)
+            .eq("id", o.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("product_options" as any)
+            .insert([optPayload]);
+          if (error) throw error;
+        }
+      }
+    }
+  }
+
   const save = useMutation({
     mutationFn: async () => {
       if (!form.name.trim()) throw new Error("Dê um nome ao prato");
