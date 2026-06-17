@@ -470,17 +470,16 @@ function AdminDashboard() {
                               {copiedPinLinkId === rest.id ? <><Check className="w-3 h-3 mr-1" />Copiado</> : 'Copiar link'}
                             </Button>
                           )}
-                          {pinStatusMap[rest.id]?.has_pin && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              title="Abrir painel do dono em nova aba"
-                              className="h-7 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest shrink-0 bg-emerald-600 text-white hover:bg-emerald-700 border border-emerald-600"
-                              onClick={() => window.open(`/${rest.slug}/admin`, '_blank', 'noopener,noreferrer')}
-                            >
-                              Abrir
-                            </Button>
-                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title="Abrir painel do dono em nova aba"
+                            className="h-7 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest shrink-0 bg-emerald-600 text-white hover:bg-emerald-700 border border-emerald-600"
+                            onClick={() => openOwnerPanel(rest)}
+                            disabled={openingPanelId === rest.id}
+                          >
+                            {openingPanelId === rest.id ? 'Abrindo…' : 'Abrir'}
+                          </Button>
                           <Button
                             size="sm"
                             variant="ghost"
