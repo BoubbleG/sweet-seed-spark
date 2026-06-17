@@ -1,24 +1,33 @@
-## Imagens faltantes (53)
+## Causa do erro
 
-- **Carne na Chapa** (3): Filé de Frango 2p, Mistão 1p, Mistão 2p
-- **Pizzas** (16): todas
-- **Combos** (10): Combo 1 a Combo 10
-- **Sucos 500ml** (8): todos os sabores
-- **Sucos Jarra 1L** (8): todos os sabores
-- **Bebidas Cremosas e Frutas** (7): Milkshake 300/500, Salada de Frutas 300/500, Vitaminada 500/1L/Mista
+A migration de segurança recente removeu as policies amplas de `orders`/`order_items` e deixou só `INSERT` público. Mas:
 
-## Estilo (mantém o já gerado)
-Foto realista premium, fundo escuro de ardósia/madeira, luz quente, 1024×1024, modelo `google/gemini-2.5-flash-image`.
-- Pizzas: top-down, pizza inteira em forma redonda, ingredientes visíveis na descrição de cada sabor.
-- Carnes na chapa: vista 45°, chapa de ferro quente, 1p = porção individual / 2p = porção dupla maior com 2 pratos.
-- Combos: agrupamento (lanche + acompanhamento + bebida conforme descrição do combo no banco).
-- Sucos 500ml: copo alto com fruta ao lado. Jarra 1L: jarra de vidro + 2 copos + fruta. Cor/polpa real de cada sabor.
-- Milkshake: copo alto com chantilly. Salada de frutas: taça com frutas variadas. Vitaminada: copo com vitamina cremosa.
+1. **As tabelas `orders` e `order_items` ficaram sem nenhum GRANT** para `anon`/`authenticated`. Sem GRANT, o PostgREST bloqueia a requisição com "permission denied" antes mesmo de avaliar a RLS — por isso o cliente vê "Não conseguimos salvar o pedido".
+2. O `.insert().select().single()` em `src/lib/orders.ts` exige policy de `SELECT` para devolver a linha criada — que não existe mais (e nem deve existir, para não vazar pedidos de outros).
+3. O trigger `assign_order_number` faz `SELECT MAX(order_number) FROM orders` rodando como o usuário invocador (anon) — também quebra sem permissão de leitura.
 
-## Execução
-1. Buscar descrições reais dos 53 produtos no banco para prompts precisos.
-2. Gerar em lotes paralelos de ~6 chamadas via AI Gateway (mesmo script anterior), salvar como `src/assets/skina/produtos/{slug}.jpg` e fazer upload para CDN.
-3. `UPDATE products SET image_url=... WHERE id=...` para cada produto.
-4. Verificar no fim que todos os 83 produtos têm `image_url`.
+## Solução
 
-Se houver rate limit, retomo automaticamente em lotes menores até completar.
+Criar uma RPC `SECURITY DEFINER` chamada `public_create_order` que recebe os dados do pedido + itens em JSON, insere tudo atomicamente e devolve só `{ id, order_number }`. O frontend deixa de fazer insert direto e passa a chamar essa RPC.
+
+### Migração SQL
+- `CREATE FUNCTION public.public_create_order(_restaurant_id uuid, _customer jsonb, _totals jsonb, _items jsonb) RETURNS TABLE(id uuid, order_number int) LANGUAGE plpgsql SECURITY DEFINER SET search_path=public`
+  - Valida que o restaurante existe e está ativo
+  - INSERT em `orders` com campos vindos do JSON
+  - INSERT em `order_items` em lote (`jsonb_array_elements`)
+  - Retorna `id` + `order_number`
+- `GRANT EXECUTE ON FUNCTION public.public_create_order(...) TO anon, authenticated`
+- Manter as policies atuais (não reintroduzir SELECT público)
+
+### Frontend (`src/lib/orders.ts`)
+- Substituir o bloco `supabase.from("orders").insert(...).select().single()` + insert em `order_items` por uma única chamada `supabase.rpc("public_create_order", { _restaurant_id, _customer, _totals, _items })`.
+- Tratar erro retornando `null` (mantém a mensagem atual no `cart-drawer.tsx`).
+- Tipos: usar `as any` no payload por ora, já que `types.ts` é auto-gerado e a regen acontece pós-migration.
+
+### Verificação
+- Após aplicar: testar criação de um pedido no preview e olhar `orders` no banco.
+- Confirmar que o número do pedido (`order_number`) continua sendo gerado corretamente pelo trigger.
+
+## Arquivos
+- **Nova migration** em `supabase/migrations/`
+- **Editar** `src/lib/orders.ts` (só a função `createOrder`)

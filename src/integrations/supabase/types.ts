@@ -909,6 +909,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      public_create_order: {
+        Args: {
+          _customer: Json
+          _items: Json
+          _restaurant_id: string
+          _totals: Json
+        }
+        Returns: {
+          id: string
+          order_number: number
+        }[]
+      }
       record_restaurant_snapshot: {
         Args: {
           _label: string
