@@ -28,45 +28,45 @@ export async function createOrder(params: {
 }): Promise<Order | null> {
   const { restaurantId, items, customer, subtotal, deliveryFee, total } = params;
 
-  const { data: order, error } = await supabase
-    .from("orders")
-    .insert({
-      restaurant_id: restaurantId,
-      customer_name: customer.name,
-      customer_phone: customer.phone || null,
-      customer_address: customer.address || null,
-      customer_neighborhood: customer.neighborhood || null,
-      customer_reference: customer.reference || null,
-      payment_method: customer.paymentMethod || null,
-      change_for: customer.changeFor ? Number(customer.changeFor.replace(",", ".")) : null,
-      notes: customer.generalNotes || null,
-      subtotal,
-      delivery_fee: deliveryFee,
-      total,
+  const { data, error } = await supabase.rpc("public_create_order" as any, {
+    _restaurant_id: restaurantId,
+    _customer: {
+      name: customer.name,
+      phone: customer.phone || "",
+      address: customer.address || "",
+      neighborhood: customer.neighborhood || "",
+      reference: customer.reference || "",
+      payment_method: customer.paymentMethod || "",
+      change_for: customer.changeFor ? String(Number(customer.changeFor.replace(",", "."))) : "",
+      notes: customer.generalNotes || "",
       order_type: customer.orderType ?? "delivery",
-      status: "novo",
-    })
-    .select()
-    .single();
+    },
+    _totals: { subtotal, delivery_fee: deliveryFee, total },
+    _items: items.map((it) => ({
+      product_name: it.name,
+      unit_price: it.price,
+      quantity: it.quantity,
+      notes: it.notes ?? "",
+      size: it.size ?? "",
+    })),
+  } as any);
 
-  if (error || !order) {
+  if (error) {
     console.error("Failed to create order", error);
     return null;
   }
 
-  if (items.length > 0) {
-    const rows = items.map((it) => ({
-      order_id: order.id,
-      product_name: it.name,
-      unit_price: it.price,
-      quantity: it.quantity,
-      notes: it.notes ?? null,
-      size: it.size ?? null,
-    }));
-    await supabase.from("order_items").insert(rows);
-  }
+  const row: any = Array.isArray(data) ? data[0] : data;
+  if (!row?.id) return null;
 
-  return order as Order;
+  return {
+    id: row.id,
+    order_number: row.order_number,
+    restaurant_id: restaurantId,
+    customer_name: customer.name,
+    status: "novo",
+    total,
+  } as unknown as Order;
 }
 
 export async function fetchOrders(restaurantId: string, slug: string): Promise<Order[]> {
