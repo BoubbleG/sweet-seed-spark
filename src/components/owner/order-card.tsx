@@ -102,9 +102,13 @@ export function OrderCard({
         <ul className="text-sm text-zinc-700 space-y-1 mb-3 bg-zinc-50 rounded-xl p-3">
           {(order.items ?? []).map((it) => (
             <li key={it.id} className="flex justify-between gap-2">
-              <span className="truncate">
+              <span className="min-w-0 flex-1">
                 <b>{it.quantity}x</b> {it.product_name}{it.size ? ` (${it.size})` : ''}
-                {it.notes ? <em className="text-zinc-500"> · {it.notes}</em> : null}
+                {it.notes ? (
+                  <em className="block text-zinc-500 whitespace-pre-line not-italic text-xs mt-0.5 pl-4">
+                    {it.notes}
+                  </em>
+                ) : null}
               </span>
               <span className="text-zinc-500 shrink-0">
                 {formatCurrency(it.unit_price * it.quantity)}

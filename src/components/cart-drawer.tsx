@@ -344,6 +344,14 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
                               <X className="w-5 h-5" />
                             </button>
                           </div>
+                          {item.notes && (
+                            <p
+                              className="text-xs mt-1 whitespace-pre-line leading-snug"
+                              style={{ color: t.textMuted }}
+                            >
+                              {item.notes}
+                            </p>
+                          )}
                           <div className="flex items-center justify-between mt-2">
                             <span className="text-base font-black" style={{ color: t.text }}>{formatCurrency(item.price * item.quantity)}</span>
                             <div

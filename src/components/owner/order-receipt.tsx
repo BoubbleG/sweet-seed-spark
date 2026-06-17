@@ -47,7 +47,7 @@ export function OrderReceipt({
               </span>
               <span>{formatCurrency(it.unit_price * it.quantity)}</span>
             </div>
-            {it.notes && <div className="pl-3 italic">obs: {it.notes}</div>}
+            {it.notes && <div className="pl-3 italic whitespace-pre-line">obs: {it.notes}</div>}
           </div>
         ))}
       </div>

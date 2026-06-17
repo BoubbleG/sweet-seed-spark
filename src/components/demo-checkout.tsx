@@ -8,7 +8,7 @@ import {
 
 /* ============ DATA ============ */
 
-type Item = { id: string; name: string; desc: string; price: number; img: string; tag?: string };
+type Item = { id: string; name: string; desc: string; price: number; img: string; tag?: string; notes?: string };
 const CATS = [
   { id: "burgers", label: "Hambúrgueres", icon: Flame },
   { id: "pizzas", label: "Pizzas", icon: UtensilsCrossed },
@@ -546,7 +546,14 @@ function StepReview({ cart, bumps, mode, address, payment, cardData, changeFor, 
         <ul className="space-y-2 text-sm">
           {entries.map(e => (
             <li key={e.item.id} className="flex justify-between gap-2">
-              <span className="text-zinc-700 font-medium truncate">{e.qty}× {e.item.name}</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-zinc-700 font-medium truncate">{e.qty}× {e.item.name}</div>
+                {e.item.notes && (
+                  <div className="text-xs text-zinc-500 whitespace-pre-line mt-0.5 pl-4">
+                    {e.item.notes}
+                  </div>
+                )}
+              </div>
               <span className="font-bold text-zinc-900 tabular-nums shrink-0">{formatBRL(e.item.price * e.qty)}</span>
             </li>
           ))}

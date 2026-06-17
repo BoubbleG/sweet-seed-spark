@@ -108,7 +108,7 @@ export function ProductBuilderDialog({
         );
       parts.push(`${group.name}: ${names.join(", ")}`);
     }
-    const notes = parts.join(" · ");
+    const notes = parts.join("\n");
     onConfirm({ selections, notes, finalPrice, quantity: qty });
     onOpenChange(false);
   };
