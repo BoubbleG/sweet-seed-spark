@@ -1,31 +1,63 @@
-## Objetivo
-Garantir que tudo que o cliente personaliza (adicionais, "monte seu combo", "monte seu prato", misturas, observações) apareça em **todas as telas do pedido** — não só na mensagem do WhatsApp.
+## Plano: Cardápio "Skina do Lanche"
 
-## Onde aparece hoje
-- Mensagem do WhatsApp: já mostra `Observação: ...` mas em uma linha só, separada por ` · `.
-- Carrinho (drawer): **não mostra** as escolhas, só nome + tamanho.
-- Tela de revisão do checkout (demo-checkout): **não mostra** as escolhas, só `qtd× nome`.
-- Card do pedido no painel do dono: já mostra inline (`· notes`).
-- Cupom/recibo do dono: já mostra como "obs:".
+Vou criar o restaurante completo no banco via migration de seed (igual aos outros restaurantes do projeto), com 11 categorias e todos os itens informados.
 
-## O que vai mudar
+### 1. Restaurante
+- **Slug:** `skina-do-lanche`
+- **Nome:** Skina do Lanche — Restaurante & Pizzaria
+- **WhatsApp:** 5592984251529
+- **Tipo:** lanchonete/pizzaria
+- **Cores (do flyer preto + amarelo dourado):**
+  - `background_color`: preto `#0a0a0a`
+  - `primary_color` / `button_color`: amarelo dourado `#f5b800`
+  - `text_color`: branco `#fafafa`
+  - `secondary_color`: amarelo mais claro
+- **Descrição:** "Este estabelecimento deu certo porque existem dois donos: DEUS e Eu."
+- `delivery_fee`: 0 (você configura depois)
+- `accepts_delivery: true`, `accepts_pickup: true`
+- Instagram: `@skinadolancheepizzaria`
 
-### 1. Carrinho (`src/components/cart-drawer.tsx`)
-Abaixo do nome do item, renderizar `item.notes` quebrado em linhas (uma escolha por linha) com tipografia menor e cor suave, usando os tokens do tema. Se houver várias categorias (ex.: "Mix 1: Granola, Banana | Mix 2: Confete"), cada grupo vira uma linha.
+### 2. Categorias (11)
+1. Sanduíches Tradicionais
+2. Sanduíches Premium
+3. Hot Dog
+4. Fritas e Porções
+5. Sopa
+6. Carne na Chapa
+7. Pizzas
+8. Combos
+9. Sucos 500ml
+10. Sucos Jarra 1L
+11. Bebidas Cremosas e Frutas
 
-### 2. Revisão do checkout (`src/components/demo-checkout.tsx`, linha ~549)
-Mesmo tratamento: mostrar as personalizações logo abaixo do nome do item na lista de revisão, com indentação leve.
+### 3. Produtos
+Todos os itens da lista que você passou, com nome, descrição e preço únicos (pizzas como tamanho único conforme escolhido).
 
-### 3. Formatação das notas (`src/components/product-builder-dialog.tsx`)
-Trocar o separador atual ` · ` por `\n` ao montar `notes`, mantendo o padrão `Grupo: opção1, opção2`. Isso faz com que em qualquer lugar que renderize `notes` com `whitespace-pre-line` as linhas fiquem separadas — sem mudar a lógica de preço nem o formato dos grupos.
+Carne na chapa: cada prato vira **2 produtos** (1 pessoa / 2 pessoas) com sufixo no nome, ex.: "Contra Filé (1 pessoa)" R$ 28 e "Contra Filé (2 pessoas)" R$ 45.
 
-### 4. Mensagem do WhatsApp (`src/lib/utils.ts`)
-Manter `Observação:` mas usar as quebras de linha vindas do `notes` (já fica naturalmente legível no WhatsApp).
+### 4. Personalizações (option groups)
+Vou já configurar usando o sistema `product_option_groups` + `product_options` que existe:
 
-### 5. Renderização com quebra de linha
-Adicionar `whitespace-pre-line` nas áreas que mostram `item.notes` (carrinho, checkout, card do dono, recibo) para respeitar os `\n`.
+**a) Adicionais nos sanduíches** (todos os X- das categorias 1 e 2):
+- Grupo "Adicionais" — opcional, max 6, modo `per_option`
+- Opções: Bacon +R$ 4, Ovo +R$ 2, Queijo extra +R$ 3, Calabresa +R$ 4, Catupiry +R$ 4, Batata palha +R$ 2
 
-## Fora de escopo
-- Não muda banco de dados, RLS, preço, lógica de cálculo nem o `ProductBuilderDialog` em si.
-- Não muda o fluxo de adicionar ao carrinho.
-- Não toca no painel do dono além de adicionar `whitespace-pre-line` nas notas já exibidas.
+**b) Sabor do Milkshake** (300ml e 500ml):
+- Grupo "Sabor" — obrigatório (min=1, max=1), modo `free`
+- Opções: Chocolate, Morango, Ovomaltine, Ninho, Baunilha
+
+**c) Sabor da Vitaminada** (500ml e 1L, não a mista):
+- Grupo "Frutas" — obrigatório, min=1, max=3, modo `free`
+- Opções: Banana, Maçã, Mamão, Aveia, Granola
+
+### 5. Imagens
+Por padrão, **sem imagens** (campo `image_url` vazio) — os cards mostram só nome/preço. Se quiser, depois posso gerar imagens com IA para itens específicos.
+
+### Como entrego
+1. Uma migration SQL única que: insere restaurant → categorias → produtos → option_groups → options, tudo conectado por IDs determinísticos (`gen_random_uuid` capturados em CTEs/variáveis).
+2. Após rodar, o cardápio aparece em `/skina-do-lanche` e o painel em `/skina-do-lanche/admin` (PIN você define em `/admin`).
+
+### Fora do escopo
+- Não mexo em nenhum outro restaurante.
+- Não toco em RLS, código de UI, hooks ou componentes — o sistema já suporta tudo isso.
+- Não configuro taxa de entrega/bairros (você faz no painel).
