@@ -100,6 +100,47 @@ export function OwnerProductSheet({
     }
   }, [open, product, defaultCategoryId, categories]);
 
+  // Carrega grupos de opções existentes do produto
+  useEffect(() => {
+    if (!open) { setGroups([]); return; }
+    if (!product?.id) { setGroups([]); return; }
+    let cancel = false;
+    (async () => {
+      setLoadingGroups(true);
+      const { data: gs, error } = await supabase
+        .from("product_option_groups" as any)
+        .select("*")
+        .eq("product_id", product.id)
+        .order("display_order", { ascending: true });
+      if (error) { setLoadingGroups(false); return; }
+      const groupIds = (gs || []).map((g: any) => g.id);
+      let opts: any[] = [];
+      if (groupIds.length) {
+        const { data: os } = await supabase
+          .from("product_options" as any)
+          .select("*")
+          .in("group_id", groupIds)
+          .order("display_order", { ascending: true });
+        opts = os || [];
+      }
+      if (cancel) return;
+      setGroups((gs || []).map((g: any) => ({
+        id: g.id,
+        name: g.name,
+        min_select: g.min_select,
+        max_select: g.max_select,
+        pricing_mode: g.pricing_mode,
+        options: opts.filter((o) => o.group_id === g.id).map((o) => ({
+          id: o.id,
+          name: o.name,
+          extra_price: String(o.extra_price ?? "0"),
+        })),
+      })));
+      setLoadingGroups(false);
+    })();
+    return () => { cancel = true; };
+  }, [open, product?.id]);
+
   const save = useMutation({
     mutationFn: async () => {
       if (!form.name.trim()) throw new Error("Dê um nome ao prato");
