@@ -721,6 +721,29 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
           );
         }}
       />
+
+      <AcaiBuilderDialog
+        open={acaiBuilderOpen}
+        onOpenChange={setAcaiBuilderOpen}
+        onConfirm={({ mix1, mix2 }) => {
+          const parts: string[] = [];
+          if (mix1.length) parts.push(`Mix 1: ${mix1.join(', ')}`);
+          if (mix2.length) parts.push(`Mix 2: ${mix2.join(', ')}`);
+          const notes = parts.length ? parts.join(' · ') : 'Sem complementos';
+          addItem(
+            {
+              id: 'acai-monte-seu-copo',
+              name: 'Copo de Açaí 400ml (montado)',
+              price: 15,
+              description: '',
+              image_url: null,
+              category_id: null,
+              restaurant_id: restaurant.id,
+            } as any,
+            { notes }
+          );
+        }}
+      />
     </div>
   );
 }
