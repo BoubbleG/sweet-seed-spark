@@ -63,6 +63,7 @@ function AdminDashboard() {
   const [copiedPinLinkId, setCopiedPinLinkId] = useState<string | null>(null);
   const [pinStatusMap, setPinStatusMap] = useState<Record<string, { has_pin: boolean; is_locked: boolean }>>({});
   const [pinDialog, setPinDialog] = useState<{ rest: Restaurant; mode: 'set' | 'reset' } | null>(null);
+  const [openingPanelId, setOpeningPanelId] = useState<string | null>(null);
 
   async function copyShareLink(slug: string, id: string) {
     const url = `${window.location.origin}/${slug}`;
