@@ -12,6 +12,7 @@ import { CartDrawer } from "@/components/cart-drawer";
 import { motion, AnimatePresence } from "framer-motion";
 import { MixSelectorDialog } from "@/components/mix-selector-dialog";
 import { AcaiBuilderDialog } from "@/components/acai-builder-dialog";
+import { ProductBuilderDialog } from "@/components/product-builder-dialog";
 import { sanitizeCustomCss } from "@/lib/sanitize-css";
 
 
@@ -46,6 +47,7 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
     price: number;
   }>({ open: false, product: null, size: null, price: 0 });
   const [acaiBuilderProduct, setAcaiBuilderProduct] = useState<any | null>(null);
+  const [builderProduct, setBuilderProduct] = useState<any | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
