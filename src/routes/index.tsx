@@ -28,7 +28,12 @@ function LandingPage() {
   useEffect(() => {
     async function load() {
       const sb = createClient("https://mrjkizqyrmljtlvusgta.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yamtpenF5cm1sanRsdnVzZ3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NTY3NDAsImV4cCI6MjA5NjUzMjc0MH0.JTDSgPn20PipEOx6GIFtnXc-M2T2o3S4oM7t0saIwVY");
-      const { data } = await sb.from('restaurants').select('*').eq('is_demo', false);
+      const { data } = await sb
+        .from('restaurants')
+        .select(
+          'id, name, slug, logo_url, banner_url, business_type, description, whatsapp, address, city, opening_hours, delivery_fee, min_order_for_free_delivery, average_delivery_time, instagram, status, primary_color, secondary_color, button_color, visual_style, created_at, updated_at, font_family, border_radius, card_style, show_delivery_status, header_style, category_layout, product_card_layout, background_color, text_color, show_search, show_categories, custom_css, accepts_delivery, accepts_pickup, payment_methods, is_demo'
+        )
+        .eq('is_demo', false);
       if (data) setRestaurants(data as Restaurant[]);
     }
     load();
