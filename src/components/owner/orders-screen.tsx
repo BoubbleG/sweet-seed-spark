@@ -66,7 +66,9 @@ export function OwnerOrdersScreen({
   useEffect(() => {
     load();
     // Realtime broadcasts were removed for security; poll instead.
-    const interval = setInterval(async () => {
+    // Pausa quando a aba está em segundo plano para reduzir carga.
+    const tick = async () => {
+      if (typeof document !== "undefined" && document.hidden) return;
       const data = await fetchOrders(restaurant.id, restaurant.slug);
       let arrivedToPrint: Order | null = null;
       for (const o of data) {
@@ -82,8 +84,14 @@ export function OwnerOrdersScreen({
       initialLoaded.current = true;
       setOrders(data);
       if (arrivedToPrint) triggerPrint(arrivedToPrint);
-    }, 6000);
-    return () => clearInterval(interval);
+    };
+    const interval = setInterval(tick, 15000);
+    const onVisible = () => { if (!document.hidden) tick(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurant.id, autoPrint]);
 
