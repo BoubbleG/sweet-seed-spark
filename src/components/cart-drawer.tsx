@@ -704,10 +704,20 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
                     <button
                       type="button"
                       onClick={handleSendOrder}
-                      className="flex-1 h-16 bg-[#25D366] hover:bg-[#1ebe5b] text-white rounded-2xl flex items-center justify-center gap-2 shadow-lg font-black text-base active:scale-[0.98] transition"
+                      disabled={submitting}
+                      className="flex-1 h-16 bg-[#25D366] hover:bg-[#1ebe5b] disabled:opacity-70 disabled:cursor-wait text-white rounded-2xl flex items-center justify-center gap-2 shadow-lg font-black text-base active:scale-[0.98] transition"
                     >
-                      <Check className="w-6 h-6" />
-                      Enviar pedido
+                      {submitting ? (
+                        <>
+                          <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                          Enviando…
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-6 h-6" />
+                          Enviar pedido
+                        </>
+                      )}
                     </button>
                   )}
                 </div>
