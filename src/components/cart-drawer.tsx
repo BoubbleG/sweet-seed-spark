@@ -19,6 +19,7 @@ import {
   readLocalProfile,
   findRemoteProfile,
   saveCustomerProfile,
+  writeLocalProfile,
   clearLocalProfile,
   deleteRemoteProfile,
 } from "@/lib/customer-profile";
@@ -76,6 +77,7 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null);
   const [lookupPhone, setLookupPhone] = useState<string>("");
+  const [submitting, setSubmitting] = useState(false);
 
   // Procura perfil pelo telefone quando o cliente acaba de digitar
   useEffect(() => {
@@ -163,6 +165,17 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
       onClose();
       return;
     }
+    if (submitting) return;
+    setSubmitting(true);
+    // Salva local imediatamente (UX: próximo pedido já vem preenchido mesmo offline)
+    writeLocalProfile(restaurant.id, {
+      name: customer.name,
+      phone: customer.phone,
+      address: customer.address,
+      neighborhood: customer.neighborhood,
+      reference: customer.reference,
+      paymentMethod: customer.paymentMethod,
+    });
     const order = await createOrder({
       restaurantId: restaurant.id,
       items,
@@ -172,19 +185,20 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
       total,
     });
     if (!order) {
-      toast.error("Não conseguimos salvar o pedido. Tente novamente.");
+      setSubmitting(false);
+      toast.error("Conexão instável. Verifique sua internet e tente enviar de novo.");
       return;
     }
 
-    // Salva o perfil do cliente para o próximo pedido
-    await saveCustomerProfile(restaurant.id, {
+    // Salva o perfil remoto em segundo plano — não bloqueia o WhatsApp
+    saveCustomerProfile(restaurant.id, {
       name: customer.name,
       phone: customer.phone,
       address: customer.address,
       neighborhood: customer.neighborhood,
       reference: customer.reference,
       paymentMethod: customer.paymentMethod,
-    });
+    }).catch(() => {});
 
     const orderTag = encodeURIComponent(
       `*Pedido #${String(order.order_number).padStart(4, "0")}*\n\n`,
@@ -203,6 +217,7 @@ export function CartDrawer({ isOpen, onClose, restaurant, isPreview = false }: C
     clearCart();
     setStep(1);
     onClose();
+    setSubmitting(false);
   };
 
   if (!isOpen) return null;
