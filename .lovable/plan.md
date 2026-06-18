@@ -1,71 +1,60 @@
-# Plano de otimização avançada (Lighthouse → 100)
+# Plano — Novo restaurante "Batatas da Naylla"
 
-Vou seguir os 3 passos que você pediu: **(1)** estruturar o prompt de auditoria, **(2)** transformar a resposta desse prompt em plano, **(3)** executar — esta resposta é o passo 2 (o plano). A execução acontece quando você aprovar.
+Criar um novo restaurante completo no painel `/admin`, com cardápio, identidade visual e imagens IA pra cada produto. O estilo segue o mesmo padrão do Point do Gordinho (fundo escuro, foto grande, glass cards, fonte Outfit), mas com a paleta da marca Naylla (preto + vermelho + amarelo das imagens enviadas).
 
-## Passo 1 — Prompt de auditoria avançada (referência)
+## 1. Restaurante (migração `restaurants`)
 
-> "Audite o cardápio público (`/{slug}`) buscando Lighthouse Performance ≥ 95 em mobile 4G. Para cada uma das 6 métricas (LCP, FCP, CLS, INP, TBT, Speed Index) liste a causa provável no código atual e a correção mínima. Considere SSR/edge cache, payload de JS, fontes web, imagens (formato/dimensão/preload), CSS crítico, hidratação parcial, fila de rede e React Query. Não toque em visual nem em lógica de negócio."
+- **Slug:** `batatas-da-naylla` → URL pública: `/batatas-da-naylla`
+- **Nome:** Batatas da Naylla
+- **WhatsApp:** `879981191047` (você passou esse; vou usá-lo como principal)
+- **Taxa de entrega:** R$ 4,00 (igual ao panfleto)
+- **Paleta Naylla** (puxada das duas imagens):
+  - `primary_color`: `#F5B400` (amarelo das marcas)
+  - `secondary_color`: `#E11D2A` (vermelho dos botões de preço)
+  - `button_color`: `#E11D2A`
+  - `background_color`: `#0A0A0A` (preto)
+  - `text_color`: `#FFFFFF`
+- **Layout/visual:** `visual_style=modern`, `header_style=standard`, `card_style=glass`, `font_family=Outfit`, `border_radius=1.5rem` — idêntico ao Gordinho.
+- **PIN:** vou deixar pra você definir no `/admin` depois (não dá pra criar sem você escolher os dígitos).
 
-## Passo 2 — Plano derivado
+## 2. Cardápio — categorias + produtos
 
-### Diagnóstico (o que ainda pesa)
+Vou juntar TUDO (texto que você mandou + imagens):
 
-1. **Cardápio renderiza vazio no SSR** — `useRestaurantMenu` só dispara no cliente, então o HTML inicial não tem conteúdo. LCP fica preso esperando JS + RPC.
-2. **Imagens sem `width/height` e sem `fetchpriority`** — gera CLS e atrasa LCP da logo/banner. Imagens do Unsplash/R2 baixam em tamanho cheio (1–2 MB cada).
-3. **Sem `preconnect` ao Supabase e ao CDN de imagens** — cada primeira requisição paga DNS + TLS (~300 ms em 4G).
-4. **JS de checkout entra no bundle inicial** — `cart-drawer.tsx` (829 linhas) + `framer-motion` + 3 diálogos (`mix-selector`, `acai-builder`, `product-builder`) são carregados antes mesmo do cliente abrir o carrinho.
-5. **Fonte web carrega 6 famílias** (`Outfit`, `Space Grotesk`, `Inter`, `Montserrat`, `Poppins`, `Playfair`, `Pacifico`) em todas as rotas — bloqueia render.
-6. **RPC `public_get_menu` sem cache HTTP** — cada visita refaz a query, mesmo o cardápio mudando pouco.
-7. **Imagens externas (Unsplash/R2) sem transformação** — sem `&w=`/`&q=` nem AVIF/WebP negociado.
+**Categorias (na ordem):**
+1. **Lanches** — 12 itens (X-SALADA R$11, X-BACON R$14, X-CALABRESA R$14, HAMBÚRGUER R$10, HAMBÚRGUER COMPLETO R$15, X-EGG R$13, X-TUDO R$15, X-TUDO PREMIUM R$17, GIGANTE DA NAYLLA R$20 + BAURU R$6, BAURU X-BACON R$7, BAURU X-CALABRESA R$7 — esses 3 só apareciam nas imagens)
+2. **Batatas (com cheddar + Catupiry)** — 6 itens das fotos (SIMPLES R$20, BATABRESA R$30, CALABACON R$40, BATABACON R$30, BATATA CARNE SECA R$35, BATATA DA CASA R$45)
+3. **Salgados (kits)** — 6 itens (15un R$11, 25un R$17, 35un R$24, 45un R$31, 50un R$35, 100un R$70)
+4. **Salgados (avulso)** — Pastel de Queijo R$5, Pastel de Frango R$5, Coxinha de Frango R$5, Coxinha de Frango c/ Cream Cheese R$10, Coxinha de Costela c/ Cream Cheese R$10
+5. **Bebidas** — Coca 2L R$15, Fanta 2L R$15, Guaraná 2L R$15, Cajuína 2L R$15, Coca 1L R$10, Fanta 1L R$10, Guaraná 1L R$10, Cajuína 1L R$10, Coca 500ml R$6, Coca lata 350ml R$5, Sprite lata R$5, Fanta lata R$5, Guaraná lata R$5, Cajuína lata R$5
 
-### Ações
+Total: ~40 produtos.
 
-#### 1. SSR do cardápio (maior ganho de LCP)
-- Adicionar `loader` em `src/routes/$slug.index.tsx` que chama o RPC `public_get_menu` via `queryClient.ensureQueryData`, e trocar `useRestaurantMenu` por `useSuspenseQuery` com a mesma `queryOptions`. HTML inicial passa a conter produtos → LCP cai de ~3 s para <1 s.
-- Definir `errorComponent` e `notFoundComponent` na rota (obrigatório quando há loader).
+## 3. Imagens (IA, padrão Gordinho)
 
-#### 2. Preconnect + preload do LCP
-Em `src/routes/__root.tsx` (`head().links`):
-- `<link rel="preconnect" href="https://mrjkizqyrmljtlvusgta.supabase.co" crossorigin>`
-- `<link rel="preconnect" href="https://images.unsplash.com" crossorigin>` e o domínio R2 usado pelos restaurantes.
-- `<link rel="dns-prefetch">` como fallback.
+Vou gerar UMA imagem por produto via Lovable AI (`google/gemini-3.1-flash-image-preview`), salvar via `lovable-assets` no R2 (mesmo fluxo dos sucos do Nando Burger) e gravar o `image_url` direto na tabela `products`. Cada imagem é validada (HTTP 200 + tipo `image/*`) antes de gravar — se uma falhar, eu regenero ou deixo sem imagem ao invés de salvar URL quebrada.
 
-Na rota `$slug.index.tsx`, derivar do loader o `logo_url`/`banner_url` e adicionar `<link rel="preload" as="image" href={...} fetchpriority="high">`.
+Estilo das fotos: prato/lanche em fundo preto liso, iluminação warm overhead, queijo derretido visível quando cabe — bem parecido com o que já fiz pro Point do Gordinho.
 
-#### 3. Imagens leves e estáveis
-- Adicionar `width` e `height` em **todos** os `<img>` (logo, banner, cards) para zerar CLS.
-- Helper `optimizeImageUrl(url, { w, q })` que injeta `?w=400&q=70&fm=webp` quando o host é Unsplash, e `?width=400&quality=70` quando é R2 (Cloudflare Images). Aplicar em cards de produto (w=400) e banner (w=1200).
-- `fetchpriority="high"` só na logo/banner; demais ficam `loading="lazy"`.
+Bebidas em lata/garrafa = produto isolado sobre fundo preto.
 
-#### 4. Code-splitting agressivo
-- Carregar via `lazy()` + `<Suspense>`: `CartDrawer`, `MixSelectorDialog`, `AcaiBuilderDialog`, `ProductBuilderDialog`. Eles só montam quando o usuário interage, então saem do bundle inicial (~150 KB a menos de JS).
-- Remover `framer-motion` dos componentes acima do dobro (substituir `motion.div` simples por classes utilitárias de animação CSS já existentes). Mantém visual idêntico.
+**Logo:** gero uma marca textual "Batatas da Naylla" no mesmo estilo vermelho+amarelo das imagens enviadas, já que você não anexou o logo final em arquivo separado.
 
-#### 5. Fontes web
-- Reduzir o `<link>` de fontes do `__root.tsx` para apenas as 2 famílias realmente usadas no projeto (vou auditar com `rg "font-(outfit|space|inter|montserrat|poppins|playfair|pacifico)"` antes). As demais saem.
-- Acrescentar `&display=swap` (já está) e `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`.
+## 4. Ordem de execução (build mode)
 
-#### 6. Cache HTTP do RPC do cardápio
-- Envolver a chamada `public_get_menu` num server route `/api/public/menu/$slug` que devolve o JSON com `Cache-Control: public, s-maxage=60, stale-while-revalidate=300`. O edge da Cloudflare passa a servir HIT em ~20 ms global. Cliente continua chamando via React Query (mesma chave).
+1. Migração SQL: cria o `restaurants` + 5 `categories` (sem produtos ainda; só pra ter os IDs).
+2. Geração das ~40 imagens IA + upload em lote (paralelo em grupos pra não estourar rate).
+3. `INSERT` único na `products` com nome/descrição/preço/categoria/image_url.
+4. Verificação rápida: abrir `/batatas-da-naylla`, conferir que todos os produtos aparecem com imagem carregada (HTTP 200 nas URLs do R2).
 
-#### 7. Higiene final
-- `defaultPreloadStaleTime` no router para 30 s, evitando refetch ao voltar para a aba.
-- Adicionar `<meta name="theme-color">` e `viewport` já está.
-- Auditar com Lighthouse antes/depois e reportar números.
+## Custo / tempo
 
-### Métricas-alvo (mobile, 4G simulado)
-| Métrica | Hoje (estimado) | Meta |
-|---|---|---|
-| LCP | 3.0–4.0 s | < 1.5 s |
-| TBT | 400 ms+ | < 150 ms |
-| CLS | 0.15+ | < 0.05 |
-| Performance | 60–75 | 95+ |
+- ~40 imagens IA = uns 2–4 min de geração + créditos do Lovable AI.
+- Nenhuma mudança em código de UI — só dados.
 
-### O que NÃO muda
-- Visual, cores, animações percebidas, fluxo de checkout, RLS, dados.
-- Painel do dono e área admin ficam de fora desta passada (foco é o cardápio público, que é o que o Lighthouse mede).
+## O que NÃO faço sem você confirmar depois
 
-## Passo 3 — Execução
-Faço todas as alterações em uma única passada após sua aprovação, na ordem acima (SSR → preconnect → imagens → code-split → fontes → cache HTTP → verificação).
+- Definir o PIN do admin desse restaurante (você faz pelo painel `/admin`).
+- Trocar a paleta se não gostar do amarelo+vermelho que extraí — me avise e ajusto.
 
-Posso começar?
+Posso seguir?
