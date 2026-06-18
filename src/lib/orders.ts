@@ -28,7 +28,7 @@ export async function createOrder(params: {
 }): Promise<Order | null> {
   const { restaurantId, items, customer, subtotal, deliveryFee, total } = params;
 
-  const { data, error } = await supabase.rpc("public_create_order" as any, {
+  const payload = {
     _restaurant_id: restaurantId,
     _customer: {
       name: customer.name,
@@ -49,7 +49,28 @@ export async function createOrder(params: {
       notes: it.notes ?? "",
       size: it.size ?? "",
     })),
-  } as any);
+  } as any;
+
+  // Tenta até 2x com timeout de 8s — protege contra conexões instáveis.
+  const attempt = async () => {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    try {
+      return await supabase.rpc("public_create_order" as any, payload).abortSignal(ctrl.signal);
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
+  let data: any = null;
+  let error: any = null;
+  for (let i = 0; i < 2; i++) {
+    const res = await attempt().catch((e) => ({ data: null, error: e }));
+    data = (res as any).data;
+    error = (res as any).error;
+    if (!error && data) break;
+    if (i === 0) await new Promise((r) => setTimeout(r, 600));
+  }
 
   if (error) {
     console.error("Failed to create order", error);
