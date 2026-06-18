@@ -1,47 +1,51 @@
-## Novo restaurante: Shalom Burger
+## Objetivo
+Deixar o cardápio rápido e o checkout instantâneo, eliminando travamentos e erros de conexão quando o cliente finaliza o pedido.
 
-Vou criar um novo cardápio digital com slug `shalom-burger`, replicando o **estilo visual do Point do Gordinho** (fundo preto, cards glass, fonte Outfit, layout em lista), mas com a identidade laranja/preto da Shalom Burger.
+## Diagnóstico (o que está pesando hoje)
 
-### Identidade visual
-- **Slug:** `/shalom-burger`
-- **Cores:** primary `#F59E0B` (laranja/dourado da logo), secondary `#FFFFFF`, background `#0A0A0A`, texto branco
-- **Fonte:** Outfit · **Cards:** glass · **Layout:** list · **Categorias:** pills
-- **Logo:** recortada da imagem enviada (o "SHALOM BURGER LANCHES" circular) e enviada via lovable-assets
-- **Rodapé:** "Shalom Burger — Sabor que abençoa 🔥"
+1. **Cardápio faz 5 consultas em sequência** ao abrir (`restaurante` → `categorias` → `produtos` → `grupos de opções` → `opções`). Cada uma é uma ida e volta separada ao banco — em rede lenta isso vira 2–4 segundos só para mostrar a tela.
+2. **Faltam índices no banco** em `products(restaurant_id)` e `categories(restaurant_id)`. Toda consulta varre a tabela inteira; quanto mais restaurantes/produtos, mais lento fica para todo mundo.
+3. **No checkout, o app espera salvar o perfil do cliente antes de abrir o WhatsApp.** Se a rede oscila, o botão "Enviar pedido" parece travado, o cliente clica de novo e gera pedido duplicado.
+4. **Sem timeout nem nova tentativa** em `createOrder`: se a primeira chamada falha por conexão fraca, aparece só "Não conseguimos salvar o pedido" e o cliente desiste.
+5. **Painel do dono recarrega pedidos a cada 6s** com uma consulta pesada (todos os pedidos + itens). Em horários de pico, isso sobrecarrega o banco e respinga na velocidade do cliente.
+6. **Imagens dos produtos sem `loading="lazy"` / dimensões fixas**, então o navegador baixa todas de uma vez e trava a rolagem em celular fraco.
 
-### Categorias (5)
-1. Burguers Simples
-2. Burguers Duplos
-3. Jantar
-4. Porções
-5. Bebidas & Sobremesas
+## Plano de ação
 
-### Produtos (23) — extraídos do cardápio
+### 1. Acelerar o carregamento do cardápio (1 consulta em vez de 5)
+- Criar a função `public_get_menu(_slug)` no banco que devolve, em **uma única resposta**, o restaurante + categorias + produtos + opções já agrupados.
+- Adaptar `useRestaurant` / `useMenu` (`src/hooks/use-restaurant.ts`) para usar essa função. Resultado esperado: tempo de abertura do cardápio cai de ~5 chamadas para 1.
+- Subir `staleTime` no React Query (cardápio muda pouco em poucos minutos) para evitar refetch desnecessário ao trocar de aba.
 
-**Burguers Simples** (pão brioche, carne 100g, queijo cheddar + extras)
-- Simples R$10 · Creme Cheese R$13 · Bacon R$15 · Gorgonzola R$15 · Queijo Reino R$17 · Bacon & Gorgonzola R$20 · Burger & Cebola Caramelizada R$12 · Queijo Reino & Bacon R$20
+### 2. Índices no banco (ganho imediato e gratuito)
+Adicionar via migration:
+- `products (restaurant_id, is_available)`
+- `categories (restaurant_id, status, display_order)`
+- `orders (restaurant_id, status, created_at DESC)` para o painel do dono
 
-**Burguers Duplos** (pão brioche, 2 carnes 100g, cheddar + extras)
-- Duplo Simples R$15 · Duplo Creme Cheese R$18 · Duplo Bacon R$20 · Duplo Gorgonzola R$20 · Duplo Queijo Reino R$22 · Burger Duplo Caramelizado R$17 · Duplo Bacon & Gorgonzola R$25 · Duplo Queijo Reino & Bacon R$25
+### 3. Checkout instantâneo e à prova de conexão ruim
+No `cart-drawer.tsx` / `lib/orders.ts`:
+- **Disparar o WhatsApp assim que o pedido for criado**, sem esperar o "salvar perfil do cliente" (esse vira fire-and-forget em segundo plano).
+- Adicionar **timeout de 8s + 1 nova tentativa automática** no `createOrder`. Mensagem de erro mais clara se mesmo assim falhar.
+- **Travar o botão "Enviar pedido"** enquanto envia (com spinner) para impedir clique duplo e pedidos duplicados.
+- Salvar o perfil do cliente localmente **antes** de chamar o servidor, então mesmo offline o próximo pedido já vem preenchido.
 
-**Jantar**
-- Macaxeira com Bisteca/Charque/Carne sol R$17 · Cachorro-Quente R$10 · X-Tudo 3 carnes R$20
+### 4. Reduzir carga do painel do dono (afeta todo mundo)
+Em `src/components/owner/orders-screen.tsx`:
+- Subir o polling de **6s para 15s**, e pausar quando a aba está em segundo plano (`document.hidden`).
+- Buscar só os pedidos das últimas 24h por padrão (hoje busca os 200 mais recentes sempre).
 
-**Porções**
-- Batata P 300g R$10 · Batata M 400g R$15 · Batata Completa 600g (frita, ovo, bacon, calabresa) R$30
+### 5. Imagens mais leves
+Nas listagens de produto (`$slug.index.tsx`):
+- Adicionar `loading="lazy"`, `decoding="async"` e `width/height` em todas as imagens.
+- Acrescentar `&w=400&q=70` nos URLs do Unsplash usados (eles aceitam transformação na URL) para baixar ~70% menos bytes.
 
-**Bebidas & Sobremesas**
-- Fatia de bolo R$8 · Refrigerante Lata R$5 · Refrigerante 1 Litro R$10
+### 6. Verificação final
+- Rodar o linter do banco para garantir que as policies continuam corretas.
+- Testar fluxo de checkout completo em rede lenta simulada (Playwright) e medir o tempo do clique "Enviar pedido" até o WhatsApp abrir — meta: < 1s mesmo com conexão fraca.
 
-### Imagens dos produtos
-- Cada produto recebe uma imagem do Unsplash escolhida por tipo (burger simples, burger duplo, hot dog, batata frita, refri, bolo, etc.)
-- **Validação obrigatória:** rodo `curl -I` em cada URL candidata ANTES de inserir; só uso as que retornam HTTP 200
-- Depois do INSERT, faço SELECT + nova validação HEAD em todas as URLs salvas — se alguma falhar, substituo na hora
-- Garantia final: `image_url IS NULL` = 0 e 100% das URLs respondem 200
+## O que NÃO vai mudar
+- Visual, cores e fluxo de telas do cardápio e do checkout ficam idênticos.
+- Nenhum pedido existente é afetado; só mudam consultas e índices.
 
-### Execução
-1. Recortar logo da imagem enviada → upload via `lovable-assets`
-2. Validar todas as URLs Unsplash candidatas
-3. 1 migration: INSERT restaurant + categories + 23 products (com GRANTs públicos já existentes na tabela)
-4. Verificação final via SELECT e HEAD em todas as imagens
-5. Preview em `/shalom-burger`
+Posso começar?
