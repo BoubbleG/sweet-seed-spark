@@ -520,7 +520,7 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
                       style={{ backgroundColor: t.surfaceMuted }}
                     >
                       {prod.image_url ? (
-                        <img src={prod.image_url} alt={prod.name} className="w-full h-full object-cover" />
+                        <img src={prod.image_url} alt={prod.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center" style={{ color: t.textFaint }}>
                           <Package className="w-7 h-7" />
