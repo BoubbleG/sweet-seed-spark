@@ -1,51 +1,71 @@
-## Objetivo
-Deixar o cardápio rápido e o checkout instantâneo, eliminando travamentos e erros de conexão quando o cliente finaliza o pedido.
+# Plano de otimização avançada (Lighthouse → 100)
 
-## Diagnóstico (o que está pesando hoje)
+Vou seguir os 3 passos que você pediu: **(1)** estruturar o prompt de auditoria, **(2)** transformar a resposta desse prompt em plano, **(3)** executar — esta resposta é o passo 2 (o plano). A execução acontece quando você aprovar.
 
-1. **Cardápio faz 5 consultas em sequência** ao abrir (`restaurante` → `categorias` → `produtos` → `grupos de opções` → `opções`). Cada uma é uma ida e volta separada ao banco — em rede lenta isso vira 2–4 segundos só para mostrar a tela.
-2. **Faltam índices no banco** em `products(restaurant_id)` e `categories(restaurant_id)`. Toda consulta varre a tabela inteira; quanto mais restaurantes/produtos, mais lento fica para todo mundo.
-3. **No checkout, o app espera salvar o perfil do cliente antes de abrir o WhatsApp.** Se a rede oscila, o botão "Enviar pedido" parece travado, o cliente clica de novo e gera pedido duplicado.
-4. **Sem timeout nem nova tentativa** em `createOrder`: se a primeira chamada falha por conexão fraca, aparece só "Não conseguimos salvar o pedido" e o cliente desiste.
-5. **Painel do dono recarrega pedidos a cada 6s** com uma consulta pesada (todos os pedidos + itens). Em horários de pico, isso sobrecarrega o banco e respinga na velocidade do cliente.
-6. **Imagens dos produtos sem `loading="lazy"` / dimensões fixas**, então o navegador baixa todas de uma vez e trava a rolagem em celular fraco.
+## Passo 1 — Prompt de auditoria avançada (referência)
 
-## Plano de ação
+> "Audite o cardápio público (`/{slug}`) buscando Lighthouse Performance ≥ 95 em mobile 4G. Para cada uma das 6 métricas (LCP, FCP, CLS, INP, TBT, Speed Index) liste a causa provável no código atual e a correção mínima. Considere SSR/edge cache, payload de JS, fontes web, imagens (formato/dimensão/preload), CSS crítico, hidratação parcial, fila de rede e React Query. Não toque em visual nem em lógica de negócio."
 
-### 1. Acelerar o carregamento do cardápio (1 consulta em vez de 5)
-- Criar a função `public_get_menu(_slug)` no banco que devolve, em **uma única resposta**, o restaurante + categorias + produtos + opções já agrupados.
-- Adaptar `useRestaurant` / `useMenu` (`src/hooks/use-restaurant.ts`) para usar essa função. Resultado esperado: tempo de abertura do cardápio cai de ~5 chamadas para 1.
-- Subir `staleTime` no React Query (cardápio muda pouco em poucos minutos) para evitar refetch desnecessário ao trocar de aba.
+## Passo 2 — Plano derivado
 
-### 2. Índices no banco (ganho imediato e gratuito)
-Adicionar via migration:
-- `products (restaurant_id, is_available)`
-- `categories (restaurant_id, status, display_order)`
-- `orders (restaurant_id, status, created_at DESC)` para o painel do dono
+### Diagnóstico (o que ainda pesa)
 
-### 3. Checkout instantâneo e à prova de conexão ruim
-No `cart-drawer.tsx` / `lib/orders.ts`:
-- **Disparar o WhatsApp assim que o pedido for criado**, sem esperar o "salvar perfil do cliente" (esse vira fire-and-forget em segundo plano).
-- Adicionar **timeout de 8s + 1 nova tentativa automática** no `createOrder`. Mensagem de erro mais clara se mesmo assim falhar.
-- **Travar o botão "Enviar pedido"** enquanto envia (com spinner) para impedir clique duplo e pedidos duplicados.
-- Salvar o perfil do cliente localmente **antes** de chamar o servidor, então mesmo offline o próximo pedido já vem preenchido.
+1. **Cardápio renderiza vazio no SSR** — `useRestaurantMenu` só dispara no cliente, então o HTML inicial não tem conteúdo. LCP fica preso esperando JS + RPC.
+2. **Imagens sem `width/height` e sem `fetchpriority`** — gera CLS e atrasa LCP da logo/banner. Imagens do Unsplash/R2 baixam em tamanho cheio (1–2 MB cada).
+3. **Sem `preconnect` ao Supabase e ao CDN de imagens** — cada primeira requisição paga DNS + TLS (~300 ms em 4G).
+4. **JS de checkout entra no bundle inicial** — `cart-drawer.tsx` (829 linhas) + `framer-motion` + 3 diálogos (`mix-selector`, `acai-builder`, `product-builder`) são carregados antes mesmo do cliente abrir o carrinho.
+5. **Fonte web carrega 6 famílias** (`Outfit`, `Space Grotesk`, `Inter`, `Montserrat`, `Poppins`, `Playfair`, `Pacifico`) em todas as rotas — bloqueia render.
+6. **RPC `public_get_menu` sem cache HTTP** — cada visita refaz a query, mesmo o cardápio mudando pouco.
+7. **Imagens externas (Unsplash/R2) sem transformação** — sem `&w=`/`&q=` nem AVIF/WebP negociado.
 
-### 4. Reduzir carga do painel do dono (afeta todo mundo)
-Em `src/components/owner/orders-screen.tsx`:
-- Subir o polling de **6s para 15s**, e pausar quando a aba está em segundo plano (`document.hidden`).
-- Buscar só os pedidos das últimas 24h por padrão (hoje busca os 200 mais recentes sempre).
+### Ações
 
-### 5. Imagens mais leves
-Nas listagens de produto (`$slug.index.tsx`):
-- Adicionar `loading="lazy"`, `decoding="async"` e `width/height` em todas as imagens.
-- Acrescentar `&w=400&q=70` nos URLs do Unsplash usados (eles aceitam transformação na URL) para baixar ~70% menos bytes.
+#### 1. SSR do cardápio (maior ganho de LCP)
+- Adicionar `loader` em `src/routes/$slug.index.tsx` que chama o RPC `public_get_menu` via `queryClient.ensureQueryData`, e trocar `useRestaurantMenu` por `useSuspenseQuery` com a mesma `queryOptions`. HTML inicial passa a conter produtos → LCP cai de ~3 s para <1 s.
+- Definir `errorComponent` e `notFoundComponent` na rota (obrigatório quando há loader).
 
-### 6. Verificação final
-- Rodar o linter do banco para garantir que as policies continuam corretas.
-- Testar fluxo de checkout completo em rede lenta simulada (Playwright) e medir o tempo do clique "Enviar pedido" até o WhatsApp abrir — meta: < 1s mesmo com conexão fraca.
+#### 2. Preconnect + preload do LCP
+Em `src/routes/__root.tsx` (`head().links`):
+- `<link rel="preconnect" href="https://mrjkizqyrmljtlvusgta.supabase.co" crossorigin>`
+- `<link rel="preconnect" href="https://images.unsplash.com" crossorigin>` e o domínio R2 usado pelos restaurantes.
+- `<link rel="dns-prefetch">` como fallback.
 
-## O que NÃO vai mudar
-- Visual, cores e fluxo de telas do cardápio e do checkout ficam idênticos.
-- Nenhum pedido existente é afetado; só mudam consultas e índices.
+Na rota `$slug.index.tsx`, derivar do loader o `logo_url`/`banner_url` e adicionar `<link rel="preload" as="image" href={...} fetchpriority="high">`.
+
+#### 3. Imagens leves e estáveis
+- Adicionar `width` e `height` em **todos** os `<img>` (logo, banner, cards) para zerar CLS.
+- Helper `optimizeImageUrl(url, { w, q })` que injeta `?w=400&q=70&fm=webp` quando o host é Unsplash, e `?width=400&quality=70` quando é R2 (Cloudflare Images). Aplicar em cards de produto (w=400) e banner (w=1200).
+- `fetchpriority="high"` só na logo/banner; demais ficam `loading="lazy"`.
+
+#### 4. Code-splitting agressivo
+- Carregar via `lazy()` + `<Suspense>`: `CartDrawer`, `MixSelectorDialog`, `AcaiBuilderDialog`, `ProductBuilderDialog`. Eles só montam quando o usuário interage, então saem do bundle inicial (~150 KB a menos de JS).
+- Remover `framer-motion` dos componentes acima do dobro (substituir `motion.div` simples por classes utilitárias de animação CSS já existentes). Mantém visual idêntico.
+
+#### 5. Fontes web
+- Reduzir o `<link>` de fontes do `__root.tsx` para apenas as 2 famílias realmente usadas no projeto (vou auditar com `rg "font-(outfit|space|inter|montserrat|poppins|playfair|pacifico)"` antes). As demais saem.
+- Acrescentar `&display=swap` (já está) e `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`.
+
+#### 6. Cache HTTP do RPC do cardápio
+- Envolver a chamada `public_get_menu` num server route `/api/public/menu/$slug` que devolve o JSON com `Cache-Control: public, s-maxage=60, stale-while-revalidate=300`. O edge da Cloudflare passa a servir HIT em ~20 ms global. Cliente continua chamando via React Query (mesma chave).
+
+#### 7. Higiene final
+- `defaultPreloadStaleTime` no router para 30 s, evitando refetch ao voltar para a aba.
+- Adicionar `<meta name="theme-color">` e `viewport` já está.
+- Auditar com Lighthouse antes/depois e reportar números.
+
+### Métricas-alvo (mobile, 4G simulado)
+| Métrica | Hoje (estimado) | Meta |
+|---|---|---|
+| LCP | 3.0–4.0 s | < 1.5 s |
+| TBT | 400 ms+ | < 150 ms |
+| CLS | 0.15+ | < 0.05 |
+| Performance | 60–75 | 95+ |
+
+### O que NÃO muda
+- Visual, cores, animações percebidas, fluxo de checkout, RLS, dados.
+- Painel do dono e área admin ficam de fora desta passada (foco é o cardápio público, que é o que o Lighthouse mede).
+
+## Passo 3 — Execução
+Faço todas as alterações em uma única passada após sua aprovação, na ordem acima (SSR → preconnect → imagens → code-split → fontes → cache HTTP → verificação).
 
 Posso começar?

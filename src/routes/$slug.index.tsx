@@ -7,13 +7,16 @@ import { buildMenuTheme } from "@/lib/theme";
 import { ShoppingCart, Plus, Search, Menu as MenuIcon, Package, Home as HomeIcon } from "lucide-react";
 import type { ProductSize } from "@/types";
 import { Sparkles, Tag, Flame, Sandwich, IceCream } from "lucide-react";
-import { useState, useMemo, useRef, useEffect } from "react";
-import { CartDrawer } from "@/components/cart-drawer";
+import { useState, useMemo, useRef, useEffect, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MixSelectorDialog } from "@/components/mix-selector-dialog";
-import { AcaiBuilderDialog } from "@/components/acai-builder-dialog";
-import { ProductBuilderDialog } from "@/components/product-builder-dialog";
 import { sanitizeCustomCss } from "@/lib/sanitize-css";
+import { optimizeImageUrl } from "@/lib/optimize-image";
+
+// Code-splitting agressivo: diálogos só baixam quando o usuário interage
+const CartDrawer = lazy(() => import("@/components/cart-drawer").then(m => ({ default: m.CartDrawer })));
+const MixSelectorDialog = lazy(() => import("@/components/mix-selector-dialog").then(m => ({ default: m.MixSelectorDialog })));
+const AcaiBuilderDialog = lazy(() => import("@/components/acai-builder-dialog").then(m => ({ default: m.AcaiBuilderDialog })));
+const ProductBuilderDialog = lazy(() => import("@/components/product-builder-dialog").then(m => ({ default: m.ProductBuilderDialog })));
 
 
 
@@ -238,7 +241,15 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
             style={{ backgroundColor: t.surface }}
           >
             {restaurant.logo_url ? (
-              <img src={restaurant.logo_url} alt={restaurant.name} className="w-full h-full object-cover" />
+              <img
+                src={optimizeImageUrl(restaurant.logo_url, { w: 160, q: 75 })}
+                alt={restaurant.name}
+                width={80}
+                height={80}
+                fetchPriority="high"
+                decoding="async"
+                className="w-full h-full object-cover"
+              />
             ) : (
               <div
                 className="w-full h-full flex items-center justify-center text-2xl font-black"
@@ -269,8 +280,12 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
         <div className="px-5 sm:px-6 mt-1">
           <div className="relative h-40 sm:h-48 rounded-3xl overflow-hidden shadow-lg">
             <img
-              src={restaurant.banner_url}
+              src={optimizeImageUrl(restaurant.banner_url, { w: 1200, q: 70 })}
               alt={`Banner ${restaurant.name}`}
+              width={1200}
+              height={400}
+              fetchPriority="high"
+              decoding="async"
               className="w-full h-full object-cover"
             />
           </div>
@@ -429,8 +444,10 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
                       <div className="relative h-32 bg-zinc-100">
                         {prod.image_url ? (
                           <img
-                            src={prod.image_url}
+                            src={optimizeImageUrl(prod.image_url, { w: 320, q: 70 })}
                             alt={prod.name}
+                            width={230}
+                            height={128}
                             loading="lazy"
                             decoding="async"
                             className="w-full h-full object-cover"
@@ -520,7 +537,15 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
                       style={{ backgroundColor: t.surfaceMuted }}
                     >
                       {prod.image_url ? (
-                        <img src={prod.image_url} alt={prod.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                        <img
+                          src={optimizeImageUrl(prod.image_url, { w: 240, q: 70 })}
+                          alt={prod.name}
+                          width={112}
+                          height={112}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center" style={{ color: t.textFaint }}>
                           <Package className="w-7 h-7" />
@@ -686,14 +711,18 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
         </div>
       </footer>
 
-      <CartDrawer 
-        isOpen={showOrder} 
-        onClose={() => setShowOrder(false)} 
-        restaurant={restaurant} 
-        isPreview={isPreview}
-      />
+      <Suspense fallback={null}>
+        {showOrder && (
+          <CartDrawer
+            isOpen={showOrder}
+            onClose={() => setShowOrder(false)}
+            restaurant={restaurant}
+            isPreview={isPreview}
+          />
+        )}
 
-      <MixSelectorDialog
+        {mixState.open && (
+          <MixSelectorDialog
         open={mixState.open}
         onOpenChange={(o) => setMixState((s) => ({ ...s, open: o }))}
         baseProduct={mixState.product}
@@ -708,9 +737,11 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
             { size: mixState.size, notes: `Misturas: ${names.join(", ")}` }
           );
         }}
-      />
+          />
+        )}
 
-      <AcaiBuilderDialog
+        {!!acaiBuilderProduct && (
+          <AcaiBuilderDialog
         open={!!acaiBuilderProduct}
         onOpenChange={(o) => { if (!o) setAcaiBuilderProduct(null); }}
         productName={acaiBuilderProduct?.name || 'Copo de Açaí'}
@@ -735,9 +766,11 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
             { notes }
           );
         }}
-      />
+          />
+        )}
 
-      <ProductBuilderDialog
+        {!!builderProduct && (
+          <ProductBuilderDialog
         open={!!builderProduct}
         onOpenChange={(o) => { if (!o) setBuilderProduct(null); }}
         product={builderProduct}
@@ -754,7 +787,9 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
             { notes, quantity }
           );
         }}
-      />
+          />
+        )}
+      </Suspense>
     </div>
   );
 }
