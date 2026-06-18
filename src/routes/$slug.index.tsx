@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useParams } from "@tanstack/react-router";
-import { useRestaurant, useMenu } from "@/hooks/use-restaurant";
+import { useRestaurantMenu } from "@/hooks/use-restaurant";
 import { useCart } from "@/hooks/use-cart";
 import { formatCurrency } from "@/lib/utils";
 import { buildMenuTheme } from "@/lib/theme";
@@ -33,8 +33,11 @@ function RouteComponent() {
 }
 
 export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string; isPreview?: boolean }) {
-  const { data: restaurant, isLoading: restLoading, error: restError } = useRestaurant(slug);
-  const { data: menu, isLoading: menuLoading, error: menuError } = useMenu(restaurant?.id || '');
+  const { data: full, isLoading: restLoading, error: restError } = useRestaurantMenu(slug);
+  const restaurant = full?.restaurant;
+  const menu = full ? { categories: full.categories, products: full.products } : undefined;
+  const menuLoading = restLoading;
+  const menuError = restError;
   const { items, addItem } = useCart();
   const [showOrder, setShowOrder] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -428,6 +431,8 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
                           <img
                             src={prod.image_url}
                             alt={prod.name}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -515,7 +520,7 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
                       style={{ backgroundColor: t.surfaceMuted }}
                     >
                       {prod.image_url ? (
-                        <img src={prod.image_url} alt={prod.name} className="w-full h-full object-cover" />
+                        <img src={prod.image_url} alt={prod.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center" style={{ color: t.textFaint }}>
                           <Package className="w-7 h-7" />

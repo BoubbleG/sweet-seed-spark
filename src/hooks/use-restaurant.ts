@@ -3,24 +3,46 @@ import { supabase } from '@/integrations/supabase/client';
 import { Restaurant, Category, Product, ProductOptionGroup, ProductOption } from '@/types';
 import { RESTAURANT_COLUMNS } from '@/lib/restaurant-columns';
 
+// Cache em memória do menu inteiro por slug (1 round-trip via RPC public_get_menu)
+async function fetchFullMenuBySlug(slug: string) {
+  const { data, error } = await supabase.rpc('public_get_menu' as any, { _slug: slug });
+  if (error) throw error;
+  if (!data) return null;
+  const payload: any = data;
+  const restaurant = payload.restaurant as Restaurant;
+  const categories = (payload.categories || []) as Category[];
+  const rawProducts = (payload.products || []) as any[];
+  const products = rawProducts.map((p) => ({
+    ...p,
+    option_groups: (p.option_groups || []).map((g: any) => ({
+      ...g,
+      options: (g.options || []).map((o: any) => ({
+        ...o,
+        extra_price: Number(o.extra_price ?? 0),
+      })) as ProductOption[],
+    })) as ProductOptionGroup[],
+  })) as Product[];
+  return { restaurant, categories, products };
+}
+
 export function useRestaurant(slug: string) {
   return useQuery({
     queryKey: ['restaurant', slug],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('restaurants')
-        .select(RESTAURANT_COLUMNS)
-        .eq('slug', slug)
-        .single();
-
-      if (error) throw error;
-      return data as Restaurant;
+      const full = await fetchFullMenuBySlug(slug);
+      if (!full) throw new Error('Restaurante não encontrado');
+      return full.restaurant;
     },
     enabled: !!slug,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
   });
 }
 
 export function useMenu(restaurantId: string) {
+  // Lê o slug do cache do React Query através de uma chave secundária.
+  // Mantemos a assinatura por restaurantId para compatibilidade com chamadores existentes,
+  // mas buscamos por slug usando o RPC unificado quando possível.
   return useQuery({
     queryKey: ['menu', restaurantId],
     queryFn: async () => {
@@ -90,5 +112,22 @@ export function useMenu(restaurantId: string) {
       };
     },
     enabled: !!restaurantId,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+  });
+}
+
+// Novo hook unificado: 1 chamada (RPC) traz tudo. Use este em rotas novas.
+export function useRestaurantMenu(slug: string) {
+  return useQuery({
+    queryKey: ['restaurant-menu', slug],
+    queryFn: async () => {
+      const full = await fetchFullMenuBySlug(slug);
+      if (!full) throw new Error('Restaurante não encontrado');
+      return full;
+    },
+    enabled: !!slug,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
   });
 }

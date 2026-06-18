@@ -921,6 +921,7 @@ export type Database = {
           order_no: number
         }[]
       }
+      public_get_menu: { Args: { _slug: string }; Returns: Json }
       record_restaurant_snapshot: {
         Args: {
           _label: string
