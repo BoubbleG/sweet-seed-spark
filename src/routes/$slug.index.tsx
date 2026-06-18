@@ -431,6 +431,8 @@ export function RestaurantPublicMenu({ slug, isPreview = false }: { slug: string
                           <img
                             src={prod.image_url}
                             alt={prod.name}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover"
                           />
                         ) : (
