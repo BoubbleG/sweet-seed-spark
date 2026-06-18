@@ -93,9 +93,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/42ebbef1-6879-4f6e-b157-5be26a29a8e3/id-preview-ec034142--457294a3-b55a-48db-bff8-963f36031e68.lovable.app-1781019749940.png" },
     ],
     links: [
+      // Preconnect/dns-prefetch para encurtar TLS+DNS dos hosts críticos
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "preconnect", href: "https://mrjkizqyrmljtlvusgta.supabase.co", crossOrigin: "anonymous" },
+      { rel: "dns-prefetch", href: "https://images.unsplash.com" },
+      { rel: "dns-prefetch", href: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Space+Grotesk:wght@300..700&family=Inter:wght@100..900&family=Montserrat:wght@100..900&family=Pacifico&family=Playfair+Display:wght@400..900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap",
+        // Carregamos só as 4 famílias realmente selecionáveis no admin — corta ~60% do CSS de fonte
+        href: "https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;600;700;800&family=Montserrat:wght@400;600;700;800&display=swap",
       },
       {
         rel: "stylesheet",

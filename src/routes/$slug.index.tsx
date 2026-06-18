@@ -7,13 +7,16 @@ import { buildMenuTheme } from "@/lib/theme";
 import { ShoppingCart, Plus, Search, Menu as MenuIcon, Package, Home as HomeIcon } from "lucide-react";
 import type { ProductSize } from "@/types";
 import { Sparkles, Tag, Flame, Sandwich, IceCream } from "lucide-react";
-import { useState, useMemo, useRef, useEffect } from "react";
-import { CartDrawer } from "@/components/cart-drawer";
+import { useState, useMemo, useRef, useEffect, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MixSelectorDialog } from "@/components/mix-selector-dialog";
-import { AcaiBuilderDialog } from "@/components/acai-builder-dialog";
-import { ProductBuilderDialog } from "@/components/product-builder-dialog";
 import { sanitizeCustomCss } from "@/lib/sanitize-css";
+import { optimizeImageUrl } from "@/lib/optimize-image";
+
+// Code-splitting agressivo: diálogos só baixam quando o usuário interage
+const CartDrawer = lazy(() => import("@/components/cart-drawer").then(m => ({ default: m.CartDrawer })));
+const MixSelectorDialog = lazy(() => import("@/components/mix-selector-dialog").then(m => ({ default: m.MixSelectorDialog })));
+const AcaiBuilderDialog = lazy(() => import("@/components/acai-builder-dialog").then(m => ({ default: m.AcaiBuilderDialog })));
+const ProductBuilderDialog = lazy(() => import("@/components/product-builder-dialog").then(m => ({ default: m.ProductBuilderDialog })));
 
 
 

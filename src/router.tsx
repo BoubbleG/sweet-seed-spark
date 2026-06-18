@@ -9,7 +9,8 @@ export const getRouter = () => {
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
-    defaultPreloadStaleTime: 0,
+    // Query controla freshness; aumentamos o preload do router pra evitar refetch ao voltar à aba
+    defaultPreloadStaleTime: 30_000,
   });
 
   return router;
